@@ -159,7 +159,8 @@ Planned enhancements include:
 
 ## 🌐 Live Demo
 
-Deployment in progress.
+https://pokemon-eclipse.vercel.app/
+
 
 ---
 
