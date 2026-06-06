@@ -89,7 +89,7 @@ function PokemonDetailModal({
     >
       <div
         ref={panelRef}
-        className="max-h-[92vh] w-full max-w-5xl overflow-x-hidden overflow-y-auto rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(243,36,36,0.18),transparent_26%),linear-gradient(145deg,#080d18_0%,#101827_55%,#05070d_100%)] p-5 shadow-[0_30px_140px_rgba(0,0,0,0.55)] sm:p-8"
+        className="max-h-[92vh] w-full max-w-5xl overflow-x-hidden overflow-y-auto rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgb(var(--color-accent-rgb)_/_0.18),transparent_26%),linear-gradient(145deg,#080d18_0%,#101827_55%,#05070d_100%)] p-5 shadow-[0_30px_140px_rgba(0,0,0,0.55)] sm:p-8"
       >
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
@@ -114,7 +114,7 @@ function PokemonDetailModal({
               <img
                 src={imageUrl}
                 alt={pokemon.name}
-                className="h-72 w-72 object-contain drop-shadow-[0_30px_80px_rgba(243,36,36,0.25)] sm:h-96 sm:w-96"
+                className="h-72 w-72 object-contain drop-shadow-[0_30px_80px_rgb(var(--color-accent-rgb)_/_0.25)] sm:h-96 sm:w-96"
               />
             ) : (
               <div className="flex h-72 w-72 items-center justify-center rounded-3xl border border-white/10 bg-white/5 text-slate-500">No image</div>
@@ -139,7 +139,7 @@ function PokemonDetailModal({
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-poke to-[#f7a1a1]"
+                      className="h-full rounded-full bg-gradient-to-r from-poke to-pokeSoft"
                       style={{ width: `${Math.min((stat.base_stat / 160) * 100, 100)}%` }}
                     />
                   </div>
@@ -282,7 +282,7 @@ function Pokedex() {
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-white/10">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-poke to-[#f7a1a1]"
+                            className="h-full rounded-full bg-gradient-to-r from-poke to-pokeSoft"
                             style={{ width: `${Math.min((stat.base_stat / 255) * 100, 100)}%` }}
                           />
                         </div>

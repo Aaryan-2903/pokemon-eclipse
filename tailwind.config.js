@@ -4,13 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        night: '#0b1320',
-        poke: '#f32424',
-        pokeSoft: '#f75c5c',
+        night: 'rgb(var(--color-night-rgb) / <alpha-value>)',
+        poke: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+        pokeSoft: 'rgb(var(--color-accent-soft-rgb) / <alpha-value>)',
         slateSoft: '#6b7280',
       },
       boxShadow: {
-        glow: '0 0 60px rgba(243, 36, 36, 0.2)',
+        glow: 'var(--shadow-glow)',
       },
     },
   },

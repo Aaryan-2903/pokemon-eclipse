@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import type { Group, Mesh, MeshBasicMaterial, PointLight } from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -10,7 +10,60 @@ type PointerState = {
   y: number;
 };
 
-function CinematicLights() {
+type ThemeColors = {
+  accent: string;
+  accentSoft: string;
+  sceneBackground: string;
+  sparkle: string;
+};
+
+function cssRgbToHex(value: string, fallback: string) {
+  const [red, green, blue] = value
+    .trim()
+    .split(/\s+/)
+    .map((part) => Number(part));
+
+  if ([red, green, blue].some((channel) => Number.isNaN(channel))) {
+    return fallback;
+  }
+
+  return `#${[red, green, blue].map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, '0')).join('')}`;
+}
+
+function getThemeColors(): ThemeColors {
+  const styles = window.getComputedStyle(document.documentElement);
+  const accent = cssRgbToHex(styles.getPropertyValue('--color-accent-rgb'), '#f32424');
+  const accentSoft = cssRgbToHex(styles.getPropertyValue('--color-accent-soft-rgb'), '#f75c5c');
+
+  return {
+    accent,
+    accentSoft,
+    sceneBackground: styles.getPropertyValue('--color-page-start').trim() || '#050c16',
+    sparkle: document.documentElement.dataset.theme === 'midnight-blue' ? '#cfe3ff' : '#fef3f3',
+  };
+}
+
+function useThemeColors() {
+  const [colors, setColors] = useState<ThemeColors>(() => getThemeColors());
+
+  useEffect(() => {
+    const updateColors = () => setColors(getThemeColors());
+    const observer = new MutationObserver(updateColors);
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return colors;
+}
+
+function CinematicLights({ colors }: { colors: ThemeColors }) {
   const keyLight = useRef<PointLight | null>(null);
   const rimLight = useRef<PointLight | null>(null);
   const glintLight = useRef<PointLight | null>(null);
@@ -52,7 +105,7 @@ function CinematicLights() {
       <pointLight ref={keyLight} position={[2.8, 1.7, 3.4]} intensity={1.86} color="#ffe9df" />
       <pointLight ref={rimLight} position={[-3.4, -2.2, -1.7]} intensity={0.82} color="#6681ff" />
       <pointLight ref={glintLight} position={[0, 1.35, 2.7]} intensity={0.5} color="#ffffff" />
-      <pointLight position={[0, 2.6, -3.2]} intensity={0.44} color="#ff2f45" />
+      <pointLight position={[0, 2.6, -3.2]} intensity={0.44} color={colors.accent} />
     </>
   );
 }
@@ -67,7 +120,7 @@ function CameraRig({ pointer }: { pointer: MutableRefObject<PointerState> }) {
   return null;
 }
 
-function PokeballMesh({ pointer }: { pointer: MutableRefObject<PointerState> }) {
+function PokeballMesh({ pointer, colors }: { pointer: MutableRefObject<PointerState>; colors: ThemeColors }) {
   const group = useRef<Group | null>(null);
   const glow = useRef<Mesh | null>(null);
 
@@ -97,13 +150,13 @@ function PokeballMesh({ pointer }: { pointer: MutableRefObject<PointerState> }) 
         <group>
           <mesh ref={glow}>
             <sphereGeometry args={[1.46, 64, 32]} />
-            <meshBasicMaterial color="#ff3348" transparent opacity={0.08} depthWrite={false} />
+            <meshBasicMaterial color={colors.accentSoft} transparent opacity={0.08} depthWrite={false} />
           </mesh>
 
           <mesh castShadow receiveShadow>
             <sphereGeometry args={[1.36, 96, 48, 0, Math.PI * 2, 0, Math.PI / 2]} />
             <meshPhysicalMaterial
-              color="#eb1f2f"
+              color={colors.accent}
               roughness={0.12}
               metalness={0.46}
               clearcoat={1}
@@ -149,7 +202,7 @@ function PokeballMesh({ pointer }: { pointer: MutableRefObject<PointerState> }) 
   );
 }
 
-function LivingStarfield() {
+function LivingStarfield({ colors }: { colors: ThemeColors }) {
   const stars = useRef<Group | null>(null);
 
   useFrame(({ clock }) => {
@@ -164,7 +217,7 @@ function LivingStarfield() {
     <group ref={stars}>
       <Stars radius={34} depth={56} count={2300} factor={5.6} saturation={0} fade speed={0.18} />
       <Stars radius={16} depth={24} count={420} factor={2.5} saturation={0.3} fade speed={0.35} />
-      <Sparkles count={82} opacity={0.5} scale={10.5} size={1.05} speed={0.26} color="#fef3f3" />
+      <Sparkles count={82} opacity={0.5} scale={10.5} size={1.05} speed={0.26} color={colors.sparkle} />
       <Sparkles count={24} opacity={0.28} scale={5.8} size={1.6} speed={0.18} color="#8fa8ff" />
     </group>
   );
@@ -172,10 +225,11 @@ function LivingStarfield() {
 
 function PokeBallScene() {
   const pointer = useRef<PointerState>({ x: 0, y: 0 });
+  const colors = useThemeColors();
 
   return (
     <div
-      className="relative h-full w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,_rgba(255,255,255,0.09),transparent_33%),radial-gradient(circle_at_50%_68%,_rgba(243,36,36,0.14),transparent_32%),linear-gradient(180deg,#020712_0%,#07101d_58%,#030509_100%)] shadow-[0_0_140px_rgba(243,36,36,0.18)]"
+      className="relative h-full w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,_rgba(255,255,255,0.09),transparent_33%),radial-gradient(circle_at_50%_68%,_rgb(var(--color-accent-rgb)_/_0.14),transparent_32%),linear-gradient(180deg,#020712_0%,#07101d_58%,#030509_100%)] shadow-[0_0_140px_rgb(var(--color-accent-rgb)_/_0.18)]"
       onPointerMove={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
         const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
@@ -200,13 +254,13 @@ function PokeBallScene() {
         camera={{ position: [0, 0, 6.15], fov: 35 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
-        <color attach="background" args={['#050c16']} />
+        <color attach="background" args={[colors.sceneBackground]} />
         <Suspense fallback={null}>
           <Environment preset="city" background={false} environmentIntensity={1.35} />
-          <CinematicLights />
-          <LivingStarfield />
+          <CinematicLights colors={colors} />
+          <LivingStarfield colors={colors} />
           <ContactShadows position={[0, -1.38, 0]} opacity={0.48} scale={5} blur={2.3} far={1.8} />
-          <PokeballMesh pointer={pointer} />
+          <PokeballMesh pointer={pointer} colors={colors} />
           <CameraRig pointer={pointer} />
         </Suspense>
         <EffectComposer>

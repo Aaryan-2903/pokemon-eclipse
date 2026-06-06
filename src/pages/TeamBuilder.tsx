@@ -182,7 +182,7 @@ function TeamBuilder() {
                 const imageUrl = pokemon ? getArtwork(pokemon) : null;
 
                 return pokemon ? (
-                  <article key={pokemon.id} className="rounded-2xl border border-poke/20 bg-night/95 p-4 shadow-[0_0_36px_rgba(243,36,36,0.08)]">
+                  <article key={pokemon.id} className="rounded-2xl border border-poke/20 bg-night/95 p-4 shadow-[0_0_36px_rgb(var(--color-accent-rgb)_/_0.08)]">
                     <div className="flex items-center gap-4">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/5 p-2">
                         {imageUrl ? <img src={imageUrl} alt={pokemon.name} className="h-full w-full object-contain" /> : null}
@@ -227,7 +227,7 @@ function TeamBuilder() {
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-poke to-[#f7a1a1]"
+                      className="h-full rounded-full bg-gradient-to-r from-poke to-pokeSoft"
                       style={{ width: `${Math.min((stat.value / 600) * 100, 100)}%` }}
                     />
                   </div>

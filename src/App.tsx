@@ -6,6 +6,8 @@ import Navbar from './components/Navbar.tsx';
 import Home from './pages/Home.tsx';
 import Pokedex from './pages/Pokedex.tsx';
 import TeamBuilder from './pages/TeamBuilder.tsx';
+import BattleArena from './pages/BattleArena.tsx';
+import MasterChallenge from './pages/MasterChallenge.tsx';
 import About from './pages/About.tsx';
 
 function AnimatedRoutes() {
@@ -137,12 +139,14 @@ function AnimatedRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/team-builder" element={<TeamBuilder />} />
+          <Route path="/battle-arena" element={<BattleArena />} />
+          <Route path="/master-challenge" element={<MasterChallenge />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </div>
       <div
         ref={scrimRef}
-        className="pointer-events-none fixed inset-0 z-50 bg-[radial-gradient(circle_at_center,_rgba(243,36,36,0.18),transparent_30%),rgba(0,0,0,0.82)] opacity-0"
+        className="pointer-events-none fixed inset-0 z-50 bg-[radial-gradient(circle_at_center,_rgb(var(--color-accent-rgb)_/_0.18),transparent_30%),rgba(0,0,0,0.82)] opacity-0"
         aria-hidden="true"
       />
     </>

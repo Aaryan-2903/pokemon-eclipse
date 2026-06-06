@@ -60,7 +60,7 @@ function Home() {
   }, []);
 
   return (
-    <section className="relative min-h-screen w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_10%,_rgba(243,36,36,0.2),transparent_22%),radial-gradient(circle_at_76%_48%,_rgba(64,91,210,0.18),transparent_28%),linear-gradient(180deg,#030509_0%,#07101d_45%,#030509_100%)]">
+    <section className="relative min-h-screen w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_10%,_rgb(var(--color-accent-rgb)_/_0.2),transparent_22%),radial-gradient(circle_at_76%_48%,_rgba(64,91,210,0.18),transparent_28%),linear-gradient(180deg,#030509_0%,#07101d_45%,#030509_100%)]">
       <div className="pointer-events-none absolute inset-0 opacity-75">
         <div className="absolute left-8 top-16 h-24 w-24 rounded-full bg-poke/20 blur-3xl animate-float-slow" />
         <div className="absolute right-8 top-32 h-20 w-20 rounded-full bg-blue-400/20 blur-3xl animate-float" />
@@ -70,12 +70,12 @@ function Home() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center overflow-hidden px-5 py-16 sm:px-8 lg:px-10">
         <div className="grid min-h-[calc(100vh-5rem)] min-w-0 gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
           <div ref={heroRef} className="min-w-0 space-y-7 pt-10 text-center lg:pt-0 lg:text-left">
-            <div className="hero-badge inline-flex items-center justify-center rounded border border-poke/30 bg-black/30 px-4 py-2 text-xs uppercase tracking-[0.22em] text-poke shadow-[0_0_24px_rgba(243,36,36,0.25)] backdrop-blur-xl sm:text-sm">
+            <div className="hero-badge inline-flex items-center justify-center rounded border border-poke/30 bg-black/30 px-4 py-2 text-xs uppercase tracking-[0.22em] text-poke shadow-[0_0_24px_rgb(var(--color-accent-rgb)_/_0.25)] backdrop-blur-xl sm:text-sm">
               Night signal detected
             </div>
 
             <div className="space-y-5">
-              <h1 ref={titleRef} className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.92] text-white drop-shadow-[0_0_48px_rgba(243,36,36,0.45)]">
+              <h1 ref={titleRef} className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.92] text-white drop-shadow-[0_0_48px_rgb(var(--color-accent-rgb)_/_0.45)]">
                 Pokemon <span className="bg-gradient-to-r from-poke via-white to-[#7da2ff] bg-clip-text text-transparent">Eclipse</span>
               </h1>
               <p ref={subtitleRef} className="mx-auto max-w-2xl text-base leading-8 text-slate-300 sm:text-xl lg:mx-0">
@@ -87,7 +87,7 @@ function Home() {
               <Link
                 ref={ctaRef}
                 to="/pokedex"
-                className="group relative inline-flex items-center justify-center overflow-hidden rounded bg-gradient-to-r from-poke via-[#ff6363] to-[#f5d4d4] px-7 py-4 text-base font-semibold text-white shadow-[0_18px_60px_rgba(243,36,36,0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_120px_rgba(243,36,36,0.3)]"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded bg-gradient-to-r from-poke via-pokeSoft to-white/80 px-7 py-4 text-base font-semibold text-white shadow-[0_18px_60px_rgb(var(--color-accent-rgb)_/_0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_120px_rgb(var(--color-accent-rgb)_/_0.3)]"
               >
                 <span className="relative z-10">Start Adventure</span>
                 <span className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.25),transparent_45%)] opacity-0 transition duration-500 group-hover:opacity-100" />
@@ -139,7 +139,7 @@ function Home() {
                     onClick={() => setSelectedStarter(starter)}
                     className={`group relative overflow-hidden rounded-lg border p-5 text-left transition duration-300 ${
                       isSelected
-                        ? 'border-poke/70 bg-poke/10 shadow-[0_0_40px_rgba(243,36,36,0.18)]'
+                        ? 'border-poke/70 bg-poke/10 shadow-[0_0_40px_rgb(var(--color-accent-rgb)_/_0.18)]'
                         : 'border-white/10 bg-white/5 hover:border-poke/40 hover:bg-white/10'
                     }`}
                   >
@@ -204,7 +204,7 @@ function Home() {
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-poke to-[#ff9c9c]"
+                        className="h-full rounded-full bg-gradient-to-r from-poke to-pokeSoft"
                         style={{ width: `${Math.min((value / 85) * 100, 100)}%` }}
                       />
                     </div>
