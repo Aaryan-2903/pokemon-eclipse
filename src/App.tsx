@@ -23,8 +23,8 @@ function AnimatedRoutes() {
     const scrimElement = scrimRef.current;
     if (!routeElement) return;
 
-    gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'blur(0px)' });
-    gsap.set(scrimElement, { autoAlpha: 0 });
+    gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'none', clearProps: 'transform' });
+    gsap.set(scrimElement, { autoAlpha: 0, opacity: 0 });
   }, []);
 
   useEffect(() => {
@@ -49,15 +49,17 @@ function AnimatedRoutes() {
 
     queuedLocation.current = location;
     const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    const exitDistance = isMobile ? -18 : -34;
+    const exitDistance = isMobile ? -10 : -18;
 
     transitionTimeline.current?.kill();
     gsap.killTweensOf([routeElement, scrimElement]);
+    gsap.set(routeElement, { opacity: 1, filter: 'none' });
     gsap.set(scrimElement, { autoAlpha: 0, opacity: 0 });
 
     const timeline = gsap.timeline({
       onComplete: () => {
-        gsap.set(scrimElement, { autoAlpha: 0 });
+        gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'none', clearProps: 'transform,filter,opacity' });
+        gsap.set(scrimElement, { autoAlpha: 0, opacity: 0, clearProps: 'opacity,visibility' });
         transitionTimeline.current = null;
       },
     });
@@ -65,16 +67,16 @@ function AnimatedRoutes() {
 
     timeline
       .set(scrimElement, { autoAlpha: 1 })
-      .to(scrimElement, { opacity: 0.38, duration: 0.18, ease: 'power2.out' }, 0)
+      .to(scrimElement, { opacity: 0.16, duration: 0.08, ease: 'power2.out' }, 0)
       .to(
         routeElement,
         {
           x: exitDistance,
-          y: isMobile ? 6 : 10,
-          opacity: 0,
-          filter: 'blur(8px)',
-          duration: 0.26,
-          ease: 'power3.inOut',
+          y: isMobile ? 2 : 4,
+          opacity: 0.65,
+          filter: 'blur(3px)',
+          duration: 0.1,
+          ease: 'power2.out',
         },
         0
       )
@@ -84,13 +86,14 @@ function AnimatedRoutes() {
           queuedLocation.current = null;
         }
         window.scrollTo({ top: 0, behavior: 'instant' });
-      }, 0.26)
-      .to(scrimElement, { opacity: 0, duration: 0.34, ease: 'power2.out' }, 0.26);
+      }, 0.1)
+      .to(scrimElement, { opacity: 0, duration: 0.14, ease: 'power2.out' }, 0.1);
 
     return () => {
       timeline.kill();
       transitionTimeline.current = null;
-      gsap.set(scrimElement, { autoAlpha: 0 });
+      gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'none', clearProps: 'transform,filter,opacity' });
+      gsap.set(scrimElement, { autoAlpha: 0, opacity: 0, clearProps: 'opacity,visibility' });
     };
   }, [location]);
 
@@ -99,29 +102,29 @@ function AnimatedRoutes() {
     if (!routeElement) return;
 
     if (!hasMountedRef.current) {
-      gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'blur(0px)' });
+      gsap.set(routeElement, { opacity: 1, x: 0, y: 0, filter: 'none', clearProps: 'transform' });
       hasMountedRef.current = true;
       return;
     }
 
     const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    const enterDistance = isMobile ? 20 : 38;
+    const enterDistance = isMobile ? 10 : 18;
 
     gsap.fromTo(
       routeElement,
       {
         x: enterDistance,
-        y: isMobile ? 6 : 10,
-        opacity: 0,
-        filter: 'blur(8px)',
+        y: isMobile ? 2 : 4,
+        opacity: 0.9,
+        filter: 'blur(3px)',
       },
       {
         x: 0,
         y: 0,
         opacity: 1,
-        filter: 'blur(0px)',
-        duration: 0.34,
-        ease: 'expo.out',
+        filter: 'none',
+        duration: 0.18,
+        ease: 'power2.out',
         clearProps: 'transform,filter,opacity',
       }
     );
@@ -129,7 +132,7 @@ function AnimatedRoutes() {
 
   return (
     <>
-      <div ref={routeRef} className="min-h-screen will-change-transform">
+      <div ref={routeRef} className="min-h-screen w-full max-w-full overflow-x-hidden will-change-transform">
         <Routes location={displayLocation}>
           <Route path="/" element={<Home />} />
           <Route path="/pokedex" element={<Pokedex />} />
@@ -148,9 +151,9 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <div className="min-h-screen bg-night text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-night text-white">
       <Navbar />
-      <main className="overflow-x-hidden">
+      <main className="w-full max-w-full overflow-x-hidden">
         <AnimatedRoutes />
       </main>
     </div>

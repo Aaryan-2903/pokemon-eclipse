@@ -77,7 +77,7 @@ function PokemonDetailModal({
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex max-w-full items-center justify-center overflow-x-hidden bg-black/75 px-4 py-6 backdrop-blur-md"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           animateClose();
@@ -89,10 +89,10 @@ function PokemonDetailModal({
     >
       <div
         ref={panelRef}
-        className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(243,36,36,0.18),transparent_26%),linear-gradient(145deg,#080d18_0%,#101827_55%,#05070d_100%)] p-5 shadow-[0_30px_140px_rgba(0,0,0,0.55)] sm:p-8"
+        className="max-h-[92vh] w-full max-w-5xl overflow-x-hidden overflow-y-auto rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(243,36,36,0.18),transparent_26%),linear-gradient(145deg,#080d18_0%,#101827_55%,#05070d_100%)] p-5 shadow-[0_30px_140px_rgba(0,0,0,0.55)] sm:p-8"
       >
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
             <p className="text-sm uppercase tracking-[0.24em] text-poke">#{pokemon.id.toString().padStart(3, '0')}</p>
             <h2 id="pokemon-modal-title" className="mt-3 text-4xl font-semibold capitalize text-white sm:text-5xl">
               {pokemon.name}
@@ -200,17 +200,17 @@ function Pokedex() {
   }, [errorMessage, loadingList, loadingResults, results.length, query]);
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-16">
-      <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-glow sm:p-8">
+    <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+      <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-glow sm:p-8">
         <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm uppercase tracking-[0.24em] text-poke">Pokedex</p>
             <h1 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">Search Pokemon with real PokeAPI data</h1>
             <p className="mt-3 max-w-xl text-slate-300">
               Lookup Pokemon, view official artwork, types, stats, and experience polished loading and error states.
             </p>
           </div>
-          <div className="max-w-md w-full">
+          <div className="w-full max-w-md">
             <label htmlFor="pokemon-search" className="sr-only">
               Search Pokemon
             </label>
@@ -256,11 +256,11 @@ function Pokedex() {
                   aria-label={`Open details for ${pokemon.name}`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm uppercase tracking-[0.24em] text-slate-500">#{pokemon.id.toString().padStart(3, '0')}</p>
                       <h2 className="mt-3 text-2xl font-semibold text-white capitalize">{pokemon.name}</h2>
                     </div>
-                    <div className="rounded-3xl bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-200 shadow-inner">
+                    <div className="max-w-[11rem] shrink-0 truncate rounded-3xl bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 shadow-inner sm:max-w-none sm:tracking-[0.22em]">
                       {pokemon.types.map((typeEntry) => typeEntry.type.name).join(' / ')}
                     </div>
                   </div>

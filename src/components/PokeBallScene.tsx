@@ -175,7 +175,7 @@ function PokeBallScene() {
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,_rgba(255,255,255,0.09),transparent_33%),radial-gradient(circle_at_50%_68%,_rgba(243,36,36,0.14),transparent_32%),linear-gradient(180deg,#020712_0%,#07101d_58%,#030509_100%)] shadow-[0_0_140px_rgba(243,36,36,0.18)]"
+      className="relative h-full w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_42%,_rgba(255,255,255,0.09),transparent_33%),radial-gradient(circle_at_50%_68%,_rgba(243,36,36,0.14),transparent_32%),linear-gradient(180deg,#020712_0%,#07101d_58%,#030509_100%)] shadow-[0_0_140px_rgba(243,36,36,0.18)]"
       onPointerMove={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
         const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
@@ -193,7 +193,13 @@ function PokeBallScene() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.08),transparent_18%)]" />
       </div>
 
-      <Canvas shadows dpr={[1, 1.5]} camera={{ position: [0, 0, 6.15], fov: 35 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+      <Canvas
+        className="max-w-full"
+        shadows
+        dpr={[1, 1.5]}
+        camera={{ position: [0, 0, 6.15], fov: 35 }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+      >
         <color attach="background" args={['#050c16']} />
         <Suspense fallback={null}>
           <Environment preset="city" background={false} environmentIntensity={1.35} />

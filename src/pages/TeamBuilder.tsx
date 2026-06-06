@@ -80,23 +80,23 @@ function TeamBuilder() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-12 lg:px-10 lg:py-16">
+    <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
       <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm uppercase tracking-[0.24em] text-poke">Team Builder</p>
           <h1 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">Build your perfect squad.</h1>
           <p className="mt-3 max-w-2xl text-slate-300">
             Search Pokemon, add up to six partners, and keep your team saved between visits.
           </p>
         </div>
-        <div className="rounded-[1.25rem] border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
+        <div className="w-full rounded-[1.25rem] border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300 md:w-auto">
           <span className="font-semibold text-white">{team.length}</span> / 6 team slots filled
         </div>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="space-y-6">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-glow sm:p-8">
+      <div className="grid min-w-0 gap-8 xl:grid-cols-[0.92fr_1.08fr]">
+        <div className="min-w-0 space-y-6">
+          <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-glow sm:p-8">
             <label htmlFor="team-search" className="text-sm uppercase tracking-[0.22em] text-slate-400">
               Search Pokemon
             </label>
@@ -109,7 +109,7 @@ function TeamBuilder() {
             />
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
+          <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="text-xl font-semibold text-white">Search Results</h2>
               <p className="text-sm text-slate-400">{isLoading ? 'Loading...' : `${results.length} shown`}</p>
@@ -162,8 +162,8 @@ function TeamBuilder() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
+        <div className="min-w-0 space-y-6">
+          <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h2 className="text-xl font-semibold text-white">Your Team</h2>
               <button
@@ -216,7 +216,7 @@ function TeamBuilder() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
+          <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-white">Team Stats</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {teamTotals.map((stat) => (

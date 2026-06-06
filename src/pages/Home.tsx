@@ -60,16 +60,16 @@ function Home() {
   }, []);
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_10%,_rgba(243,36,36,0.2),transparent_22%),radial-gradient(circle_at_76%_48%,_rgba(64,91,210,0.18),transparent_28%),linear-gradient(180deg,#030509_0%,#07101d_45%,#030509_100%)]">
+    <section className="relative min-h-screen w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_10%,_rgba(243,36,36,0.2),transparent_22%),radial-gradient(circle_at_76%_48%,_rgba(64,91,210,0.18),transparent_28%),linear-gradient(180deg,#030509_0%,#07101d_45%,#030509_100%)]">
       <div className="pointer-events-none absolute inset-0 opacity-75">
         <div className="absolute left-8 top-16 h-24 w-24 rounded-full bg-poke/20 blur-3xl animate-float-slow" />
         <div className="absolute right-8 top-32 h-20 w-20 rounded-full bg-blue-400/20 blur-3xl animate-float" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px] opacity-20" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-5 py-16 sm:px-8 lg:px-10">
-        <div className="grid min-h-[calc(100vh-5rem)] gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
-          <div ref={heroRef} className="space-y-7 pt-10 text-center lg:pt-0 lg:text-left">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center overflow-hidden px-5 py-16 sm:px-8 lg:px-10">
+        <div className="grid min-h-[calc(100vh-5rem)] min-w-0 gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
+          <div ref={heroRef} className="min-w-0 space-y-7 pt-10 text-center lg:pt-0 lg:text-left">
             <div className="hero-badge inline-flex items-center justify-center rounded border border-poke/30 bg-black/30 px-4 py-2 text-xs uppercase tracking-[0.22em] text-poke shadow-[0_0_24px_rgba(243,36,36,0.25)] backdrop-blur-xl sm:text-sm">
               Night signal detected
             </div>
@@ -100,7 +100,7 @@ function Home() {
               </a>
             </div>
 
-            <div ref={cardsRef} className="grid gap-3 sm:grid-cols-3">
+            <div ref={cardsRef} className="grid min-w-0 gap-3 sm:grid-cols-3">
               {[
                 { label: 'Region', value: 'Eclipse Coast' },
                 { label: 'Signal', value: 'Crimson Pulse' },
@@ -114,12 +114,12 @@ function Home() {
             </div>
           </div>
 
-          <div className="relative mx-auto h-[56vh] min-h-[390px] w-full max-w-5xl sm:h-[68vh] lg:h-[calc(100vh-7rem)] lg:min-h-[620px]">
+          <div className="relative mx-auto h-[56vh] min-h-[390px] w-full max-w-5xl overflow-hidden sm:h-[68vh] lg:h-[calc(100vh-7rem)] lg:min-h-[620px]">
             <PokeBallScene />
           </div>
         </div>
 
-        <div id="starters" className="mt-12 border-t border-white/10 bg-black/15 px-4 py-12 shadow-[0_0_80px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-8">
+        <div id="starters" className="mt-12 w-full max-w-full overflow-hidden border-t border-white/10 bg-black/15 px-4 py-12 shadow-[0_0_80px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-8">
           <div className="mb-10 text-center">
             <p className="text-sm uppercase tracking-[0.24em] text-poke">Choose Your Starter</p>
             <h2 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">Pick the partner for your first journey.</h2>
@@ -128,7 +128,7 @@ function Home() {
             </p>
           </div>
 
-          <div className="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid min-w-0 gap-8 xl:grid-cols-[1.08fr_0.92fr]">
             <div className="grid gap-4 sm:grid-cols-3">
               {starters.map((starter) => {
                 const isSelected = starter.name === selectedStarter.name;
@@ -168,13 +168,13 @@ function Home() {
               })}
             </div>
 
-            <div className="rounded-lg border border-white/10 bg-night/95 p-8 shadow-[0_0_80px_rgba(0,0,0,0.2)]">
-              <div className="flex items-center justify-between gap-4">
-                <div>
+            <div className="rounded-lg border border-white/10 bg-night/95 p-5 shadow-[0_0_80px_rgba(0,0,0,0.2)] sm:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="min-w-0">
                   <p className="text-sm uppercase tracking-[0.22em] text-poke">Selected Pokemon</p>
                   <h3 className="mt-3 text-3xl font-semibold text-white">{selectedStarter.name}</h3>
                 </div>
-                <div className="rounded bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-200">
+                <div className="shrink-0 rounded bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-200">
                   #{selectedStarter.id.toString().padStart(3, '0')}
                 </div>
               </div>
