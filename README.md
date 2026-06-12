@@ -1,180 +1,291 @@
-<<<<<<< HEAD
-# Pokémon 3D Website
+# Pokemon Eclipse
 
-A dark Pokémon-inspired React app with a 3D Poké Ball hero, smooth animations, and a mock Pokedex.
+A modern Pokémon-inspired web experience built with React, TypeScript, and Vite. Pokemon Eclipse combines interactive Pokémon tools with a long-term vision of becoming a full-featured browser-based Pokémon RPG set in the Eclipse Region.
 
-## Available scripts
+## Badges
 
-- `npm install`
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
-=======
-# ⚡ Pokemon Eclipse
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-5-blue?logo=vite)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-blue?logo=tailwindcss)
+![PokéAPI](https://img.shields.io/badge/PokéAPI-Integrated-blue)
+![Responsive](https://img.shields.io/badge/Responsive-320px%E2%80%934K-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-A modern Pokémon-themed 3D web experience built with React, TypeScript, Tailwind CSS, GSAP, React Three Fiber, and PokéAPI.
+## Live Demo
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-Fast-646CFF?logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Active-success)
+**[pokemon-eclipse.vercel.app](https://pokemon-eclipse.vercel.app/)**
 
 ---
 
-## 🎮 Overview
+## Project Overview
 
-Pokemon Eclipse is a modern Pokémon-inspired web application that combines immersive design, smooth animations, and interactive features into a single experience.
+Pokemon Eclipse is a web application that provides a modern interface for exploring Pokémon data, building competitive teams, engaging in turn-based battles, and testing your knowledge through an interactive challenge system. The project demonstrates professional frontend development with TypeScript, 3D graphics, responsive design, and API integration.
 
-Built using modern frontend technologies, the project features a 3D animated hero section, real-time Pokémon data from PokéAPI, a custom Team Builder system, and responsive UI designed for both desktop and mobile users.
+This is an active portfolio project that is evolving toward a full-featured browser-based Pokémon RPG. The current release focuses on polished gameplay mechanics and responsive user experience. Future phases will introduce an open-world adventure mode set in the Eclipse Region with exploration, NPC interaction, progression systems, and a complete campaign narrative.
 
-The goal of the project was to explore advanced frontend development concepts including 3D rendering, API integration, animations, state management, and responsive design while creating an engaging Pokémon-themed experience.
+### Current Application Capabilities
 
----
-
-## ✨ Features
-
-- 🌌 Interactive 3D Poké Ball Hero Section
-- ⚡ Smooth GSAP Animations and Transitions
-- 🔍 Real-Time Pokémon Search
-- 📖 Interactive Pokédex
-- 🐢 Starter Pokémon Selection
-- 🧩 Team Builder System
-- 💾 Local Storage Persistence
-- 📱 Fully Responsive Design
-- 🎨 Modern Pokémon-Themed UI
-- 🚀 Fast Performance with Vite
-- 🛡 TypeScript-Powered Development
+- **Interactive Pokédex**: Real-time search across 1,000+ Pokémon with official artwork, stats, and abilities
+- **Team Builder**: Compose and persist 6-Pokémon teams with type coverage analysis
+- **Battle Arena**: Turn-based combat system with damage simulation and statistics tracking
+- **Challenge Mode**: Timed trivia game with progressive difficulty tiers
+- **Responsive Experience**: Optimized layouts from mobile phones (320px) to 4K displays
+- **Modern UI**: Dark-themed interface with custom color schemes and smooth animations
 
 ---
 
-## 🛠 Tech Stack
+## Current Features
 
-### Frontend
+### Core Functionality
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
+- **Interactive Pokédex**: Search and view detailed information for 1,000+ Pokémon
+- **Team Builder**: Create, save, and manage competitive 6-Pokémon teams
+- **Battle Arena**: Turn-based combat with opponent AI and damage calculations
+- **Challenge Mode**: Timed silhouette identification game with three difficulty levels
+- **3D Graphics**: Interactive 3D model rendering with smooth animations
+- **Music System**: Procedurally generated background music with toggle control
+- **Theme Switching**: Dark and light theme options with persistent storage
+- **Responsive Design**: Fully optimized for phones, tablets, and desktop displays
 
-### 3D & Animations
+### Technical Features
 
-- Three.js
-- React Three Fiber
-- Drei
-- GSAP
-
-### Data Source
-
-- PokéAPI
+- TypeScript for full type safety with zero runtime type errors
+- Responsive grid layouts tested across 8+ device breakpoints (320px to 4K)
+- Touch-friendly interface with minimum 44px interaction targets
+- No horizontal scrolling on any device size
+- 60fps animations and transitions
+- Local storage persistence for teams and user preferences
 
 ---
 
-## 🚀 Getting Started
+## Responsive Design
 
-### Clone the Repository
+The application is optimized for all device sizes with adaptive layouts and touch-friendly interfaces.
+
+| Device | Breakpoint | Layout | Navigation |
+|--------|-----------|--------|-----------|
+| Small Phone | 320px - 374px | Single-column, stacked cards | Hamburger menu |
+| Phone | 375px - 639px | Single-column, optimized spacing | Hamburger menu |
+| Tablet | 640px - 1023px | 2-column grid, dual panels | Full navigation |
+| Laptop | 1024px - 1919px | 3-column grid, expanded layout | Full navigation |
+| Desktop 4K | 1920px+ | Full-width, optimized for cinema displays | Full navigation |
+
+**Key Requirements:**
+- All interactive elements are 44px minimum (WCAG AA standard)
+- Zero horizontal scrolling at any breakpoint
+- 60fps animations on mobile devices
+- Touch gestures optimized for all screen sizes
+
+---
+
+## Story Overview: The Eclipse Region
+
+### Setting
+
+A celestial event known as the Great Eclipse plunges the Eclipse Region into darkness. This phenomenon awakens Eclipse Shards—fragments of crystalline energy scattered across the land—which corrupt wild Pokémon and attract those seeking power.
+
+### Characters
+
+| Character | Role |
+|-----------|------|
+| **Professor Nova** | Lead researcher investigating the Eclipse phenomenon |
+| **Kai** | Childhood rival and fellow trainer |
+| **Team Umbra** | Organization harvesting Eclipse Shards for their own purposes |
+| **Eclipseon** | Legendary Pokémon tied to the Eclipse and the region's fate |
+
+### The Quest
+
+As a trainer entering this darkened land, your objectives are to:
+
+1. Uncover the mystery of the Great Eclipse and the Eclipse Shards
+2. Build a strong team of Pokémon to face the challenges ahead
+3. Discover Team Umbra's plans and their connection to the Eclipse
+4. Encounter Eclipseon and determine the region's future
+
+---
+
+## Future Vision
+
+Pokemon Eclipse is evolving from a feature-rich demonstration into a full-featured browser-based Pokémon RPG. The long-term roadmap includes adventure mode exploration, complete progression systems, multiplayer features, and mobile platform support.
+
+### Planned Major Systems
+
+**Adventure Mode & Exploration**
+- Open-world Eclipse Region exploration
+- Dynamic wild Pokémon encounters
+- NPC dialogue system with branching conversations
+- Multiple towns and route networks
+- Environmental storytelling and discovery
+
+**Progression & Battle Systems**
+- XP-based leveling and Pokémon growth
+- Evolution chains with multiple evolution paths
+- Comprehensive move learning and move sets
+- Trainer battles with AI decision-making
+- Gym Leaders with signature team compositions
+
+**Game Depth**
+- Complete inventory system
+- Day/night cycle affecting game events and spawns
+- Dynamic weather system with gameplay implications
+- Item economy and merchant shops
+- Pokémon catching and wild encounter mechanics
+
+**RPG Campaign**
+- Team Umbra story questline
+- Gym badge progression system
+- Elite Four challenge
+- Legendary Pokémon encounters
+- Post-game content and superbosses
+
+**Platform Support**
+- Gamepad and controller support (Xbox, PlayStation, Nintendo Switch)
+- Mobile touch controls and virtual joystick
+- Firebase authentication and cloud saves
+- Progressive Web App (PWA) capabilities
+- Native mobile app versions (iOS/Android)
+
+---
+
+## Technology Stack
+
+### Current Architecture
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Frontend Framework | React 19 | Component-based UI |
+| Language | TypeScript | Type-safe code |
+| Build Tool | Vite 5 | Fast development and production builds |
+| Styling | Tailwind CSS | Responsive utility-first CSS |
+| 3D Graphics | Three.js, React Three Fiber | Interactive 3D rendering |
+| Animations | GSAP | Smooth transitions and effects |
+| Data Source | PokéAPI | Real-time Pokémon data |
+| State Management | React Hooks | Local state management |
+| Storage | Local Storage | Persistent user data |
+| Audio | Web Audio API | Procedural music generation |
+
+### Planned Technologies
+
+- **Phaser.js**: 2D game engine for adventure and battle systems
+- **Firebase**: Authentication, cloud storage, and cloud functions
+- **WebGL Shaders**: Advanced visual effects and post-processing
+- **Service Workers**: Offline support and PWA capabilities
+
+---
+
+## Roadmap
+
+### Completed
+
+- Interactive Pokédex with PokéAPI integration
+- 6-Pokémon team builder with persistence
+- Turn-based battle arena with combat simulation
+- Challenge mode with difficulty progression
+- Fully responsive design across all breakpoints
+- Theme switching system
+- Procedural music generation
+- Mobile hamburger navigation
+- Accessibility compliance (WCAG AA)
+
+### In Progress
+
+- RPG design documentation and planning
+- Adventure mode foundation
+- NPC dialogue system architecture
+
+### Planned
+
+**Version 2.0: Adventure Foundation**
+- Open-world Eclipse Region map
+- Wild Pokémon encounter system
+- Comprehensive NPC dialogue trees
+- Trainer battle encounters
+- Environmental exploration mechanics
+
+**Version 2.5: Progression Systems**
+- Experience points and leveling
+- Pokémon evolution system
+- Move learning and move sets
+- Item inventory system
+- Shop and merchant system
+
+**Version 3.0: Campaign Content**
+- Gym Leaders and badge system
+- Elite Four challenge
+- Team Umbra story campaign
+- Legendary Pokémon encounters
+- Day/night cycle and weather system
+
+**Version 3.5: Platform Expansion**
+- Gamepad and controller support
+- Mobile touch controls
+- Firebase authentication
+- Cloud save system
+- PWA capabilities
+
+---
+
+## Getting Started
+
+### Requirements
+
+- Node.js 18 or later
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Aaryan-2903/pokemon-eclipse.git
+   cd pokemon-eclipse
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   Open http://localhost:5173 in your browser.
+
+### Build & Deploy
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/pokemon-eclipse.git
-cd pokemon-eclipse
-```
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Start Development Server
-
-```bash
-npm run dev
-```
-
-Open the local development URL shown in your terminal.
-
----
-
-## 🏗 Production Build
-
-Build the application:
-
-```bash
+# Production build
 npm run build
-```
 
-Preview the production build:
-
-```bash
+# Preview production build
 npm run preview
 ```
 
----
-
-## 📂 Project Structure
-
-```text
-src/
-├── components/
-├── pages/
-├── hooks/
-├── data/
-├── assets/
-├── App.tsx
-├── main.tsx
-└── index.css
-```
+The build output is optimized and ready for deployment to any static hosting service.
 
 ---
 
-## 🎯 Challenges Solved
+## Developer
 
-During development, several key challenges were addressed:
+**Aaryan Mandal**
 
-- Integrating real-time Pokémon data from PokéAPI
-- Building a responsive and mobile-friendly UI
-- Creating smooth page transitions with GSAP
-- Managing application state efficiently
-- Implementing a Team Builder system
-- Developing a Pokémon-themed user experience
-- Working with modern React and TypeScript patterns
-- Optimizing performance while using animations and 3D elements
+A developer interested in interactive web experiences, game development, and modern frontend engineering. Pokemon Eclipse serves as an exploration of full-stack web development concepts, API integration, 3D graphics, and responsive design.
 
----
+### Connect
 
-## 🌟 Future Improvements
-
-Planned enhancements include:
-
-- Pokémon Battle Arena
-- Trainer Profile System
-- Pokémon Comparison Tool
-- Evolution Chain Explorer
-- Sound Effects & Background Music
-- Advanced 3D Interactions
-- Team Sharing via URL
-- Achievement & Badge System
+- GitHub: https://github.com/Aaryan-2903
+- LinkedIn: https://www.linkedin.com/in/aryan-mandal-94b66b278
+- Instagram: https://www.instagram.com/7.aary4n
+- X: https://x.com/aryanmandal2907
+- Email: alonexcyrax@gmail.com
 
 ---
 
-## 🌐 Live Demo
+## License
 
-https://pokemon-eclipse.vercel.app/
+Pokemon Eclipse is distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
+### Disclaimer
 
----
-
-## 👨‍💻 Author
-
-**Aaryan**
-
-GitHub: https://github.com/Aaryan-2903
-
-Built as a frontend development and portfolio project to explore modern web technologies and interactive user experiences.
-
----
-
-## ⭐ Support
-
-If you enjoyed this project, consider giving the repository a star. It helps support future improvements and motivates continued development.
->>>>>>> 8a82d5bc2f94a0b03cd15d1bb77bcf6b5ca312b0
+Pokemon Eclipse is a fan-made educational and portfolio project created for learning, experimentation, and web development purposes. It is not affiliated with The Pokémon Company, Nintendo, or Game Freak. All Pokémon intellectual property belongs to their respective owners.

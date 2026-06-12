@@ -58,9 +58,9 @@ Eclipseon
 
 ## Main Story
 
-# Pokémon Eclipse — Main Story
+## Pokémon Eclipse — Main Story
 
-## Prologue
+### Prologue
 
 Many years ago, an event known as **The Great Eclipse** occurred in the Eclipse Region.
 
@@ -76,7 +76,7 @@ But the Pokémon never did.
 
 ---
 
-## Chapter 1 — The Beginning
+### Chapter 1 — The Beginning
 
 The player lives in **Eclipse Town**.
 
@@ -90,7 +90,7 @@ Both begin their journeys to investigate the region.
 
 ---
 
-## Chapter 2 — The Strange Pokémon
+### Chapter 2 — The Strange Pokémon
 
 As the player travels through Route 1 and the nearby forest, wild Pokémon begin acting aggressively.
 
@@ -104,7 +104,7 @@ The phenomenon is spreading.
 
 ---
 
-## Chapter 3 — Team Umbra
+### Chapter 3 — Team Umbra
 
 A mysterious organization known as **Team Umbra** emerges.
 
@@ -120,7 +120,7 @@ Nobody knows their true identity.
 
 ---
 
-## Chapter 4 — The Lost Civilization
+### Chapter 4 — The Lost Civilization
 
 While collecting badges, the player discovers ancient ruins hidden throughout the region.
 
@@ -144,7 +144,7 @@ Their warning was buried in the ruins.
 
 ---
 
-## Chapter 5 — The Rival's Fall
+### Chapter 5 — The Rival's Fall
 
 Kai becomes obsessed with becoming stronger.
 
@@ -160,7 +160,7 @@ The friendship between the player and Kai begins to fracture.
 
 ---
 
-## Chapter 6 — The Awakening
+### Chapter 6 — The Awakening
 
 Team Umbra gathers Eclipse Shards from across the region.
 
@@ -178,7 +178,7 @@ Entire routes are altered by Eclipse Energy.
 
 ---
 
-## Chapter 7 — The Truth
+### Chapter 7 — The Truth
 
 The player learns a shocking secret.
 
@@ -196,7 +196,7 @@ Now their conflict threatens the entire region.
 
 ---
 
-## Chapter 8 — The Eclipse Battle
+### Chapter 8 — The Eclipse Battle
 
 The player, Kai, and Professor Nova travel to the Eclipse Temple.
 
@@ -214,7 +214,7 @@ The player can either capture Eclipseon or restore its power and allow it to rem
 
 ---
 
-## Chapter 9 — Pokémon League
+### Chapter 9 — Pokémon League
 
 With balance restored, the region begins to recover.
 
@@ -228,7 +228,7 @@ Upon victory, the player becomes the first trainer recognized as:
 
 ---
 
-## Post-Game
+### Post-Game
 
 New areas unlock.
 
