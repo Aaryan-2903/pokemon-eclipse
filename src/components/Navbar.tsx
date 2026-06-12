@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 
 const links = [
@@ -91,14 +91,27 @@ function createMusicEngine() {
 function Navbar() {
   const [theme, setTheme] = useState<ThemeName>(() => getInitialTheme());
   const [musicEnabled, setMusicEnabled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const musicEngineRef = useRef<MusicEngine | null>(null);
   const musicStopTimeoutRef = useRef<number | null>(null);
+  const location = useLocation();
   const isMidnightBlue = theme === 'midnight-blue';
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  const navMenuClasses = menuOpen ? 'flex' : 'hidden';
+  const responsiveNavClass = `${navMenuClasses} w-full flex-col gap-2 md:flex md:flex-row md:items-center`;
+  const getNavLinkClass = (isActive: boolean) =>
+    `inline-flex w-full justify-center min-h-[44px] items-center rounded-full px-4 py-3 text-center transition ${
+      isActive ? 'bg-white/10 text-white shadow-glow' : 'hover:bg-white/5'
+    } md:w-auto`;
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === 'eclipse-red' ? 'midnight-blue' : 'eclipse-red'));
@@ -171,34 +184,42 @@ function Navbar() {
         <div className="min-w-0">
           <span className="text-lg font-semibold tracking-[0.18em] text-poke">POKE 3D</span>
         </div>
-        <div className="flex w-full max-w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-end">
-          <nav className="flex max-w-full flex-wrap items-center gap-2 text-sm font-medium text-slate-300 md:gap-3">
-            {links.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                className={({ isActive }) =>
-                  `rounded-full px-3 py-2 transition sm:px-4 ${
-                    isActive ? 'bg-white/10 text-white shadow-glow' : 'hover:bg-white/5'
-                  }`
-                }
+        <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-end">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/90 shadow-glow transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-poke/40 md:hidden"
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation menu"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+          <div className={responsiveNavClass}>
+            <nav className="flex flex-col gap-2 text-sm font-medium text-slate-300 md:flex-row md:gap-3">
+              {links.map((link) => (
+                <NavLink
+                  key={link.path}
+                  to={link.path}
+                  className={({ isActive }) => getNavLinkClass(isActive)}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="flex flex-col items-stretch gap-2 md:ml-3 md:flex-row md:items-center">
+              <button
+                type="button"
+                onClick={toggleMusic}
+                className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-semibold uppercase tracking-[0.12em] shadow-glow transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-poke/40 ${
+                  musicEnabled
+                    ? 'border-poke/40 bg-poke/15 text-poke'
+                    : 'border-white/10 bg-white/5 text-slate-300'
+                }`}
+                aria-pressed={musicEnabled}
+                aria-label={musicEnabled ? 'Turn background music off' : 'Turn background music on'}
               >
-                {link.label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleMusic}
-              className={`inline-flex h-10 items-center justify-center gap-2 rounded-full border px-3 text-xs font-semibold uppercase tracking-[0.12em] shadow-glow transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-poke/40 sm:px-4 ${
-                musicEnabled
-                  ? 'border-poke/40 bg-poke/15 text-poke'
-                  : 'border-white/10 bg-white/5 text-slate-300'
-              }`}
-              aria-pressed={musicEnabled}
-              aria-label={musicEnabled ? 'Turn background music off' : 'Turn background music on'}
-            >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                 <path
                   d="M9 18V6l10-2v12"
@@ -215,7 +236,7 @@ function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-poke shadow-glow transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-poke/40"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-poke shadow-glow transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-poke/40"
               aria-label={`Switch to ${isMidnightBlue ? 'Eclipse Red' : 'Midnight Blue'} theme`}
               title={isMidnightBlue ? 'Eclipse Red' : 'Midnight Blue'}
             >
@@ -242,6 +263,7 @@ function Navbar() {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </header>
   );

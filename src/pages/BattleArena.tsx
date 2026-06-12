@@ -81,7 +81,7 @@ function PokemonBattleCard({
   return (
     <div
       ref={cardRef}
-      className={`min-h-[360px] overflow-hidden rounded-[2rem] border border-white/10 bg-night/95 p-5 shadow-glow sm:p-6 ${
+      className={`min-h-[320px] sm:min-h-[360px] overflow-hidden rounded-[2rem] border border-white/10 bg-night/95 p-5 shadow-glow sm:p-6 ${
         align === 'right' ? 'text-right' : 'text-left'
       }`}
     >
@@ -104,12 +104,12 @@ function PokemonBattleCard({
         />
       </div>
 
-      <div className="mt-8 flex min-h-[190px] items-center justify-center rounded-[1.5rem] bg-white/5 p-4">
+      <div className="mt-8 flex min-h-[180px] items-center justify-center rounded-[1.5rem] bg-white/5 p-4">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={pokemon?.name}
-            className="h-44 w-44 object-contain drop-shadow-[0_28px_70px_rgb(var(--color-accent-rgb)_/_0.24)] sm:h-56 sm:w-56"
+            className="h-40 w-40 max-w-full object-contain drop-shadow-[0_28px_70px_rgb(var(--color-accent-rgb)_/_0.24)] sm:h-56 sm:w-56"
           />
         ) : (
           <div className="text-sm text-slate-500">Select a Pokemon to enter the arena.</div>

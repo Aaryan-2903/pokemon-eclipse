@@ -109,15 +109,15 @@ function PokemonDetailModal({
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="flex min-h-[320px] items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/5 p-6 shadow-inner">
+          <div className="flex min-h-[20rem] items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/5 p-6 shadow-inner">
             {imageUrl ? (
               <img
                 src={imageUrl}
                 alt={pokemon.name}
-                className="h-72 w-72 object-contain drop-shadow-[0_30px_80px_rgb(var(--color-accent-rgb)_/_0.25)] sm:h-96 sm:w-96"
+                className="h-auto max-h-[24rem] w-full max-w-[18rem] object-contain drop-shadow-[0_30px_80px_rgb(var(--color-accent-rgb)_/_0.25)] sm:max-w-[22rem]"
               />
             ) : (
-              <div className="flex h-72 w-72 items-center justify-center rounded-3xl border border-white/10 bg-white/5 text-slate-500">No image</div>
+              <div className="flex h-40 w-full max-w-[18rem] items-center justify-center rounded-3xl border border-white/10 bg-white/5 text-slate-500">No image</div>
             )}
           </div>
 
