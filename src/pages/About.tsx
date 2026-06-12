@@ -1,6 +1,3 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-
 const techStack = [
   'React',
   'TypeScript',
@@ -69,59 +66,23 @@ const socialLinks = [
 ];
 
 function About() {
-  const pageRef = useRef<HTMLDivElement | null>(null);
-  const sectionsRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const pageNode = pageRef.current;
-    const sectionNode = sectionsRef.current;
-
-    if (!pageNode || !sectionNode) {
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      const timeline = gsap.timeline({ defaults: { duration: 0.75, ease: 'power3.out' } });
-
-      timeline.from(pageNode, {
-        opacity: 0,
-        y: 32,
-        scale: 0.98,
-        duration: 0.85,
-      });
-
-      timeline.from(
-        sectionNode.querySelectorAll('.animate-item'),
-        {
-          opacity: 0,
-          y: 24,
-          stagger: 0.12,
-        },
-        '-=0.5'
-      );
-    }, pageRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
       <div
-        ref={pageRef}
-        className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-[0_0_80px_rgba(243,36,36,0.12)] backdrop-blur-xl sm:p-8"
+        className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-[0_0_80px_rgba(243,36,36,0.12)] backdrop-blur-xl sm:p-8"
       >
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] xl:gap-14">
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.24em] text-poke">Developer Profile</p>
-              <h1 className="text-4xl font-semibold text-white sm:text-5xl">Aaryan Mandal</h1>
-              <p className="max-w-3xl text-slate-300 sm:text-lg">
-                Engineering student and aspiring full-stack developer passionate about web development, gaming,
-                interactive experiences, and Pokémon-inspired projects.
-              </p>
-            </div>
+        {/* subtle glow */}
+        <div className="absolute -left-16 -top-24 subtle-eclipse-glow" aria-hidden />
+        <div className="space-y-10 relative z-10">
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-night/95 p-6 shadow-[0_0_48px_rgba(243,36,36,0.1)]">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">Pokemon Eclipse Hero Section</p>
+            <h1 className="mt-3 text-4xl font-semibold text-white sm:text-5xl">Pokemon Eclipse</h1>
+            <p className="mt-4 max-w-3xl text-slate-300 sm:text-lg">
+              A flagship browser-based Pokémon experience built with React, TypeScript, TailwindCSS, GSAP, React Three Fiber,
+              and PokéAPI.
+            </p>
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="mt-8 grid gap-5 md:grid-cols-2">
               <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
                 <p className="text-xs uppercase tracking-[0.24em] text-poke">Flagship project</p>
                 <h2 className="mt-4 text-2xl font-semibold text-white">Pokemon Eclipse</h2>
@@ -139,115 +100,146 @@ function About() {
                 </p>
               </div>
             </div>
+          </div>
 
-            <div ref={sectionsRef} className="space-y-8">
-              <div className="animate-item rounded-[2rem] border border-white/10 bg-night/95 p-6 shadow-[0_0_48px_rgba(243,36,36,0.1)]">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.24em] text-poke">Bio</p>
-                    <h2 className="mt-3 text-2xl font-semibold text-white">Premium profile summary</h2>
-                  </div>
-                  <span className="inline-flex rounded-full bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/70 ring-1 ring-white/10">
-                    Pokemon Eclipse dark/red theme
-                  </span>
-                </div>
-                <p className="mt-6 max-w-3xl text-slate-300 leading-7">
-                  Pokemon Eclipse is my flagship project, built using React, TypeScript, TailwindCSS, GSAP,
-                  React Three Fiber, and PokéAPI. My goal is to continue expanding it into a complete browser-based Pokémon
-                  adventure experience while learning modern software development.
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-[0_0_48px_rgba(255,255,255,0.08)] backdrop-blur-xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">About Pokemon Eclipse</p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">Project overview</h2>
+            <p className="mt-5 max-w-3xl text-slate-300 leading-7">
+              Pokemon Eclipse is my flagship project, built using React, TypeScript, TailwindCSS, GSAP, React Three Fiber,
+              and PokéAPI. My goal is to continue expanding it into a complete browser-based Pokémon adventure experience while
+              learning modern software development.
+            </p>
+          </div>
+
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-night/95 p-6 shadow-[0_0_48px_rgba(243,36,36,0.12)]">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">Features</p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">Key experiences</h2>
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                <h3 className="text-xl font-semibold text-white">Interactive 3D Design</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  A polished dark/red aesthetic with smooth motion and engaging visuals.
                 </p>
               </div>
-
-              <div className="animate-item rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-[0_0_48px_rgba(255,255,255,0.08)] backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.24em] text-poke">Tech Stack</p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {techStack.map((tech) => (
-                    <span
-                      key={tech}
-                      className="inline-flex items-center rounded-3xl border border-white/10 bg-night/95 px-4 py-3 text-sm text-slate-100 shadow-[0_0_24px_rgba(255,255,255,0.04)]"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                <h3 className="text-xl font-semibold text-white">Responsive Gameplay</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  Browser-first features like a Pokédex and team builder designed for desktop and mobile experiences.
+                </p>
               </div>
-
-              <div className="animate-item rounded-[2rem] border border-white/10 bg-night/95 p-6 shadow-[0_0_48px_rgba(243,36,36,0.12)]">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.24em] text-poke">Connect With Me</p>
-                    <h2 className="mt-3 text-2xl font-semibold text-white">Modern social cards</h2>
-                  </div>
-                  <p className="text-sm text-slate-400">Open links in a new tab with subtle hover glow.</p>
-                </div>
-
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  {socialLinks.map((social) => (
-                    <a
-                      key={social.name}
-                      href={social.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 p-5 text-left transition duration-300 hover:-translate-y-1 hover:border-poke/40 hover:bg-white/10 hover:shadow-[0_0_32px_rgba(243,36,36,0.18)] active:scale-[0.98]"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-poke/10 text-poke transition duration-300 group-hover:bg-poke/15">
-                          {social.icon}
-                        </span>
-                        <span className="text-xs uppercase tracking-[0.24em] text-slate-400">{social.name}</span>
-                      </div>
-                      <div className="mt-5">
-                        <p className="text-lg font-semibold text-white">{social.name}</p>
-                        <p className="mt-2 text-sm leading-6 text-slate-300">{social.label}</p>
-                      </div>
-                    </a>
-                  ))}
-                </div>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                <h3 className="text-xl font-semibold text-white">Modern Web Tech</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  Built with React, TypeScript, TailwindCSS, GSAP, and React Three Fiber for speed and polish.
+                </p>
               </div>
             </div>
           </div>
 
-          <aside className="space-y-6">
-            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_72px_rgba(243,36,36,0.12)] backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.24em] text-poke">Profile card</p>
-                  <h2 className="mt-3 text-3xl font-semibold text-white">Aaryan Mandal</h2>
-                </div>
-                <span className="inline-flex rounded-full bg-poke/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-poke">
-                  Full-stack
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-[0_0_48px_rgba(255,255,255,0.08)] backdrop-blur-xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">Roadmap</p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">What&apos;s coming next</h2>
+            <div className="mt-6 space-y-4 text-slate-300">
+              <div className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                <span className="font-semibold">Completed</span>
+                <span className="text-green-300">Pokédex, Team Builder</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                <span className="font-semibold">In Progress</span>
+                <span className="text-yellow-300">Adventure Mode</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                <span className="font-semibold">Planned</span>
+                <span className="text-slate-300">Cloud Saves, Multiplayer</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-[0_0_48px_rgba(255,255,255,0.08)] backdrop-blur-xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">Tech Stack</p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">Built with modern tools</h2>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {techStack.map((tech) => (
+                <span
+                  key={tech}
+                  className="inline-flex items-center rounded-3xl border border-white/10 bg-night/95 px-4 py-3 text-sm text-slate-100 shadow-[0_0_24px_rgba(255,255,255,0.04)]"
+                >
+                  {tech}
                 </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="animate-item rounded-[2rem] border border-white/10 bg-night/95 p-6 shadow-[0_0_48px_rgba(243,36,36,0.12)]">
+            <p className="text-sm uppercase tracking-[0.24em] text-poke">Developer Profile</p>
+            <h2 className="mt-3 text-3xl font-semibold text-white">Aaryan Mandal</h2>
+            <p className="mt-4 max-w-3xl text-slate-300 leading-7">
+              Engineering student and aspiring full-stack developer passionate about web development, gaming,
+              interactive experiences, and Pokémon-inspired projects.
+            </p>
+            <div className="mt-8 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.24em] text-poke">Profile card</p>
+                    <h3 className="mt-3 text-2xl font-semibold text-white">Aaryan Mandal</h3>
+                  </div>
+                  <span className="inline-flex rounded-full bg-poke/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-poke">
+                    Full-stack
+                  </span>
+                </div>
+
+                <div className="mt-8 space-y-4 text-slate-300">
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Location</p>
+                    <p className="mt-2 text-sm text-white">India</p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Focus</p>
+                    <p className="mt-2 text-sm text-white">Web experiences, animation, and gameplay systems</p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Quote</p>
+                    <p className="mt-2 text-sm text-white">"Build playful, polished experiences with modern tools."</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-8 space-y-4 text-slate-300">
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Location</p>
-                  <p className="mt-2 text-sm text-white">India</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Focus</p>
-                  <p className="mt-2 text-sm text-white">Web experiences, animation, and gameplay systems</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Quote</p>
-                  <p className="mt-2 text-sm text-white">"Build playful, polished experiences with modern tools."</p>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm uppercase tracking-[0.24em] text-poke">Connect With Me</p>
+                    <h3 className="text-2xl font-semibold text-white">Modern social cards</h3>
+                    <p className="text-sm text-slate-400">Open links in a new tab with subtle hover glow.</p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {socialLinks.map((social) => (
+                      <a
+                        key={social.name}
+                        href={social.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 p-5 text-left transition duration-300 hover:-translate-y-1 hover:border-poke/40 hover:bg-white/10 hover:shadow-[0_0_32px_rgba(243,36,36,0.14)] active:scale-[0.98]"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-poke/10 text-poke transition duration-300 group-hover:bg-poke/15">
+                            {social.icon}
+                          </span>
+                          <span className="text-xs uppercase tracking-[0.24em] text-slate-400">{social.name}</span>
+                        </div>
+                        <div className="mt-5">
+                          <p className="text-lg font-semibold text-white">{social.name}</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-300">{social.label}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="rounded-[2rem] border border-white/10 bg-night/95 p-6 text-slate-300 shadow-[0_0_40px_rgba(255,255,255,0.06)]">
-              <p className="text-sm uppercase tracking-[0.24em] text-poke">Why this project</p>
-              <h2 className="mt-4 text-2xl font-semibold text-white">Pokemon Eclipse</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-300">
-                A flagship build blending web, 3D, and interactive design with a dark/red Pokémon aesthetic.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="rounded-3xl bg-poke/10 px-4 py-2 text-sm text-poke">React</span>
-                <span className="rounded-3xl bg-poke/10 px-4 py-2 text-sm text-poke">Three.js</span>
-                <span className="rounded-3xl bg-poke/10 px-4 py-2 text-sm text-poke">Interactive UX</span>
-              </div>
-            </div>
-          </aside>
+          </div>
         </div>
       </div>
     </section>

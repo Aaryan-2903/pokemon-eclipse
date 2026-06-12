@@ -1,6 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { gsap } from 'gsap';
 import PokeBallScene from '../components/PokeBallScene';
 
 const starters = [
@@ -31,33 +30,7 @@ const starters = [
 ];
 
 function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const ctaRef = useRef<HTMLAnchorElement>(null);
-  const cardsRef = useRef<HTMLDivElement>(null);
   const [selectedStarter, setSelectedStarter] = useState(starters[0]);
-
-  useLayoutEffect(() => {
-    const context = gsap.context(() => {
-      const timeline = gsap.timeline({
-        defaults: {
-          ease: 'power3.out',
-          clearProps: 'transform,opacity,visibility',
-        },
-      });
-
-      timeline.fromTo('.hero-badge', { y: 32, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.85 });
-      timeline.fromTo(titleRef.current, { y: 46, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1.05 }, '<0.1');
-      timeline.fromTo(subtitleRef.current, { y: 28, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8 }, '<0.15');
-      timeline.fromTo(ctaRef.current, { y: 24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8 }, '<0.2');
-      timeline.fromTo(cardsRef.current, { y: 24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.85 }, '<0.25');
-    }, heroRef);
-
-    return () => {
-      context.revert();
-    };
-  }, []);
 
   return (
     <section className="relative min-h-screen w-full max-w-full overflow-hidden bg-[radial-gradient(circle_at_50%_10%,_rgb(var(--color-accent-rgb)_/_0.2),transparent_22%),radial-gradient(circle_at_76%_48%,_rgba(64,91,210,0.18),transparent_28%),linear-gradient(180deg,#030509_0%,#07101d_45%,#030509_100%)]">
@@ -68,24 +41,23 @@ function Home() {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center overflow-hidden px-5 py-16 sm:px-8 lg:px-10">
-        <div className="grid min-h-[calc(100vh-5rem)] min-w-0 gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
-          <div ref={heroRef} className="min-w-0 space-y-7 pt-10 text-center lg:pt-0 lg:text-left">
+        <div className="grid min-h-[calc(100vh-5rem)] min-w-0 gap-8 lg:grid-cols-[0.45fr_0.55fr] lg:gap-16 lg:items-center">
+          <div className="min-w-0 space-y-7 pt-10 text-center lg:pt-0 lg:text-left lg:pr-8">
             <div className="hero-badge inline-flex items-center justify-center rounded border border-poke/30 bg-black/30 px-4 py-2 text-xs uppercase tracking-[0.22em] text-poke shadow-[0_0_24px_rgb(var(--color-accent-rgb)_/_0.25)] backdrop-blur-xl sm:text-sm">
               Night signal detected
             </div>
 
             <div className="space-y-5">
-              <h1 ref={titleRef} className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.92] text-white drop-shadow-[0_0_48px_rgb(var(--color-accent-rgb)_/_0.45)]">
+              <h1 className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.92] text-white drop-shadow-[0_0_48px_rgb(var(--color-accent-rgb)_/_0.45)]">
                 Pokemon <span className="bg-gradient-to-r from-poke via-white to-[#7da2ff] bg-clip-text text-transparent">Eclipse</span>
               </h1>
-              <p ref={subtitleRef} className="mx-auto max-w-2xl text-base leading-8 text-slate-300 sm:text-xl lg:mx-0">
+              <p className="mx-auto max-w-2xl text-base leading-8 text-slate-300 sm:text-xl lg:mx-0">
                 A midnight region wakes under crimson auroras. Choose your partner, step through the storm, and answer the call from the glowing Poke Ball.
               </p>
             </div>
 
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:justify-start">
               <Link
-                ref={ctaRef}
                 to="/pokedex"
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded bg-gradient-to-r from-poke via-pokeSoft to-white/80 px-7 py-4 text-base font-semibold text-white shadow-[0_18px_60px_rgb(var(--color-accent-rgb)_/_0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_120px_rgb(var(--color-accent-rgb)_/_0.3)]"
               >
@@ -100,7 +72,7 @@ function Home() {
               </a>
             </div>
 
-            <div ref={cardsRef} className="grid min-w-0 gap-3 sm:grid-cols-3">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-3">
               {[
                 { label: 'Region', value: 'Eclipse Coast' },
                 { label: 'Signal', value: 'Crimson Pulse' },
@@ -114,7 +86,7 @@ function Home() {
             </div>
           </div>
 
-          <div className="relative mx-auto h-[56vh] min-h-[390px] w-full max-w-5xl overflow-hidden sm:h-[68vh] lg:h-[calc(100vh-7rem)] lg:min-h-[620px]">
+          <div className="relative mx-auto h-[56vh] min-h-[390px] w-full overflow-hidden sm:h-[68vh] lg:h-[calc(100vh-7rem)] lg:min-h-[620px] lg:pl-6">
             <PokeBallScene />
           </div>
         </div>
