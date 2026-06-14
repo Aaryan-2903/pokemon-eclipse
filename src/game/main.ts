@@ -2,6 +2,7 @@ import { BootScene } from './BootScene';
 import { PreloadScene } from './PreloadScene';
 import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
+import { Route1Scene } from './Route1Scene';
 import { Types, Game } from 'phaser';
 
 const config: Types.Core.GameConfig = {
@@ -10,6 +11,10 @@ const config: Types.Core.GameConfig = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#2d2d2d',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -24,7 +29,8 @@ const config: Types.Core.GameConfig = {
         BootScene,
         PreloadScene,
         OverworldScene,
-        InteriorScene
+        InteriorScene,
+        Route1Scene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

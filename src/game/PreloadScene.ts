@@ -56,6 +56,9 @@ export class PreloadScene extends Scene {
         createNPC('npc_kai', 0xef4444);  // Red
         createNPC('npc_nurse', 0xf472b6); // Pink
         createNPC('npc_shopkeeper', 0x3b82f6); // Blue
+        createNPC('npc_youngster', 0x38bdf8); // Light blue
+        createNPC('npc_bugcatcher', 0x4ade80); // Green
+        createNPC('npc_traveler', 0x78350f); // Brown
 
         // Generate Portrait Placeholders
         const createPortrait = (key: string, color: number) => {
@@ -73,6 +76,9 @@ export class PreloadScene extends Scene {
         createPortrait('portrait_kai', 0xef4444);
         createPortrait('portrait_nurse', 0xf472b6);
         createPortrait('portrait_shopkeeper', 0x3b82f6);
+        createPortrait('portrait_youngster', 0x38bdf8);
+        createPortrait('portrait_bugcatcher', 0x4ade80);
+        createPortrait('portrait_traveler', 0x78350f);
 
         // Generate Starter Placeholders
         const createStarter = (key: string, color: number) => {
@@ -118,6 +124,15 @@ export class PreloadScene extends Scene {
         graphics.fillRect(16, 16, 4, 8);
         graphics.fillRect(48, 40, 4, 8);
         graphics.generateTexture('grass', 64, 64);
+        graphics.clear();
+
+        // Generate Tall Grass
+        graphics.fillStyle(0x166534, 1);
+        graphics.fillRect(0, 0, 64, 64);
+        graphics.fillStyle(0x14532d, 1);
+        graphics.fillRect(16, 16, 8, 16);
+        graphics.fillRect(40, 32, 8, 16);
+        graphics.generateTexture('tall_grass', 64, 64);
         graphics.clear();
 
         // Generate Dirt Path Pattern

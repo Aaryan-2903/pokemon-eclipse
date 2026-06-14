@@ -63,7 +63,9 @@ export class OverworldScene extends Scene {
 
         // Environment: Town Boundaries (Trees)
         for (let x = 500; x <= 1500; x += 64) {
-            this.obstacles.create(x, 400, 'tree').setDepth(2); // North Edge
+            if (x < 900 || x > 1100) {
+                this.obstacles.create(x, 400, 'tree').setDepth(2); // North Edge Gap for Route 1
+            }
             this.obstacles.create(x, 1600, 'tree').setDepth(2); // South Edge
         }
         for (let y = 400; y <= 1600; y += 64) {
@@ -85,13 +87,18 @@ export class OverworldScene extends Scene {
         this.obstacles.create(700, 750, 'fence').setDepth(2);
         this.obstacles.create(900, 750, 'fence').setDepth(2);
 
-        // Route 1 Preparation
-        this.add.tileSprite(1000, 500, 128, 200, 'path').setDepth(roadDepth);
+        // Route 1 Preparation & Transition
+        this.add.tileSprite(1000, 450, 128, 100, 'path').setDepth(roadDepth);
         this.obstacles.create(920, 450, 'sign').setDepth(2);
         this.add.text(920, 420, 'Route 1', {
             fontFamily: 'monospace', fontSize: '14px', color: '#ffffff',
             backgroundColor: '#000000aa', padding: { x: 4, y: 2 }
         }).setOrigin(0.5).setDepth(5);
+
+        const route1Zone = this.add.zone(1000, 380, 128, 40);
+        this.physics.add.existing(route1Zone, true);
+        route1Zone.setData('targetScene', 'Route1Scene');
+        this.entrances.add(route1Zone);
 
         const addBuilding = (x: number, y: number, key: string, label: string, entranceId: string) => {
             const building = this.obstacles.create(x, y, key) as Phaser.Physics.Arcade.Image;
@@ -145,6 +152,7 @@ export class OverworldScene extends Scene {
         else if (this.spawnEntrance === 'lab') { spawnX = 1000; spawnY = 1420; }
         else if (this.spawnEntrance === 'center') { spawnX = 750; spawnY = 1140; }
         else if (this.spawnEntrance === 'mart') { spawnX = 1250; spawnY = 1140; }
+        else if (this.spawnEntrance === 'route1') { spawnX = 1000; spawnY = 450; }
 
         this.player = new Player(this, spawnX, spawnY);
 
@@ -236,10 +244,21 @@ export class OverworldScene extends Scene {
 
         // Entrance Detection logic
         this.currentEntrance = null;
+        let transitionScene: string | null = null;
+
         this.physics.overlap(this.player, this.entrances, (player, entranceObj) => {
             const entrance = entranceObj as Phaser.GameObjects.GameObject;
-            this.currentEntrance = entrance.getData('entranceId');
+            if (entrance.getData('targetScene')) {
+                transitionScene = entrance.getData('targetScene');
+            } else {
+                this.currentEntrance = entrance.getData('entranceId');
+            }
         });
+
+        if (transitionScene) {
+            this.scene.start(transitionScene, { spawnEntrance: 'town' });
+            return;
+        }
 
         this.currentNPC = null;
         this.physics.overlap(this.player, this.npcZones, (player, zoneObj) => {

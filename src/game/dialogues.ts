@@ -37,5 +37,16 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'shopkeeper_intro': [
         { speaker: 'Shopkeeper', text: "Our shelves are still being stocked.", portrait: 'portrait_shopkeeper' },
         { speaker: 'Shopkeeper', text: "Come back soon.", portrait: 'portrait_shopkeeper' }
+    ],
+    'route1_youngster': [
+        { speaker: 'Youngster', text: "I like wearing shorts! They're comfy and easy to wear!", portrait: 'portrait_youngster' }
+    ],
+    'route1_bugcatcher': [
+        { speaker: 'Bug Catcher', text: "I'm looking for rare bugs in the tall grass.", portrait: 'portrait_bugcatcher' },
+        { speaker: 'Bug Catcher', text: "Be careful, wild Pokémon will jump out at you if you walk through it!", portrait: 'portrait_bugcatcher' }
+    ],
+    'route1_traveler': [
+        { speaker: 'Traveler', text: "I've been traveling across the Eclipse Region.", portrait: 'portrait_traveler' },
+        { speaker: 'Traveler', text: "The sky has been looking strange lately, hasn't it?", portrait: 'portrait_traveler' }
     ]
 };
