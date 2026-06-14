@@ -57,6 +57,23 @@ export class PreloadScene extends Scene {
         createNPC('npc_nurse', 0xf472b6); // Pink
         createNPC('npc_shopkeeper', 0x3b82f6); // Blue
 
+        // Generate Portrait Placeholders
+        const createPortrait = (key: string, color: number) => {
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillRect(0, 0, 96, 96);
+            graphics.fillStyle(color, 1);
+            graphics.fillRect(2, 2, 92, 92);
+            graphics.fillStyle(0xfcd34d, 1); // Face
+            graphics.fillCircle(48, 40, 24);
+            graphics.generateTexture(key, 96, 96);
+            graphics.clear();
+        };
+
+        createPortrait('portrait_nova', 0x10b981);
+        createPortrait('portrait_kai', 0xef4444);
+        createPortrait('portrait_nurse', 0xf472b6);
+        createPortrait('portrait_shopkeeper', 0x3b82f6);
+
         // Generate Grass Pattern
         graphics.fillStyle(0x4ade80, 1);
         graphics.fillRect(0, 0, 64, 64);

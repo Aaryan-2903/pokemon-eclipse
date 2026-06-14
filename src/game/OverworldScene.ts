@@ -13,6 +13,8 @@ export class OverworldScene extends Scene {
     private hudText!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
+    private spaceKey!: Phaser.Input.Keyboard.Key;
+    private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
     private currentEntrance: string | null = null;
     private currentNPC: string | null = null;
@@ -147,6 +149,8 @@ export class OverworldScene extends Scene {
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
+            this.spaceKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.SPACE);
+            this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
         }
 
@@ -178,7 +182,7 @@ export class OverworldScene extends Scene {
     private showCurrentDialogue() {
         if (!this.activeDialogue) return;
         const node = this.activeDialogue[this.currentDialogueIndex];
-        this.dialogueBox.show(node.speaker, node.text);
+        this.dialogueBox.show(node.speaker, node.text, node.portrait);
     }
 
     private progressDialogue() {
@@ -199,7 +203,7 @@ export class OverworldScene extends Scene {
 
     update(time: number, delta: number) {
         if (this.activeDialogue) {
-            if (Input.Keyboard.JustDown(this.interactKey)) {
+            if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) {
                 this.progressDialogue();
             } else if (Input.Keyboard.JustDown(this.escKey)) {
                 this.endDialogue();
