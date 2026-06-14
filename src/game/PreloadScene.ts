@@ -9,9 +9,14 @@ export class PreloadScene extends Scene {
         console.log('PreloadScene: preload - generating textures');
 
         const graphics = this.add.graphics();
-        graphics.fillStyle(0xff0000, 1);
-        graphics.fillRect(0, 0, 32, 32);
-        graphics.generateTexture('player_placeholder', 32, 32);
+        
+        // Generate a better placeholder for the trainer
+        graphics.fillStyle(0x3b82f6, 1); // Blue jacket
+        graphics.fillRoundedRect(0, 16, 32, 32, 8); // Body
+        graphics.fillStyle(0xfcd34d, 1); // Skin tone
+        graphics.fillCircle(16, 12, 12); // Head
+        
+        graphics.generateTexture('trainer_placeholder', 32, 48);
         graphics.destroy();
     }
 
