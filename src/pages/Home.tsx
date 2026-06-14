@@ -58,7 +58,7 @@ function Home() {
 
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:justify-start">
               <Link
-                to="/pokedex"
+                to="/adventure"
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded bg-gradient-to-r from-poke via-pokeSoft to-white/80 px-7 py-4 text-base font-semibold text-white shadow-[0_18px_60px_rgb(var(--color-accent-rgb)_/_0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_120px_rgb(var(--color-accent-rgb)_/_0.3)]"
               >
                 <span className="relative z-10">Start Adventure</span>

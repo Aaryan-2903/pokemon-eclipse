@@ -7,6 +7,7 @@ const links = [
   { label: 'Team Builder', path: '/team-builder' },
   { label: 'Battle Arena', path: '/battle-arena' },
   { label: 'Master Challenge', path: '/master-challenge' },
+  { label: 'Adventure', path: '/adventure' },
   { label: 'About', path: '/about' },
 ];
 

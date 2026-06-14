@@ -6,6 +6,7 @@ import TeamBuilder from './pages/TeamBuilder.tsx';
 import BattleArena from './pages/BattleArena.tsx';
 import MasterChallenge from './pages/MasterChallenge.tsx';
 import About from './pages/About.tsx';
+import AdventurePage from './pages/AdventurePage.tsx';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/battle-arena" element={<BattleArena />} />
           <Route path="/master-challenge" element={<MasterChallenge />} />
           <Route path="/about" element={<About />} />
+          <Route path="/adventure" element={<AdventurePage />} />
         </Routes>
       </main>
     </div>
