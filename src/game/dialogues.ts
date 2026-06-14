@@ -6,6 +6,20 @@ export interface DialogueNode {
 }
 
 export const Dialogues: Record<string, DialogueNode[]> = {
+    'home_intro': [
+        { speaker: 'System', text: "Message from Professor Nova:\n'Max, please come to my lab! It is urgent.'" }
+    ],
+    'nova_lab_intro': [
+        { speaker: 'Professor Nova', text: "Welcome, Max.", portrait: 'portrait_nova' },
+        { speaker: 'Professor Nova', text: "The Eclipse Shards have become active again.", portrait: 'portrait_nova' },
+        { speaker: 'Professor Nova', text: "Something unusual is happening across the region.", portrait: 'portrait_nova' },
+        { speaker: 'Professor Nova', text: "I need a capable trainer to help investigate.", portrait: 'portrait_nova' },
+        { speaker: 'Professor Nova', text: "Before you begin your journey, choose a partner Pokémon.", portrait: 'portrait_nova' }
+    ],
+    'nova_give_pokedex': [
+        { speaker: 'Professor Nova', text: "Take this Pokédex.", portrait: 'portrait_nova' },
+        { speaker: 'Professor Nova', text: "It will help you document Pokémon across the Eclipse Region.", portrait: 'portrait_nova' }
+    ],
     'nova_intro': [
         { speaker: 'Professor Nova', text: "Welcome to Eclipse Town, Max.", portrait: 'portrait_nova' },
         { speaker: 'Professor Nova', text: "The Eclipse Shards have been behaving strangely lately.", portrait: 'portrait_nova' },

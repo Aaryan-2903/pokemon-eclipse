@@ -1,6 +1,7 @@
 import { BootScene } from './BootScene';
 import { PreloadScene } from './PreloadScene';
 import { OverworldScene } from './OverworldScene';
+import { InteriorScene } from './InteriorScene';
 import { Types, Game } from 'phaser';
 
 const config: Types.Core.GameConfig = {
@@ -16,10 +17,14 @@ const config: Types.Core.GameConfig = {
             debug: false
         }
     },
+    input: {
+        gamepad: true // Enable Gamepad API for controller support
+    },
     scene: [
         BootScene,
         PreloadScene,
-        OverworldScene
+        OverworldScene,
+        InteriorScene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

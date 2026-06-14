@@ -4,6 +4,7 @@ import { Player } from './Player';
 import { NPC } from './NPC';
 import { DialogueBox } from './DialogueBox';
 import { Dialogues, DialogueNode } from './dialogues';
+import { QuestTracker } from './QuestTracker';
 
 export class OverworldScene extends Scene {
     private player!: Player;
@@ -19,11 +20,17 @@ export class OverworldScene extends Scene {
     private currentEntrance: string | null = null;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
+    private questTracker!: QuestTracker;
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
+    private spawnEntrance?: string;
 
     constructor() {
         super('OverworldScene');
+    }
+
+    init(data: any) {
+        this.spawnEntrance = data.spawnEntrance;
     }
 
     create() {
@@ -131,8 +138,15 @@ export class OverworldScene extends Scene {
         addNPC(750, 1130, 'npc_nurse', 'nurse_intro', 'Nurse');
         addNPC(1250, 1130, 'npc_shopkeeper', 'shopkeeper_intro', 'Shopkeeper');
 
-        // Create Player in front of their house
-        this.player = new Player(this, 800, 850);
+        // Set spawn point based on which building the player exited
+        let spawnX = 800, spawnY = 850;
+        if (this.spawnEntrance === 'home') { spawnX = 800; spawnY = 850; }
+        else if (this.spawnEntrance === 'kai_home') { spawnX = 1200; spawnY = 850; }
+        else if (this.spawnEntrance === 'lab') { spawnX = 1000; spawnY = 1420; }
+        else if (this.spawnEntrance === 'center') { spawnX = 750; spawnY = 1140; }
+        else if (this.spawnEntrance === 'mart') { spawnX = 1250; spawnY = 1140; }
+
+        this.player = new Player(this, spawnX, spawnY);
 
         // Setup Camera smooth follow and bounds
         this.cameras.main.setBounds(0, 0, worldSize, worldSize);
@@ -156,6 +170,7 @@ export class OverworldScene extends Scene {
 
         // Setup Dialogue Box UI
         this.dialogueBox = new DialogueBox(this);
+        this.questTracker = new QuestTracker(this);
 
         // Minimal HUD overlay (fixed to camera)
         this.hudText = this.add.text(16, 16, '', {
@@ -247,7 +262,7 @@ export class OverworldScene extends Scene {
                 if (this.currentNPC) {
                     this.startDialogue(this.currentNPC);
                 } else if (this.currentEntrance) {
-                    console.log(`Transition to map ID: ${this.currentEntrance}`);
+                    this.scene.start('InteriorScene', { entranceId: this.currentEntrance });
                 }
             }
         } else {

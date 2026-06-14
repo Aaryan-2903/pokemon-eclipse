@@ -87,6 +87,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const up = this.cursors?.up.isDown || this.wasdKeys?.up.isDown;
         const down = this.cursors?.down.isDown || this.wasdKeys?.down.isDown;
 
+        // Debugging Investigation #3: Are keyboard inputs registered?
+        if (this.cursors && this.wasdKeys) {
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.wasdKeys.left as Phaser.Input.Keyboard.Key)) 
+                console.log('[DEBUG] Left input detected');
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.right) || Phaser.Input.Keyboard.JustDown(this.wasdKeys.right as Phaser.Input.Keyboard.Key)) 
+                console.log('[DEBUG] Right input detected');
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.wasdKeys.up as Phaser.Input.Keyboard.Key)) 
+                console.log('[DEBUG] Up input detected');
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.down) || Phaser.Input.Keyboard.JustDown(this.wasdKeys.down as Phaser.Input.Keyboard.Key)) 
+                console.log('[DEBUG] Down input detected');
+        }
+
         if (left) velocityX = -1;
         else if (right) velocityX = 1;
 
@@ -97,6 +109,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             // Normalize vector to ensure diagonal movement isn't faster
             const velocity = new PhaserMath.Vector2(velocityX, velocityY).normalize().scale(this.speed);
             this.setVelocity(velocity.x, velocity.y);
+
+            // Debugging Investigation #4: Is the Player.update() method being called?
+            console.log(`[DEBUG] Player velocity values: X=${velocity.x.toFixed(2)}, Y=${velocity.y.toFixed(2)}`);
 
             // Animation logic
             let dir = this.lastDirection;

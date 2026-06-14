@@ -74,6 +74,43 @@ export class PreloadScene extends Scene {
         createPortrait('portrait_nurse', 0xf472b6);
         createPortrait('portrait_shopkeeper', 0x3b82f6);
 
+        // Generate Starter Placeholders
+        const createStarter = (key: string, color: number) => {
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillCircle(32, 32, 28);
+            graphics.fillStyle(color, 1);
+            graphics.fillCircle(32, 32, 24);
+            graphics.generateTexture(key, 64, 64);
+            graphics.clear();
+        };
+        createStarter('starter_grass', 0x22c55e);
+        createStarter('starter_fire', 0xef4444);
+        createStarter('starter_water', 0x3b82f6);
+
+        // Generate Floors
+        graphics.fillStyle(0xd4d4d8, 1);
+        graphics.fillRect(0, 0, 64, 64);
+        graphics.lineStyle(2, 0xa1a1aa, 1); // Darker border for tiles
+        graphics.strokeRect(0, 0, 64, 64);
+        graphics.generateTexture('floor_lab', 64, 64);
+        graphics.clear();
+
+        graphics.fillStyle(0x78350f, 1);
+        graphics.fillRect(0, 0, 64, 64);
+        graphics.fillStyle(0x451a03, 1); // Darker wood lines to show movement
+        graphics.fillRect(0, 16, 64, 2);
+        graphics.fillRect(0, 32, 64, 2);
+        graphics.fillRect(0, 48, 64, 2);
+        graphics.lineStyle(2, 0x451a03, 1);
+        graphics.strokeRect(0, 0, 64, 64);
+        graphics.generateTexture('floor_wood', 64, 64);
+        graphics.clear();
+
+        graphics.fillStyle(0x000000, 0.5);
+        graphics.fillRect(0, 0, 100, 20);
+        graphics.generateTexture('exit_mat', 100, 20);
+        graphics.clear();
+
         // Generate Grass Pattern
         graphics.fillStyle(0x4ade80, 1);
         graphics.fillRect(0, 0, 64, 64);
@@ -168,7 +205,7 @@ export class PreloadScene extends Scene {
     }
 
     create() {
-        console.log('PreloadScene: create - starting OverworldScene');
-        this.scene.start('OverworldScene');
+        console.log('PreloadScene: create - starting InteriorScene');
+        this.scene.start('InteriorScene', { entranceId: 'home' });
     }
 }
