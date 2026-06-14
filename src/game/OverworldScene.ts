@@ -1,15 +1,24 @@
 import { Scene, Input } from 'phaser';
 import { EventBus } from './EventBus';
 import { Player } from './Player';
+import { NPC } from './NPC';
+import { DialogueBox } from './DialogueBox';
+import { Dialogues, DialogueNode } from './dialogues';
 
 export class OverworldScene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
+    private npcZones!: Phaser.Physics.Arcade.StaticGroup;
     private hudText!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
+    private escKey!: Phaser.Input.Keyboard.Key;
     private currentEntrance: string | null = null;
+    private currentNPC: string | null = null;
+    private dialogueBox!: DialogueBox;
+    private activeDialogue: DialogueNode[] | null = null;
+    private currentDialogueIndex: number = 0;
 
     constructor() {
         super('OverworldScene');
@@ -41,6 +50,7 @@ export class OverworldScene extends Scene {
         // 3. Collision-ready Architecture
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
+        this.npcZones = this.physics.add.staticGroup();
 
         // Environment: Town Boundaries (Trees)
         for (let x = 500; x <= 1500; x += 64) {
@@ -102,6 +112,23 @@ export class OverworldScene extends Scene {
         addBuilding(750, 1060, 'center', "Pokemon Center", 'center');
         addBuilding(1250, 1060, 'mart', "Poke Mart", 'mart');
 
+        // Add NPCs
+        const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string) => {
+            const npc = new NPC(this, x, y, key, dialogueId);
+            this.obstacles.add(npc); 
+            this.npcZones.add(npc.interactionZone);
+            
+            this.add.text(x, y - 36, label, {
+                fontFamily: 'monospace', fontSize: '12px', color: '#ffffff',
+                backgroundColor: '#000000aa', padding: { x: 4, y: 2 }
+            }).setOrigin(0.5).setDepth(20);
+        };
+
+        addNPC(1000, 1360, 'npc_nova', 'nova_intro', 'Prof. Nova');
+        addNPC(1200, 830, 'npc_kai', 'kai_intro', 'Kai');
+        addNPC(750, 1130, 'npc_nurse', 'nurse_intro', 'Nurse');
+        addNPC(1250, 1130, 'npc_shopkeeper', 'shopkeeper_intro', 'Shopkeeper');
+
         // Create Player in front of their house
         this.player = new Player(this, 800, 850);
 
@@ -120,7 +147,11 @@ export class OverworldScene extends Scene {
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
+            this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
         }
+
+        // Setup Dialogue Box UI
+        this.dialogueBox = new DialogueBox(this);
 
         // Minimal HUD overlay (fixed to camera)
         this.hudText = this.add.text(16, 16, '', {
@@ -135,7 +166,47 @@ export class OverworldScene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
+    private startDialogue(dialogueId: string) {
+        if (!Dialogues[dialogueId]) return;
+        this.activeDialogue = Dialogues[dialogueId];
+        this.currentDialogueIndex = 0;
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+        this.showCurrentDialogue();
+    }
+
+    private showCurrentDialogue() {
+        if (!this.activeDialogue) return;
+        const node = this.activeDialogue[this.currentDialogueIndex];
+        this.dialogueBox.show(node.speaker, node.text);
+    }
+
+    private progressDialogue() {
+        if (!this.activeDialogue) return;
+        this.currentDialogueIndex++;
+        if (this.currentDialogueIndex >= this.activeDialogue.length) {
+            this.endDialogue();
+        } else {
+            this.showCurrentDialogue();
+        }
+    }
+
+    private endDialogue() {
+        this.activeDialogue = null;
+        this.dialogueBox.hide();
+        this.player.setMovementEnabled(true);
+    }
+
     update(time: number, delta: number) {
+        if (this.activeDialogue) {
+            if (Input.Keyboard.JustDown(this.interactKey)) {
+                this.progressDialogue();
+            } else if (Input.Keyboard.JustDown(this.escKey)) {
+                this.endDialogue();
+            }
+            return; // Skip normal update logic while in dialogue
+        }
+
         // Delegate movement logic to the Player class
         this.player.update(time, delta);
 
@@ -151,11 +222,29 @@ export class OverworldScene extends Scene {
             this.currentEntrance = entrance.getData('entranceId');
         });
 
-        if (this.currentEntrance) {
+        this.currentNPC = null;
+        this.physics.overlap(this.player, this.npcZones, (player, zoneObj) => {
+            const zone = zoneObj as Phaser.GameObjects.GameObject;
+            this.currentNPC = zone.getData('dialogueId');
+        });
+
+        let interactionMessage = '';
+        if (this.currentNPC) {
+            interactionMessage = 'Press E to Talk';
+        } else if (this.currentEntrance) {
+            interactionMessage = 'Press E to Enter';
+        }
+
+        if (interactionMessage) {
+            this.interactionText.setText(interactionMessage);
             this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true);
             
             if (Input.Keyboard.JustDown(this.interactKey)) {
-                console.log(`Transition to map ID: ${this.currentEntrance}`);
+                if (this.currentNPC) {
+                    this.startDialogue(this.currentNPC);
+                } else if (this.currentEntrance) {
+                    console.log(`Transition to map ID: ${this.currentEntrance}`);
+                }
             }
         } else {
             this.interactionText.setVisible(false);

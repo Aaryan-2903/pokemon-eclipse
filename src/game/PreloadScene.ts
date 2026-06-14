@@ -39,6 +39,24 @@ export class PreloadScene extends Scene {
         graphics.generateTexture('player_texture', 128, 192);
         graphics.clear();
 
+        // Generate Basic NPCs
+        const createNPC = (key: string, color: number) => {
+            graphics.fillStyle(0xfcd34d, 1); // Skin tone
+            graphics.fillCircle(16, 14, 10); // Head
+            graphics.fillStyle(color, 1); // Body color
+            graphics.fillRoundedRect(6, 22, 20, 24, 6); // Body
+            graphics.fillStyle(0x000000, 1); // Eyes
+            graphics.fillRect(11, 12, 2, 2);
+            graphics.fillRect(19, 12, 2, 2);
+            graphics.generateTexture(key, 32, 48);
+            graphics.clear();
+        };
+
+        createNPC('npc_nova', 0x10b981); // Emerald
+        createNPC('npc_kai', 0xef4444);  // Red
+        createNPC('npc_nurse', 0xf472b6); // Pink
+        createNPC('npc_shopkeeper', 0x3b82f6); // Blue
+
         // Generate Grass Pattern
         graphics.fillStyle(0x4ade80, 1);
         graphics.fillRect(0, 0, 64, 64);

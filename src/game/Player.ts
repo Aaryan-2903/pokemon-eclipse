@@ -7,6 +7,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private speed: number = 200;
     private nameText!: Phaser.GameObjects.Text;
     private lastDirection: string = 'down';
+    private movementEnabled: boolean = true;
 
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'player_texture', '0_0');
@@ -62,7 +63,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    public setMovementEnabled(enabled: boolean) {
+        this.movementEnabled = enabled;
+        if (!enabled) {
+            this.setVelocity(0, 0);
+            this.anims.stop();
+            let idleIdx = 0;
+            if (this.lastDirection === 'left') idleIdx = 1;
+            else if (this.lastDirection === 'right') idleIdx = 2;
+            else if (this.lastDirection === 'up') idleIdx = 3;
+            this.setFrame(`${idleIdx}_0`);
+        }
+    }
+
     update(time: number, delta: number) {
+        if (!this.movementEnabled) return;
+
         let velocityX = 0;
         let velocityY = 0;
 
