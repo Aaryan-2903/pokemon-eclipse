@@ -1,12 +1,15 @@
 import { Scene, Input, Math as PhaserMath } from 'phaser';
+import { PlayerState } from './PlayerData';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasdKeys!: Phaser.Types.Input.Keyboard.CursorKeys;
     private speed: number = 200;
+    private nameText!: Phaser.GameObjects.Text;
+    private lastDirection: string = 'down';
 
     constructor(scene: Scene, x: number, y: number) {
-        super(scene, x, y, 'trainer_placeholder');
+        super(scene, x, y, 'player_texture', '0_0');
 
         // Add to the scene and enable physics
         scene.add.existing(this);
@@ -26,6 +29,37 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 right: Input.Keyboard.KeyCodes.D
             }) as Phaser.Types.Input.Keyboard.CursorKeys;
         }
+
+        // Identity Label
+        this.nameText = scene.add.text(x, y, PlayerState.name, {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#ffffff',
+            backgroundColor: '#000000aa',
+            padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(20);
+
+        this.setupAnimations();
+    }
+
+    private setupAnimations() {
+        const directions = ['down', 'left', 'right', 'up'];
+        directions.forEach((dir, index) => {
+            const walkKey = `walk_${dir}`;
+            if (!this.scene.anims.exists(walkKey)) {
+                this.scene.anims.create({
+                    key: walkKey,
+                    frames: [
+                        { key: 'player_texture', frame: `${index}_1` },
+                        { key: 'player_texture', frame: `${index}_0` },
+                        { key: 'player_texture', frame: `${index}_3` },
+                        { key: 'player_texture', frame: `${index}_0` }
+                    ],
+                    frameRate: 6,
+                    repeat: -1
+                });
+            }
+        });
     }
 
     update(time: number, delta: number) {
@@ -47,8 +81,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             // Normalize vector to ensure diagonal movement isn't faster
             const velocity = new PhaserMath.Vector2(velocityX, velocityY).normalize().scale(this.speed);
             this.setVelocity(velocity.x, velocity.y);
+
+            // Animation logic
+            let dir = this.lastDirection;
+            if (velocityX < 0) dir = 'left';
+            else if (velocityX > 0) dir = 'right';
+            else if (velocityY < 0) dir = 'up';
+            else if (velocityY > 0) dir = 'down';
+
+            this.anims.play(`walk_${dir}`, true);
+            this.lastDirection = dir;
         } else {
             this.setVelocity(0, 0);
+            this.anims.stop();
+
+            // Snap to idle frame
+            let idleIdx = 0;
+            if (this.lastDirection === 'left') idleIdx = 1;
+            else if (this.lastDirection === 'right') idleIdx = 2;
+            else if (this.lastDirection === 'up') idleIdx = 3;
+            this.setFrame(`${idleIdx}_0`);
         }
+
+        // Keep name attached to player
+        this.nameText.setPosition(this.x, this.y - 36);
     }
 }
