@@ -19,7 +19,6 @@ export class InteriorScene extends Scene {
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
     private interactionText!: Phaser.GameObjects.Text;
-    private hasLoggedUpdate: boolean = false;
     
     private activeDialogueKey: string | null = null;
     private activeDialogue: DialogueNode[] | null = null;
@@ -53,16 +52,7 @@ export class InteriorScene extends Scene {
         this.add.image(400, 490, 'exit_mat').setDepth(0);
         
         this.player = new Player(this, 400, 300);
-        
-        // Debugging Investigation #2: Log player creation
-        console.log(`[DEBUG] Player created at X: ${this.player.x}, Y: ${this.player.y}`);
-        
-        // Debugging Investigation #7: Log body status
-        console.log(`[DEBUG] Player Body Enabled: ${this.player.body.enable}`);
-        
-        // Debugging Investigation #8: Temporarily disable collisions for testing
-        // this.player.setCollideWorldBounds(true);
-        console.log(`[DEBUG] World bounds collision temporarily disabled for testing.`);
+        this.player.setCollideWorldBounds(true);
         
         this.exitZone = this.add.zone(400, 490, 100, 40);
         this.physics.add.existing(this.exitZone, true);
@@ -85,10 +75,6 @@ export class InteriorScene extends Scene {
             fontFamily: 'monospace', fontSize: '12px', color: '#000000',
             backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
         }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
-
-        // Debugging Investigation #5 & #6: Scene and Physics status
-        console.log(`[DEBUG] Scene State (Paused?): ${this.scene.isPaused()}`);
-        console.log(`[DEBUG] Physics World Active: ${this.physics.world.isPaused ? 'Paused' : 'Running'}`);
 
         // Process Opening Story Events
         if (this.entranceId === 'home' && !StoryManager.getInstance().hasFlag(StoryFlag.INTRO_DONE)) {
@@ -163,12 +149,6 @@ export class InteriorScene extends Scene {
     }
 
     update(time: number, delta: number) {
-        // Debugging Investigation #1: Is the scene's update() method running?
-        if (!this.hasLoggedUpdate) {
-            console.log('[DEBUG] InteriorScene update loop is running.');
-            this.hasLoggedUpdate = true;
-        }
-
         if (this.starterUIOpen || this.activeDialogue) {
             if (this.activeDialogue && !this.starterUIOpen) {
                 if (Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey) || Input.Keyboard.JustDown(this.interactKey)) {

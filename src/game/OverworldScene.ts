@@ -246,7 +246,7 @@ export class OverworldScene extends Scene {
         this.currentEntrance = null;
         let transitionScene: string | null = null;
 
-        this.physics.overlap(this.player, this.entrances, (player, entranceObj) => {
+        this.physics.overlap(this.player, this.entrances, (_player, entranceObj) => {
             const entrance = entranceObj as Phaser.GameObjects.GameObject;
             if (entrance.getData('targetScene')) {
                 transitionScene = entrance.getData('targetScene');
@@ -261,7 +261,7 @@ export class OverworldScene extends Scene {
         }
 
         this.currentNPC = null;
-        this.physics.overlap(this.player, this.npcZones, (player, zoneObj) => {
+        this.physics.overlap(this.player, this.npcZones, (_player, zoneObj) => {
             const zone = zoneObj as Phaser.GameObjects.GameObject;
             this.currentNPC = zone.getData('dialogueId');
         });

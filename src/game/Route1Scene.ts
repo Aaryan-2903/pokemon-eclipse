@@ -168,11 +168,11 @@ export class Route1Scene extends Scene {
         this.hudText.setText(`Location: Route 1\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
 
         let transitionScene: string | null = null;
-        this.physics.overlap(this.player, this.entrances, (player, entrance) => { transitionScene = entrance.getData('targetScene'); });
+        this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { this.scene.start(transitionScene, { spawnEntrance: 'route1' }); return; }
 
         this.currentNPC = null;
-        this.physics.overlap(this.player, this.npcZones, (player, zone) => { this.currentNPC = zone.getData('dialogueId'); });
+        this.physics.overlap(this.player, this.npcZones, (_player, zone) => { this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId'); });
         if (this.currentNPC) { this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true); if (Input.Keyboard.JustDown(this.interactKey)) { this.activeDialogue = Dialogues[this.currentNPC]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); } } 
         else { this.interactionText.setVisible(false); }
     }
