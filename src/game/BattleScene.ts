@@ -1,13 +1,16 @@
-import { Scene } from 'phaser';
+import { Scene, Input } from 'phaser';
 import { PokemonInstance, handleLevelUp } from './PokemonData';
 import { TurnManager, TurnAction } from './TurnManager';
 import { Moves } from './Moves';
 import { EventBus } from './EventBus';
 import { PlayerState } from './PlayerData';
+import { Trainer } from './TrainerData';
 
 export class BattleScene extends Scene {
     private playerMon!: PokemonInstance;
     private enemyMon!: PokemonInstance;
+    private playerSprite!: Phaser.GameObjects.Image;
+    private enemySprite!: Phaser.GameObjects.Image;
 
     private messageText!: Phaser.GameObjects.Text;
     private actionMenu!: Phaser.GameObjects.Container;
@@ -18,47 +21,91 @@ export class BattleScene extends Scene {
     private playerHpBar!: Phaser.GameObjects.Rectangle;
     private enemyHpText!: Phaser.GameObjects.Text;
     private playerHpText!: Phaser.GameObjects.Text;
+    private enemyInfoText!: Phaser.GameObjects.Text;
     private playerInfoText!: Phaser.GameObjects.Text;
 
     private isProcessingTurn: boolean = false;
+    private isTrainerBattle: boolean = false;
+    private trainer?: Trainer;
+    private enemyTeam: PokemonInstance[] = [];
+    private currentEnemyIndex: number = 0;
 
     constructor() {
         super('BattleScene');
         console.log('BattleScene constructor');
     }
 
-    init(data: { playerMon: PokemonInstance, enemyMon: PokemonInstance }) {
-        this.playerMon = data.playerMon;
-        this.enemyMon = data.enemyMon;
+    init(data: { playerMon?: PokemonInstance, enemyMon?: PokemonInstance, trainer?: Trainer }) {
         this.isProcessingTurn = false;
+        this.trainer = data.trainer;
+        this.isTrainerBattle = !!data.trainer;
+
+        if (this.isTrainerBattle && this.trainer) {
+            this.enemyTeam = this.trainer.team;
+            this.enemyMon = this.enemyTeam[0];
+            this.playerMon = PlayerState.pokemonTeam[0];
+            this.currentEnemyIndex = 0;
+        } else if (data.enemyMon) {
+            this.enemyMon = data.enemyMon;
+            this.playerMon = PlayerState.pokemonTeam[0];
+        } else {
+            console.error("BattleScene initiated with invalid data", data);
+            this.scene.stop();
+        }
     }
 
     preload() {
         console.log('BattleScene preload()');
         // Dynamically load sprites for the current battle
-        const enemySpriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${this.enemyMon.id}.png`;
-        const playerSpriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`;
-        this.load.image('enemy_sprite', enemySpriteUrl);
-        this.load.image('player_sprite', playerSpriteUrl);
+        const teamToLoad = this.isTrainerBattle ? this.enemyTeam : [this.enemyMon];
+        teamToLoad.forEach(mon => {
+            const enemySpriteKey = `enemy_sprite_${mon.id}`;
+            if (!this.textures.exists(enemySpriteKey)) {
+                this.load.image(enemySpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mon.id}.png`);
+            }
+        });
+
+        const playerSpriteKey = `player_sprite_back_${this.playerMon.id}`;
+        if (!this.textures.exists(playerSpriteKey)) {
+            this.load.image(playerSpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`);
+        }
+
+        if (this.isTrainerBattle && this.trainer && !this.textures.exists(this.trainer.spriteKey)) {
+            console.warn(`Trainer sprite ${this.trainer.spriteKey} not preloaded. Ensure it is in PreloadScene.`);
+        }
     }
 
     create() {
         console.log('BattleScene create()');
         this.cameras.main.fadeIn(500, 0, 0, 0);
-        
+
         // Background
         this.add.rectangle(400, 300, 800, 600, 0x4ade80); // Light green terrain
 
-        // Placeholder Sprites
-        this.add.image(600, 220, 'enemy_sprite').setScale(3); // Wild Pokémon on the right
-        this.add.image(200, 400, 'player_sprite').setScale(3); // Player Pokémon on the left
+        // Sprites
+        if (this.isTrainerBattle && this.trainer) {
+            this.add.image(600, 150, this.trainer.spriteKey).setScale(2);
+        }
+        this.enemySprite = this.add.image(600, 220, `enemy_sprite_${this.enemyMon.id}`).setScale(3); // Wild Pokémon on the right
+        this.playerSprite = this.add.image(200, 400, `player_sprite_back_${this.playerMon.id}`).setScale(3); // Player Pokémon on the left
 
         this.createUI();
         this.updateHpBars(0); // instant initial update
 
-        this.showMessage(`A wild ${this.enemyMon.name} appeared!`, () => {
-            this.showActionMenu();
+        this.events.on('resume', this.onSceneResume, this);
+        this.events.on('shutdown', () => {
+            this.events.off('resume', this.onSceneResume, this);
         });
+
+        if (this.isTrainerBattle && this.trainer) {
+            this.showMessage(`${this.trainer.name} sent out ${this.enemyMon.name}!`, () => {
+                this.showActionMenu();
+            });
+        } else {
+            this.showMessage(`A wild ${this.enemyMon.name} appeared!`, () => {
+                this.showActionMenu();
+            });
+        }
 
         EventBus.emit('current-scene-ready', this);
         console.log('BattleScene fully loaded');
@@ -79,13 +126,14 @@ export class BattleScene extends Scene {
             return [btnBg, btnText];
         };
 
+        const runCallback = this.isTrainerBattle ? () => this.showMessage("Can't escape a trainer battle!", () => this.showActionMenu()) : () => this.runAway();
         // Main Action Menu
         this.actionMenu = this.add.container(600, 520);
         this.actionMenu.add([
             ...createBtn(-80, -25, 'FIGHT', () => this.showMovesMenu()),
             ...createBtn(80, -25, 'BAG', () => this.showItemsMenu()),
-            ...createBtn(-80, 25, 'POKEMON', () => this.showMessage('No other Pokemon!', () => this.showActionMenu())),
-            ...createBtn(80, 25, 'RUN', () => this.runAway())
+            ...createBtn(-80, 25, 'POKEMON', () => this.openTeamMenu()),
+            ...createBtn(80, 25, 'RUN', runCallback)
         ]);
         this.actionMenu.setVisible(false);
 
@@ -102,7 +150,7 @@ export class BattleScene extends Scene {
         // Items Menu
         this.itemsMenu = this.add.container(600, 520);
         const pokeballCount = PlayerState.inventory['Pokeball'] || 0;
-        if (pokeballCount > 0) {
+        if (pokeballCount > 0 && !this.isTrainerBattle) {
             this.itemsMenu.add([...createBtn(-80, -25, `POKEBALL (${pokeballCount})`, () => this.attemptCatch())]);
         }
         this.itemsMenu.add([...createBtn(0, 25, 'CANCEL', () => this.showActionMenu())]);
@@ -110,7 +158,7 @@ export class BattleScene extends Scene {
 
         // Enemy Status UI (Top Left)
         this.add.rectangle(200, 100, 280, 70, 0xf3f4f6).setStrokeStyle(2, 0x000000);
-        this.add.text(80, 75, `${this.enemyMon.name} Lv${this.enemyMon.level}`, { fontFamily: 'monospace', fontSize: '18px', color: '#000000', fontStyle: 'bold' });
+        this.enemyInfoText = this.add.text(80, 75, `${this.enemyMon.name} Lv${this.enemyMon.level}`, { fontFamily: 'monospace', fontSize: '18px', color: '#000000', fontStyle: 'bold' });
         this.add.rectangle(200, 110, 200, 12, 0x9ca3af); // HP Track
         this.enemyHpBar = this.add.rectangle(100, 110, 200, 12, 0x22c55e).setOrigin(0, 0.5); // HP Fill
         this.enemyHpText = this.add.text(200, 125, '', { fontFamily: 'monospace', fontSize: '12px', color: '#000000' }).setOrigin(0.5);
@@ -165,6 +213,49 @@ export class BattleScene extends Scene {
         this.itemsMenu.setVisible(true);
     }
 
+    private openTeamMenu() {
+        if (this.isProcessingTurn) return;
+        this.scene.pause();
+        this.scene.launch('TeamScene', { fromScene: 'BattleScene', inBattle: true });
+    }
+
+    private onSceneResume() {
+        // Check if the active pokemon has changed
+        if (this.playerMon.id !== PlayerState.pokemonTeam[0].id) {
+            this.handlePokemonSwap();
+        }
+    }
+
+    private handlePokemonSwap() {
+        const oldPokemonName = this.playerMon.name;
+        this.playerMon = PlayerState.pokemonTeam[0];
+        const newPokemonName = this.playerMon.name;
+
+        this.isProcessingTurn = true; // Lock controls
+
+        this.showMessage(`${oldPokemonName}, come back! Go, ${newPokemonName}!`, () => {
+            const newSpriteKey = `player_sprite_back_${this.playerMon.id}`;
+            const newSpriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`;
+
+            // Update UI text
+            this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
+            this.updateHpBars(0);
+
+            // Handle sprite update
+            if (this.textures.exists(newSpriteKey)) {
+                this.playerSprite.setTexture(newSpriteKey);
+                this.enemyTurnAfterSwap();
+            } else {
+                this.load.image(newSpriteKey, newSpriteUrl);
+                this.load.once('complete', () => {
+                    this.playerSprite.setTexture(newSpriteKey);
+                    this.enemyTurnAfterSwap();
+                }, this);
+                this.load.start();
+            }
+        });
+    }
+
     private executeTurn(moveId: string) {
         if (this.isProcessingTurn) return;
         this.isProcessingTurn = true;
@@ -179,6 +270,14 @@ export class BattleScene extends Scene {
         if (this.isProcessingTurn) return;
         this.isProcessingTurn = true;
         this.itemsMenu.setVisible(false);
+
+        if (this.isTrainerBattle) {
+            this.showMessage("You can't steal another trainer's Pokémon!", () => {
+                this.isProcessingTurn = false;
+                this.showActionMenu();
+            });
+            return;
+        }
 
         PlayerState.inventory['Pokeball']--;
 
@@ -198,8 +297,7 @@ export class BattleScene extends Scene {
                 this.showMessage(`Oh no! The Pokemon broke free!`, () => {
                     // On failure, the enemy gets to attack.
                     const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
-                    const enemyActions = TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId);
-                    this.processActions(enemyActions);
+                    this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
                 });
             }
         });
@@ -212,7 +310,7 @@ export class BattleScene extends Scene {
             return;
         }
         const action = actions.shift()!;
-        
+
         this.showMessage(action.message, () => {
             if (action.damage !== undefined) {
                 this.updateHpBars(300);
@@ -230,10 +328,10 @@ export class BattleScene extends Scene {
                         this.showMessage(levelUpResult.message, () => {
                             this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
                             this.updateHpBars(0);
-                            this.time.delayedCall(1500, () => this.endBattle('win'));
+                            this.time.delayedCall(1500, () => this.handleEnemyFaint());
                         });
                     } else {
-                        this.time.delayedCall(1500, () => this.endBattle('win'));
+                        this.time.delayedCall(1500, () => this.handleEnemyFaint());
                     }
                 });
                 return; // End of turn processing
@@ -248,6 +346,56 @@ export class BattleScene extends Scene {
             // If not a game-ending action, continue processing the rest of the turn's actions
             this.processActions(actions);
         });
+    }
+
+    private handleEnemyFaint() {
+        if (this.isTrainerBattle && this.trainer) {
+            this.currentEnemyIndex++;
+            if (this.currentEnemyIndex < this.enemyTeam.length) {
+                this.enemyMon = this.enemyTeam[this.currentEnemyIndex];
+                this.showMessage(`${this.trainer.name} is about to send in ${this.enemyMon.name}.`, () => {
+                    this.switchEnemyPokemon();
+                });
+            } else {
+                this.showMessage(`${this.trainer.name} is out of usable Pokémon!`, () => {
+                    this.endBattle('win');
+                });
+            }
+        } else {
+            this.endBattle('win');
+        }
+    }
+
+    private switchEnemyPokemon() {
+        const newSpriteKey = `enemy_sprite_${this.enemyMon.id}`;
+        
+        this.enemyInfoText.setText(`${this.enemyMon.name} Lv${this.enemyMon.level}`);
+        this.updateHpBars(0);
+
+        const showNextMon = () => {
+            this.showMessage(`Go, ${this.enemyMon.name}!`, () => {
+                this.isProcessingTurn = false;
+                this.showActionMenu();
+            });
+        };
+
+        if (this.textures.exists(newSpriteKey)) {
+            this.enemySprite.setTexture(newSpriteKey);
+            showNextMon();
+        } else {
+            this.load.image(newSpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${this.enemyMon.id}.png`);
+            this.load.once('complete', () => {
+                this.enemySprite.setTexture(newSpriteKey);
+                showNextMon();
+            }, this);
+            this.load.start();
+        }
+    }
+
+    private enemyTurnAfterSwap() {
+        // Enemy gets a free turn after a switch
+        const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
+        this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
     }
 
     private runAway() {

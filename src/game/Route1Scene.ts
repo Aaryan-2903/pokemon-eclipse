@@ -10,6 +10,7 @@ import { Route1Data } from './RouteData';
 import { EncounterManager } from './EncounterManager';
 import { generatePlayerPokemon, PokemonInstance } from './PokemonData';
 import { PlayerState } from './PlayerData';
+import { getTrainer, Trainer } from './TrainerData';
 
 export class Route1Scene extends Scene {
     private player!: Player;
@@ -23,6 +24,7 @@ export class Route1Scene extends Scene {
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
+    private teamKey!: Phaser.Input.Keyboard.Key;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
     private questTracker!: QuestTracker;
@@ -110,8 +112,8 @@ export class Route1Scene extends Scene {
         }).setOrigin(0.5).setDepth(5);
 
         // NPCs
-        const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string) => {
-            const npc = new NPC(this, x, y, key, dialogueId);
+        const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
+            const npc = new NPC(this, x, y, key, dialogueId, trainerId);
             this.obstacles.add(npc); 
             this.npcZones.add(npc.interactionZone);
             this.add.text(x, y - 36, label, {
@@ -120,7 +122,9 @@ export class Route1Scene extends Scene {
             }).setOrigin(0.5).setDepth(20);
         };
 
-        addNPC(1000, 2200, 'npc_youngster', 'route1_youngster', 'Youngster');
+        // Add Trainers
+        addNPC(1000, 2200, 'npc_youngster', 'route1_youngster', 'Youngster Joey', 'route1_joey');
+        addNPC(1000, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai');
         addNPC(800, 1300, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher');
         addNPC(1000, 500, 'npc_traveler', 'route1_traveler', 'Traveler');
 
@@ -163,6 +167,7 @@ export class Route1Scene extends Scene {
             this.spaceKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.SPACE);
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
+            this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
         }
 
         // Story Progression
@@ -182,9 +187,21 @@ export class Route1Scene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
+    private startDialogue(dialogueId: string) {
+        if (!Dialogues[dialogueId]) return;
+        this.activeDialogue = Dialogues[dialogueId];
+        this.currentDialogueIndex = 0;
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+        this.showCurrentDialogue();
+    }
+
     // Reuse Dialogue functions (abbreviated here, identical to OverworldScene)
-    private showCurrentDialogue() { this.dialogueBox.show(this.activeDialogue![this.currentDialogueIndex].speaker, this.activeDialogue![this.currentDialogueIndex].text, this.activeDialogue![this.currentDialogueIndex].portrait); }
-    private progressDialogue() { this.currentDialogueIndex++; if (this.currentDialogueIndex >= this.activeDialogue!.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
+    private showCurrentDialogue() { 
+        if (!this.activeDialogue) return;
+        this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); 
+    }
+    private progressDialogue() { this.currentDialogueIndex++; if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
         console.log('Encounter triggered!');
@@ -198,9 +215,7 @@ export class Route1Scene extends Scene {
             console.log('About to start BattleScene...');
             this.scene.pause();
             
-            const playerMon = PlayerState.pokemonTeam[0];
-            console.log('Current playerPokemon on encounter:', playerMon);
-            if (!playerMon) {
+            if (PlayerState.pokemonTeam.length === 0) {
                 console.error("Battle triggered without a player Pokémon.");
                 this.scene.resume(); // Abort battle and resume route
                 this.player.setMovementEnabled(true);
@@ -208,7 +223,6 @@ export class Route1Scene extends Scene {
             }
 
             this.scene.launch('BattleScene', {
-                playerMon,
                 enemyMon
             });
 
@@ -228,9 +242,56 @@ export class Route1Scene extends Scene {
         });
     }
 
+    private startTrainerBattle(trainer: Trainer) {
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+    
+        // Show pre-battle dialogue
+        this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
+        this.currentDialogueIndex = 0;
+        this.showCurrentDialogue();
+    
+        // Temporarily override progressDialogue to launch the battle after the dialogue finishes
+        const originalProgress = this.progressDialogue.bind(this);
+        this.progressDialogue = () => {
+            this.progressDialogue = originalProgress; // Restore original function
+            this.dialogueBox.hide();
+            this.activeDialogue = null;
+    
+            this.cameras.main.flash(300, 0, 0, 0);
+            this.time.delayedCall(300, () => {
+                this.scene.pause();
+                this.scene.launch('BattleScene', { trainer });
+    
+                this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
+                    console.log(`Trainer battle ended with result: ${result}`);
+                    this.scene.stop('BattleScene');
+                    this.cameras.main.fadeIn(250, 0, 0, 0);
+                    this.scene.resume();
+                    
+                    if (result === 'win') {
+                        PlayerState.defeatedTrainers.add(trainer.id);
+                        PlayerState.money += trainer.rewardMoney;
+                        this.startDialogue(`${trainer.id}_defeated`);
+                        // Post-battle dialogue will re-enable player movement
+                    } else if (result === 'loss') {
+                        PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
+                        this.scene.start('InteriorScene', { entranceId: 'home' });
+                    }
+                });
+            });
+        };
+    }
+
     update(time: number, delta: number) {
         if (this.activeDialogue) {
             if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) this.progressDialogue();
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.teamKey)) {
+            this.scene.pause();
+            this.scene.launch('TeamScene', { fromScene: this.scene.key, inBattle: false });
             return;
         }
 
@@ -244,9 +305,33 @@ export class Route1Scene extends Scene {
         if (transitionScene) { this.scene.start(transitionScene, { spawnEntrance: 'route1' }); return; }
 
         this.currentNPC = null;
-        this.physics.overlap(this.player, this.npcZones, (_player, zone) => { this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId'); });
-        if (this.currentNPC) { this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true); if (Input.Keyboard.JustDown(this.interactKey)) { this.activeDialogue = Dialogues[this.currentNPC]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); } } 
-        else { this.interactionText.setVisible(false); }
+        let currentTrainerId: string | null = null;
+        this.physics.overlap(this.player, this.npcZones, (_player, zone) => { 
+            const go = zone as Phaser.GameObjects.GameObject;
+            this.currentNPC = go.getData('dialogueId');
+            currentTrainerId = go.getData('trainerId');
+        });
+
+        let interactionMessage = '';
+        if (this.currentNPC) {
+            if (currentTrainerId && !PlayerState.defeatedTrainers.has(currentTrainerId)) {
+                interactionMessage = 'Press E to Battle';
+            } else {
+                interactionMessage = 'Press E to Talk';
+            }
+        }
+
+        if (interactionMessage) {
+            this.interactionText.setText(interactionMessage).setPosition(this.player.x, this.player.y - 56).setVisible(true);
+            if (Input.Keyboard.JustDown(this.interactKey)) {
+                const trainer = currentTrainerId ? getTrainer(currentTrainerId) : null;
+                if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
+                    this.startTrainerBattle(trainer);
+                } else {
+                    this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
+                }
+            }
+        } else { this.interactionText.setVisible(false); }
 
         // Wild Encounter Logic
         let inTallGrass = false;

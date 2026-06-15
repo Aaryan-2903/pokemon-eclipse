@@ -17,6 +17,7 @@ export class OverworldScene extends Scene {
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
+    private teamKey!: Phaser.Input.Keyboard.Key;
     private currentEntrance: string | null = null;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
@@ -174,6 +175,7 @@ export class OverworldScene extends Scene {
             this.spaceKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.SPACE);
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
+            this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
         }
 
         // Setup Dialogue Box UI
@@ -232,6 +234,12 @@ export class OverworldScene extends Scene {
                 this.endDialogue();
             }
             return; // Skip normal update logic while in dialogue
+        }
+
+        if (Input.Keyboard.JustDown(this.teamKey)) {
+            this.scene.pause();
+            this.scene.launch('TeamScene', { fromScene: this.scene.key, inBattle: false });
+            return;
         }
 
         // Delegate movement logic to the Player class

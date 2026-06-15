@@ -41,6 +41,12 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route1_youngster': [
         { speaker: 'Youngster', text: "I like wearing shorts! They're comfy and easy to wear!", portrait: 'portrait_youngster' }
     ],
+    'route1_joey_defeated': [
+        { speaker: 'Youngster Joey', text: "My Rattata will be stronger next time!", portrait: 'portrait_youngster' }
+    ],
+    'route1_kai_defeated': [
+        { speaker: 'Rival Kai', text: "This isn't over, Max. I'll be back.", portrait: 'portrait_kai' }
+    ],
     'route1_bugcatcher': [
         { speaker: 'Bug Catcher', text: "I'm looking for rare bugs in the tall grass.", portrait: 'portrait_bugcatcher' },
         { speaker: 'Bug Catcher', text: "Be careful, wild Pokémon will jump out at you if you walk through it!", portrait: 'portrait_bugcatcher' }
