@@ -122,4 +122,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Keep name attached to player
         this.nameText.setPosition(this.x, this.y - 36);
     }
+
+    public isMoving(): boolean {
+        return this.body.velocity.x !== 0 || this.body.velocity.y !== 0;
+    }
 }

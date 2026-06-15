@@ -7,6 +7,8 @@ import { Dialogues, DialogueNode } from './dialogues';
 import { QuestTracker } from './QuestTracker';
 import { StoryManager, StoryFlag } from './StoryManager';
 import { Route1Data } from './RouteData';
+import { EncounterManager } from './EncounterManager';
+import { EncounterData } from './Route1Encounters';
 
 export class Route1Scene extends Scene {
     private player!: Player;
@@ -14,6 +16,7 @@ export class Route1Scene extends Scene {
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
     private hudText!: Phaser.GameObjects.Text;
+    private tallGrassZones!: Phaser.Physics.Arcade.StaticGroup;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -25,6 +28,7 @@ export class Route1Scene extends Scene {
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
     private spawnEntrance?: string;
+    private encounterManager!: EncounterManager;
 
     constructor() {
         super('Route1Scene');
@@ -49,10 +53,15 @@ export class Route1Scene extends Scene {
         this.add.tileSprite(1000, 1500, 128, 3000, 'path').setDepth(1);
 
         // Exploration Areas: Tall Grass Patches (Future Encounter Zones)
-        this.add.tileSprite(800, 2500, 256, 256, 'tall_grass').setDepth(0.5);
-        this.add.tileSprite(1200, 2000, 256, 384, 'tall_grass').setDepth(0.5);
-        this.add.tileSprite(800, 1200, 384, 256, 'tall_grass').setDepth(0.5);
-        this.add.tileSprite(1200, 600, 256, 256, 'tall_grass').setDepth(0.5);
+        this.tallGrassZones = this.physics.add.staticGroup();
+        const addTallGrass = (x: number, y: number, width: number, height: number) => {
+            this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
+            this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
+        };
+        addTallGrass(800, 2500, 256, 256);
+        addTallGrass(1200, 2000, 256, 384);
+        addTallGrass(800, 1200, 384, 256);
+        addTallGrass(1200, 600, 256, 256);
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
@@ -117,6 +126,9 @@ export class Route1Scene extends Scene {
         this.cameras.main.setZoom(1.5);
         this.physics.add.collider(this.player, this.obstacles);
 
+        // Encounter System
+        this.encounterManager = new EncounterManager(this);
+
         // UI & Quest System Trigger
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
@@ -158,11 +170,35 @@ export class Route1Scene extends Scene {
     private showCurrentDialogue() { this.dialogueBox.show(this.activeDialogue![this.currentDialogueIndex].speaker, this.activeDialogue![this.currentDialogueIndex].text, this.activeDialogue![this.currentDialogueIndex].portrait); }
     private progressDialogue() { this.currentDialogueIndex++; if (this.currentDialogueIndex >= this.activeDialogue!.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
 
+    private triggerEncounter(pokemon: EncounterData) {
+        this.player.setMovementEnabled(false);
+
+        // 1. Screen flash effect
+        this.cameras.main.flash(300, 255, 255, 255);
+
+        // 2. Transition to encounter scene
+        this.time.delayedCall(300, () => {
+            this.scene.pause();
+            this.scene.launch('EncounterScene', {
+                pokemonName: pokemon.name,
+                pokemonLevel: EncounterManager.getRandomLevel(pokemon),
+            });
+
+            // 3. Resume this scene when the encounter is over
+            this.scene.get('EncounterScene').events.once('shutdown', () => {
+                this.cameras.main.fadeIn(250, 0, 0, 0);
+                this.player.setMovementEnabled(true);
+            });
+        });
+    }
+
     update(time: number, delta: number) {
         if (this.activeDialogue) {
             if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) this.progressDialogue();
             return;
         }
+
+        if (!this.player.movementEnabled) return;
 
         this.player.update(time, delta);
         this.hudText.setText(`Location: Route 1\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
@@ -175,5 +211,18 @@ export class Route1Scene extends Scene {
         this.physics.overlap(this.player, this.npcZones, (_player, zone) => { this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId'); });
         if (this.currentNPC) { this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true); if (Input.Keyboard.JustDown(this.interactKey)) { this.activeDialogue = Dialogues[this.currentNPC]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); } } 
         else { this.interactionText.setVisible(false); }
+
+        // Wild Encounter Logic
+        let inTallGrass = false;
+        this.physics.overlap(this.player, this.tallGrassZones, () => {
+            inTallGrass = true;
+        });
+
+        if (inTallGrass && this.player.isMoving()) {
+            const encounter = this.encounterManager.checkEncounter('Route1Scene');
+            if (encounter) {
+                this.triggerEncounter(encounter);
+            }
+        }
     }
 }

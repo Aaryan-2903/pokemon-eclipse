@@ -93,6 +93,12 @@ export class PreloadScene extends Scene {
         createStarter('starter_fire', 0xef4444);
         createStarter('starter_water', 0x3b82f6);
 
+        // Generate Pokemon Placeholder
+        graphics.fillStyle(0x9ca3af, 1); // Gray
+        graphics.fillCircle(32, 32, 30);
+        graphics.generateTexture('pokemon_placeholder', 64, 64);
+        graphics.clear();
+
         // Generate Floors
         graphics.fillStyle(0xd4d4d8, 1);
         graphics.fillRect(0, 0, 64, 64);
