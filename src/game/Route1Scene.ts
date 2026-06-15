@@ -9,6 +9,8 @@ import { StoryManager, StoryFlag } from './StoryManager';
 import { Route1Data } from './RouteData';
 import { EncounterManager } from './EncounterManager';
 import { EncounterData } from './Route1Encounters';
+import { generatePlayerPokemon, generateWildPokemon } from './PokemonData';
+import { PlayerState } from './PlayerData';
 
 export class Route1Scene extends Scene {
     private player!: Player;
@@ -179,13 +181,20 @@ export class Route1Scene extends Scene {
         // 2. Transition to encounter scene
         this.time.delayedCall(300, () => {
             this.scene.pause();
-            this.scene.launch('EncounterScene', {
-                pokemonName: pokemon.name,
-                pokemonLevel: EncounterManager.getRandomLevel(pokemon),
+            
+            const enemyLevel = EncounterManager.getRandomLevel(pokemon);
+            const enemyMon = generateWildPokemon(pokemon.name, enemyLevel);
+            const playerStarter = PlayerState.starterPokemon || 'Charmander';
+            const playerMon = generatePlayerPokemon(playerStarter, 5);
+
+            this.scene.launch('BattleScene', {
+                playerMon,
+                enemyMon
             });
 
             // 3. Resume this scene when the encounter is over
-            this.scene.get('EncounterScene').events.once('shutdown', () => {
+            this.scene.get('BattleScene').events.once('battle-ended', () => {
+                this.scene.stop('BattleScene');
                 this.cameras.main.fadeIn(250, 0, 0, 0);
                 this.player.setMovementEnabled(true);
             });
@@ -198,7 +207,7 @@ export class Route1Scene extends Scene {
             return;
         }
 
-        if (!this.player.movementEnabled) return;
+        if (!this.player.canMove()) return;
 
         this.player.update(time, delta);
         this.hudText.setText(`Location: Route 1\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);

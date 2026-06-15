@@ -76,6 +76,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    public canMove(): boolean {
+        return this.movementEnabled;
+    }
+
     update(time: number, delta: number) {
         if (!this.movementEnabled) return;
 
@@ -124,6 +128,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     public isMoving(): boolean {
+        if (!this.body) {
+            return false;
+        }
         return this.body.velocity.x !== 0 || this.body.velocity.y !== 0;
     }
 }
