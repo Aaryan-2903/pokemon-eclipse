@@ -7,12 +7,13 @@ const encounterTables: Record<string, EncounterData[]> = {
 
 export class EncounterManager {
     private scene: Phaser.Scene;
-    private encounterChance: number = 0.15; // 15% chance per check
-    private lastEncounterTime: number = 0;
-    private cooldown: number = 3000; // 3 seconds
+    private readonly ENCOUNTER_RATE: number = 0.1;
+    private readonly ENCOUNTER_COOLDOWN_STEPS: number = 12;
+    private stepsSinceLastEncounter: number = 0;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
+        this.stepsSinceLastEncounter = this.ENCOUNTER_COOLDOWN_STEPS; // Allow first encounter immediately
     }
 
     /**
@@ -21,15 +22,15 @@ export class EncounterManager {
      * @returns The encountered Pokémon data or null if no encounter happens.
      */
     public checkEncounter(routeKey: string): EncounterData | null {
-        const now = this.scene.time.now;
-        if (now - this.lastEncounterTime < this.cooldown) {
+        this.stepsSinceLastEncounter++;
+        if (this.stepsSinceLastEncounter < this.ENCOUNTER_COOLDOWN_STEPS) {
             return null;
         }
 
-        if (Math.random() < this.encounterChance) {
+        if (Math.random() < this.ENCOUNTER_RATE) {
             const encounterTable = encounterTables[routeKey];
             if (encounterTable) {
-                this.lastEncounterTime = now;
+                this.stepsSinceLastEncounter = 0; // Reset for cooldown
                 return this.selectRandomPokemon(encounterTable);
             }
         }

@@ -7,6 +7,7 @@ export interface TurnAction {
     target?: 'player' | 'enemy';
     damage?: number;
     isFaint?: boolean;
+    isGameOver?: boolean;
 }
 
 export class TurnManager {
@@ -39,6 +40,8 @@ export class TurnManager {
         }
         if (playerMon.currentHp <= 0) {
             actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });
+            actions.push({ message: `You blacked out!`, isGameOver: true });
+            return actions;
         }
 
         return actions;

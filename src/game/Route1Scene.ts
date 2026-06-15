@@ -31,6 +31,8 @@ export class Route1Scene extends Scene {
     private currentDialogueIndex: number = 0;
     private spawnEntrance?: string;
     private encounterManager!: EncounterManager;
+    private playerLastPosForEncounter!: Phaser.Math.Vector2;
+    private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
 
     constructor() {
         super('Route1Scene');
@@ -41,6 +43,18 @@ export class Route1Scene extends Scene {
     }
 
     create() {
+        console.log('Route1Scene loaded');
+
+        // --- DEBUG: Ensure player has a Pokémon for testing ---
+        if (PlayerState.pokemonTeam.length === 0) {
+            console.warn('No player Pokémon found! Creating a default Charmander for testing.');
+            const defaultStarter = generatePlayerPokemon('Charmander', 5);
+            PlayerState.pokemonTeam.push(defaultStarter);
+        }
+        // --- END DEBUG ---
+
+        console.log('Current playerPokemon on load:', PlayerState.pokemonTeam[0]);
+
         console.log(`Loading Route Data: ${Route1Data.name}`);
 
         // Larger World Bounds for exploration (2000x3000)
@@ -121,6 +135,7 @@ export class Route1Scene extends Scene {
         let spawnX = 1000, spawnY = 2850;
         if (this.spawnEntrance === 'town') { spawnX = 1000; spawnY = 2850; }
         this.player = new Player(this, spawnX, spawnY);
+        this.playerLastPosForEncounter = new Phaser.Math.Vector2(this.player.x, this.player.y);
 
         // Camera Setup
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
@@ -173,6 +188,7 @@ export class Route1Scene extends Scene {
     private progressDialogue() { this.currentDialogueIndex++; if (this.currentDialogueIndex >= this.activeDialogue!.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
 
     private triggerEncounter(pokemon: EncounterData) {
+        console.log('Encounter triggered!');
         this.player.setMovementEnabled(false);
 
         // 1. Screen flash effect
@@ -180,12 +196,20 @@ export class Route1Scene extends Scene {
 
         // 2. Transition to encounter scene
         this.time.delayedCall(300, () => {
+            console.log('About to start BattleScene...');
             this.scene.pause();
             
             const enemyLevel = EncounterManager.getRandomLevel(pokemon);
             const enemyMon = generateWildPokemon(pokemon.name, enemyLevel);
-            const playerStarter = PlayerState.starterPokemon || 'Charmander';
-            const playerMon = generatePlayerPokemon(playerStarter, 5);
+            
+            const playerMon = PlayerState.pokemonTeam[0];
+            console.log('Current playerPokemon on encounter:', playerMon);
+            if (!playerMon) {
+                console.error("Battle triggered without a player Pokémon.");
+                this.scene.resume(); // Abort battle and resume route
+                this.player.setMovementEnabled(true);
+                return;
+            }
 
             this.scene.launch('BattleScene', {
                 playerMon,
@@ -193,10 +217,17 @@ export class Route1Scene extends Scene {
             });
 
             // 3. Resume this scene when the encounter is over
-            this.scene.get('BattleScene').events.once('battle-ended', () => {
+            this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
+                console.log(`Battle ended with result: ${result}`);
                 this.scene.stop('BattleScene');
-                this.cameras.main.fadeIn(250, 0, 0, 0);
-                this.player.setMovementEnabled(true);
+                if (result === 'loss') {
+                    PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
+                    this.scene.start('InteriorScene', { entranceId: 'home' });
+                } else {
+                    this.cameras.main.fadeIn(250, 0, 0, 0);
+                    this.scene.resume(); // Explicitly resume the scene
+                    this.player.setMovementEnabled(true);
+                }
             });
         });
     }
@@ -228,10 +259,19 @@ export class Route1Scene extends Scene {
         });
 
         if (inTallGrass && this.player.isMoving()) {
-            const encounter = this.encounterManager.checkEncounter('Route1Scene');
-            if (encounter) {
-                this.triggerEncounter(encounter);
+            const distance = this.playerLastPosForEncounter.distance({ x: this.player.x, y: this.player.y });
+
+            if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
+                this.playerLastPosForEncounter.set(this.player.x, this.player.y);
+                const encounter = this.encounterManager.checkEncounter('Route1Scene');
+                if (encounter) {
+                    this.triggerEncounter(encounter);
+                }
             }
+        } else {
+            // When not in grass or not moving, keep the last position updated
+            // to prevent a large distance jump when re-entering grass.
+            this.playerLastPosForEncounter.set(this.player.x, this.player.y);
         }
     }
 }

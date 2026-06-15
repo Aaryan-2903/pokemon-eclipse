@@ -1,10 +1,12 @@
+import { PokemonInstance } from './PokemonData';
+
 export interface IPlayerData {
     name: string;
     starterPokemon?: string;
-    // Future Expansion Points:
-    // gender, starterPokemon, money, badges, inventory
+    pokemonTeam: PokemonInstance[];
 }
 
 export const PlayerState: IPlayerData = {
-    name: 'Max'
+    name: 'Max',
+    pokemonTeam: []
 };

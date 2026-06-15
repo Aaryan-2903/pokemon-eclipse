@@ -7,6 +7,7 @@ import { EventBus } from './EventBus';
 import { QuestTracker } from './QuestTracker';
 import { StarterSelectionUI } from './StarterSelectionUI';
 import { PlayerState } from './PlayerData';
+import { generatePlayerPokemon } from './PokemonData';
 
 export class InteriorScene extends Scene {
     private player!: Player;
@@ -129,8 +130,16 @@ export class InteriorScene extends Scene {
             this.starterUIOpen = true;
             new StarterSelectionUI(this, (starterName) => {
                 this.starterUIOpen = false;
+                console.log(`Starter selected: ${starterName}`);
                 PlayerState.starterPokemon = starterName;
                 StoryManager.getInstance().setFlag(StoryFlag.HAS_CHOSEN_STARTER);
+
+                if (PlayerState.pokemonTeam.length === 0) {
+                    const playerMon = generatePlayerPokemon(starterName, 5);
+                    console.log('Player Pokemon created:', playerMon);
+                    PlayerState.pokemonTeam.push(playerMon);
+                    console.log('Player Pokemon saved. Current team:', PlayerState.pokemonTeam);
+                }
 
                 // Transition seamlessly into the Pokédex sequence
                 this.activeDialogueKey = 'nova_give_pokedex';
