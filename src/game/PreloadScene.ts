@@ -60,6 +60,7 @@ export class PreloadScene extends Scene {
         createNPC('npc_youngster', 0x38bdf8); // Light blue
         createNPC('npc_bugcatcher', 0x4ade80); // Green
         createNPC('npc_traveler', 0x78350f); // Brown
+        createNPC('npc_aurora', 0xa78bfa); // Violet
 
         // Generate Portrait Placeholders
         const createPortrait = (key: string, color: number) => {
@@ -80,6 +81,7 @@ export class PreloadScene extends Scene {
         createPortrait('portrait_youngster', 0x38bdf8);
         createPortrait('portrait_bugcatcher', 0x4ade80);
         createPortrait('portrait_traveler', 0x78350f);
+        createPortrait('portrait_aurora', 0xa78bfa);
 
         // Generate Starter Placeholders
         const createStarter = (key: string, color: number) => {
@@ -195,6 +197,14 @@ export class PreloadScene extends Scene {
         graphics.generateTexture('desk_texture', 200, 60);
         graphics.clear();
 
+        // Generate Sky Badge
+        graphics.fillStyle(0x7dd3fc, 1); // Light Sky Blue
+        graphics.fillPoints([ {x: 16, y: 2}, {x: 30, y: 16}, {x: 16, y: 30}, {x: 2, y: 16} ]);
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(16, 16, 4);
+        graphics.generateTexture('badge_sky', 32, 32);
+        graphics.clear();
+
         // Generate Water
         graphics.fillStyle(0x38bdf8, 1);
         graphics.fillRect(0, 0, 64, 64);
@@ -222,6 +232,7 @@ export class PreloadScene extends Scene {
         createBuilding('lab', 256, 192, 0x64748b);          // Slate roof
         createBuilding('center', 160, 128, 0xf43f5e);       // Rose roof
         createBuilding('mart', 160, 128, 0x0ea5e9);         // Sky blue roof
+        createBuilding('building_gym', 192, 160, 0xf59e0b); // Amber roof
 
         graphics.destroy();
 

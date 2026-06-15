@@ -5,6 +5,8 @@ import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
 import { BattleScene } from './BattleScene';
 import { TeamScene } from './TeamScene';
+import { EvolutionScene } from './EvolutionScene';
+import { BadgeScene } from './BadgeScene';
 import { Types, Game } from 'phaser';
 
 const config: Types.Core.GameConfig = {
@@ -34,7 +36,9 @@ const config: Types.Core.GameConfig = {
         InteriorScene,
         Route1Scene,
         BattleScene,
-        TeamScene
+        TeamScene,
+        EvolutionScene,
+        BadgeScene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

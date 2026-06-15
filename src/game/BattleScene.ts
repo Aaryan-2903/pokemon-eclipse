@@ -1,5 +1,5 @@
 import { Scene, Input } from 'phaser';
-import { PokemonInstance, handleLevelUp } from './PokemonData';
+import { PokemonInstance, handleLevelUp, getXpForNextLevel } from './PokemonData';
 import { TurnManager, TurnAction } from './TurnManager';
 import { Moves } from './Moves';
 import { EventBus } from './EventBus';
@@ -23,6 +23,8 @@ export class BattleScene extends Scene {
     private playerHpText!: Phaser.GameObjects.Text;
     private enemyInfoText!: Phaser.GameObjects.Text;
     private playerInfoText!: Phaser.GameObjects.Text;
+    private playerXpBar!: Phaser.GameObjects.Rectangle;
+    private playerXpText!: Phaser.GameObjects.Text;
 
     private isProcessingTurn: boolean = false;
     private isTrainerBattle: boolean = false;
@@ -164,11 +166,16 @@ export class BattleScene extends Scene {
         this.enemyHpText = this.add.text(200, 125, '', { fontFamily: 'monospace', fontSize: '12px', color: '#000000' }).setOrigin(0.5);
 
         // Player Status UI (Bottom Right)
-        this.add.rectangle(600, 350, 280, 70, 0xf3f4f6).setStrokeStyle(2, 0x000000);
+        this.add.rectangle(600, 355, 280, 90, 0xf3f4f6).setStrokeStyle(2, 0x000000);
         this.playerInfoText = this.add.text(480, 325, `${this.playerMon.name} Lv${this.playerMon.level}`, { fontFamily: 'monospace', fontSize: '18px', color: '#000000', fontStyle: 'bold' });
-        this.add.rectangle(600, 360, 200, 12, 0x9ca3af); // HP Track
-        this.playerHpBar = this.add.rectangle(500, 360, 200, 12, 0x22c55e).setOrigin(0, 0.5); // HP Fill
-        this.playerHpText = this.add.text(600, 375, '', { fontFamily: 'monospace', fontSize: '12px', color: '#000000' }).setOrigin(0.5);
+        // HP Bar
+        this.add.rectangle(600, 350, 200, 12, 0x9ca3af); // HP Track
+        this.playerHpBar = this.add.rectangle(500, 350, 200, 12, 0x22c55e).setOrigin(0, 0.5); // HP Fill
+        this.playerHpText = this.add.text(600, 365, '', { fontFamily: 'monospace', fontSize: '12px', color: '#000000' }).setOrigin(0.5);
+        // XP Bar
+        this.add.rectangle(600, 380, 200, 8, 0x9ca3af); // XP Track
+        this.playerXpBar = this.add.rectangle(500, 380, 0, 8, 0x3b82f6).setOrigin(0, 0.5); // XP Fill
+        this.playerXpText = this.add.text(600, 392, '', { fontFamily: 'monospace', fontSize: '12px', color: '#000000' }).setOrigin(0.5);
     }
 
     private updateHpBars(duration: number = 300) {
@@ -179,6 +186,11 @@ export class BattleScene extends Scene {
         const pPercent = Math.max(0, this.playerMon.currentHp / this.playerMon.maxHp);
         this.tweens.add({ targets: this.playerHpBar, width: 200 * pPercent, duration });
         this.playerHpText.setText(`${this.playerMon.currentHp} / ${this.playerMon.maxHp}`);
+
+        const xpForNextLevel = getXpForNextLevel(this.playerMon.level);
+        const xpPercent = this.playerMon.xp / xpForNextLevel;
+        this.playerXpBar.width = 200 * xpPercent;
+        this.playerXpText.setText(`XP: ${this.playerMon.xp} / ${xpForNextLevel}`);
     }
 
     private showMessage(text: string, onComplete?: () => void) {
@@ -235,22 +247,23 @@ export class BattleScene extends Scene {
 
         this.showMessage(`${oldPokemonName}, come back! Go, ${newPokemonName}!`, () => {
             const newSpriteKey = `player_sprite_back_${this.playerMon.id}`;
-            const newSpriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`;
 
             // Update UI text
             this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
             this.updateHpBars(0);
 
-            // Handle sprite update
-            if (this.textures.exists(newSpriteKey)) {
+            const performSwap = () => {
                 this.playerSprite.setTexture(newSpriteKey);
                 this.enemyTurnAfterSwap();
+            };
+
+            // Handle sprite update
+            if (this.textures.exists(newSpriteKey)) {
+                performSwap();
             } else {
+                const newSpriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`;
                 this.load.image(newSpriteKey, newSpriteUrl);
-                this.load.once('complete', () => {
-                    this.playerSprite.setTexture(newSpriteKey);
-                    this.enemyTurnAfterSwap();
-                }, this);
+                this.load.once('complete', performSwap, this);
                 this.load.start();
             }
         });
@@ -306,10 +319,17 @@ export class BattleScene extends Scene {
 
             if (Math.random() < finalCatchChance) {
                 // --- SUCCESS ---
-                PlayerState.pokemonTeam.push(this.enemyMon);
-                this.showMessage(`Gotcha! ${this.enemyMon.name} was caught!`, () => {
-                    this.time.delayedCall(1000, () => this.endBattle('win'));
-                });
+                if (PlayerState.pokemonTeam.length < 6) {
+                    PlayerState.pokemonTeam.push(this.enemyMon);
+                    this.showMessage(`Gotcha! ${this.enemyMon.name} was caught!`, () => {
+                        this.time.delayedCall(1000, () => this.endBattle('win'));
+                    });
+                } else {
+                    PlayerState.pokemonBox.push(this.enemyMon);
+                    this.showMessage(`Gotcha! ${this.enemyMon.name} was caught and sent to the PC Box!`, () => {
+                        this.time.delayedCall(1000, () => this.endBattle('win'));
+                    });
+                }
             } else {
                 // --- FAILURE ---
                 const failureMessages = ["The Pokemon broke free!", "Almost had it!"];
@@ -339,32 +359,90 @@ export class BattleScene extends Scene {
             // VICTORY: Enemy fainted
             if (action.isFaint && action.target === 'enemy') {
                 const xpGained = 20;
-                this.playerMon.xp += xpGained;
-                this.playerMon.totalXp += xpGained;
+                this.handleXpGain(xpGained);
+            }
+            // DEFEAT: Player fainted, now showing "blacked out"
+            else if (action.isGameOver) {
+                this.time.delayedCall(1500, () => this.endBattle('loss'));
+            }
+            else {
+                // If not a game-ending action, continue processing the rest of the turn's actions
+                this.processActions(actions);
+            }
+        });
+    }
 
-                this.showMessage(`${this.playerMon.name} gained ${xpGained} XP!`, () => {
-                    const levelUpResult = handleLevelUp(this.playerMon);
-                    if (levelUpResult.leveledUp) {
-                        this.showMessage(levelUpResult.message, () => {
-                            this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
-                            this.updateHpBars(0);
-                            this.time.delayedCall(1500, () => this.handleEnemyFaint());
-                        });
-                    } else {
-                        this.time.delayedCall(1500, () => this.handleEnemyFaint());
+    private handleXpGain(xpGained: number) {
+        this.showMessage(`${this.playerMon.name} gained ${xpGained} XP!`, () => {
+            console.log(`[XP DEBUG] Before: Level ${this.playerMon.level}, XP ${this.playerMon.xp}/${getXpForNextLevel(this.playerMon.level)}`);
+            console.log(`[XP DEBUG] XP Gained: ${xpGained}`);
+
+            const oldXp = this.playerMon.xp;
+            const oldLevel = this.playerMon.level;
+            const xpForOldLevel = getXpForNextLevel(oldLevel);
+            const oldXpPercent = oldXp / xpForOldLevel;
+    
+            this.playerMon.xp += xpGained;
+            this.playerMon.totalXp += xpGained;
+    
+            console.log(`[XP DEBUG] After gain: Total XP is now ${this.playerMon.xp}`);
+
+            const levelUpResult = handleLevelUp(this.playerMon);
+    
+            if (!levelUpResult.leveledUp) {
+                const newXpPercent = this.playerMon.xp / xpForOldLevel;
+                this.playerXpText.setText(`XP: ${this.playerMon.xp} / ${xpForOldLevel}`);
+                this.tweens.add({
+                    targets: this.playerXpBar,
+                    width: 200 * newXpPercent,
+                    duration: 800,
+                    ease: 'Power1',
+                    onComplete: () => {
+                        this.time.delayedCall(500, () => this.handleEnemyFaint());
                     }
                 });
-                return; // End of turn processing
+            } else { // Leveled up
+                this.tweens.add({
+                    targets: this.playerXpBar,
+                    width: 200,
+                    duration: 800 * (1 - oldXpPercent),
+                    ease: 'Power1',
+                    onComplete: () => {
+                        this.showMessage(levelUpResult.message, () => {
+                            this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
+                            this.updateHpBars(0); // Snap to new values
+    
+                            if (levelUpResult.evolution) {
+                                this.startEvolutionSequence(this.playerMon, levelUpResult.evolution.to);
+                            } else {
+                                this.time.delayedCall(1500, () => this.handleEnemyFaint());
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    private startEvolutionSequence(pokemon: PokemonInstance, toSpecies: string) {
+        this.scene.pause();
+        this.scene.launch('EvolutionScene', { pokemon, to: toSpecies, fromScene: 'BattleScene' });
+
+        this.scene.get('EvolutionScene').events.once('evolution-complete', () => {
+            this.scene.resume();
+            this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
+            this.updateHpBars(0);
+            
+            const newSpriteKey = `player_sprite_back_${this.playerMon.id}`;
+            if (!this.textures.exists(newSpriteKey)) {
+                this.load.image(newSpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`);
+                this.load.once('complete', () => this.playerSprite.setTexture(newSpriteKey), this);
+                this.load.start();
+            } else {
+                this.playerSprite.setTexture(newSpriteKey);
             }
 
-            // DEFEAT: Player fainted, now showing "blacked out"
-            if (action.isGameOver) {
-                this.time.delayedCall(1500, () => this.endBattle('loss'));
-                return; // End of turn processing
-            }
-
-            // If not a game-ending action, continue processing the rest of the turn's actions
-            this.processActions(actions);
+            this.time.delayedCall(1500, () => this.handleEnemyFaint());
         });
     }
 

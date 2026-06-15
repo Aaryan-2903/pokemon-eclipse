@@ -26,6 +26,7 @@ export class Route1Scene extends Scene {
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
     private teamKey!: Phaser.Input.Keyboard.Key;
+    private badgeKey!: Phaser.Input.Keyboard.Key;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
     private questTracker!: QuestTracker;
@@ -130,7 +131,7 @@ export class Route1Scene extends Scene {
         // Add Trainers
         addNPC(1000, 2200, 'npc_youngster', 'route1_youngster', 'Youngster Joey', 'route1_joey');
         addNPC(1000, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai');
-        addNPC(800, 1300, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher');
+        addNPC(800, 1300, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher Tim', 'route1_tim');
         addNPC(1000, 500, 'npc_traveler', 'route1_traveler', 'Traveler');
 
         // Map Transition: Return to Eclipse Town
@@ -180,6 +181,7 @@ export class Route1Scene extends Scene {
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
             this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
+            this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
         // Story Progression
@@ -308,6 +310,12 @@ export class Route1Scene extends Scene {
         if (Input.Keyboard.JustDown(this.teamKey)) {
             this.scene.pause();
             this.scene.launch('TeamScene', { fromScene: this.scene.key, inBattle: false });
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.badgeKey)) {
+            this.scene.pause();
+            this.scene.launch('BadgeScene', { fromScene: this.scene.key });
             return;
         }
 

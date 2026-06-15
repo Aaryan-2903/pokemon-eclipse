@@ -1,7 +1,10 @@
+import { EvolutionTable } from './EvolutionData';
+
 export interface PokemonInstance {
     name: string;
     id: number;
     level: number;
+    types: string[];
     maxHp: number;
     currentHp: number;
     attack: number;
@@ -13,7 +16,7 @@ export interface PokemonInstance {
     totalXp: number;
 }
 
-const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
+export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Bulbasaur': 1,
     'Charmander': 4,
     'Squirtle': 7,
@@ -21,6 +24,32 @@ const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Weedle': 13,
     'Pidgey': 16,
     'Rattata': 19,
+    'Charmeleon': 5,
+    'Charizard': 6,
+    'Metapod': 11,
+    'Butterfree': 12,
+    'Kakuna': 14,
+    'Beedrill': 15,
+    'Pidgeotto': 17,
+    'Raticate': 20,
+};
+
+const POKEMON_TYPES_MAP: Record<string, string[]> = {
+    'Bulbasaur': ['Grass', 'Poison'],
+    'Charmander': ['Fire'],
+    'Squirtle': ['Water'],
+    'Caterpie': ['Bug'],
+    'Weedle': ['Bug', 'Poison'],
+    'Pidgey': ['Normal', 'Flying'],
+    'Rattata': ['Normal'],
+    'Charmeleon': ['Fire'],
+    'Charizard': ['Fire', 'Flying'],
+    'Metapod': ['Bug'],
+    'Butterfree': ['Bug', 'Flying'],
+    'Kakuna': ['Bug', 'Poison'],
+    'Beedrill': ['Bug', 'Poison'],
+    'Pidgeotto': ['Normal', 'Flying'],
+    'Raticate': ['Normal'],
 };
 
 export const generateWildPokemon = (name: string, level: number): PokemonInstance => {
@@ -28,6 +57,7 @@ export const generateWildPokemon = (name: string, level: number): PokemonInstanc
         name,
         level,
         id: POKEMON_SPECIES_ID_MAP[name] || 1, // Default to Bulbasaur if not found
+        types: POKEMON_TYPES_MAP[name] || ['Normal'],
         maxHp: 20 + level * 2,
         currentHp: 20 + level * 2,
         attack: 5 + level,
@@ -49,12 +79,20 @@ export const generatePlayerPokemon = (name: string, level: number): PokemonInsta
     };
 };
 
-export const handleLevelUp = (pokemon: PokemonInstance): { leveledUp: boolean, message: string } => {
-    const xpForNextLevel = 100;
+export const getXpForNextLevel = (level: number): number => {
+    // A simple formula for now. Can be expanded later (e.g., Math.pow(level, 3))
+    return 100;
+};
+
+export const handleLevelUp = (pokemon: PokemonInstance): { leveledUp: boolean, message: string, evolution: { to: string } | null } => {
+    let xpForNextLevel = getXpForNextLevel(pokemon.level);
     let message = '';
     let leveledUp = false;
+    let evolution: { to: string } | null = null;
+
     while (pokemon.xp >= xpForNextLevel) {
         leveledUp = true;
+        const oldLevel = pokemon.level;
         pokemon.level++;
         pokemon.xp -= xpForNextLevel;
         pokemon.maxHp += 5;
@@ -62,9 +100,35 @@ export const handleLevelUp = (pokemon: PokemonInstance): { leveledUp: boolean, m
         pokemon.defense += 2;
         pokemon.speed += 2;
         pokemon.currentHp = pokemon.maxHp;
+
+        xpForNextLevel = getXpForNextLevel(pokemon.level);
+
+        console.log(`[XP DEBUG] LEVEL UP! ${pokemon.name} | Level ${oldLevel} -> ${pokemon.level} | XP is now ${pokemon.xp}/${xpForNextLevel}`);
+
+        // Check for evolution
+        const evolutionStep = EvolutionTable[pokemon.name];
+        if (evolutionStep && pokemon.level >= evolutionStep.level) {
+            evolution = { to: evolutionStep.to };
+        }
     }
     if (leveledUp) {
         message = `${pokemon.name} grew to Level ${pokemon.level}!`;
     }
-    return { leveledUp, message };
+    return { leveledUp, message, evolution };
+};
+
+export const evolvePokemon = (pokemon: PokemonInstance, to: string) => {
+    const oldName = pokemon.name;
+    pokemon.name = to;
+    pokemon.id = POKEMON_SPECIES_ID_MAP[to] || pokemon.id;
+    pokemon.types = POKEMON_TYPES_MAP[to] || pokemon.types;
+
+    // Stat boost on evolution
+    pokemon.maxHp += 10;
+    pokemon.attack += 5;
+    pokemon.defense += 5;
+    pokemon.speed += 5;
+    pokemon.currentHp = pokemon.maxHp; // Fully heal on evolution
+
+    console.log(`${oldName} evolved into ${to}!`, pokemon);
 };

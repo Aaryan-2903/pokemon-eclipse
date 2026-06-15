@@ -55,6 +55,18 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route1_kai_defeated': [
         { speaker: 'Rival Kai', text: "This isn't over, Max. I'll be back.", portrait: 'portrait_kai' }
     ],
+    'route1_tim_defeated': [
+        { speaker: 'Bug Catcher Tim', text: "You're a good trainer! My bugs will get stronger!", portrait: 'portrait_bugcatcher' }
+    ],
+    'gym_aurora_defeated': [
+        { speaker: 'Aurora', text: "That was a wonderful battle. Your bond with your Pokémon is clear.", portrait: 'portrait_aurora' }
+    ],
+    'gym_aurora_victory': [
+        { speaker: 'Aurora', text: "You have proven your worth. As a symbol of your victory, I present you with the Sky Badge!", portrait: 'portrait_aurora' },
+        { speaker: 'System', text: "You received the Sky Badge!" },
+        { speaker: 'Aurora', text: "Also, please take this. It's a Technical Machine. It can teach a Pokémon a new move.", portrait: 'portrait_aurora' },
+        { speaker: 'System', text: "You received a TM! (Placeholder)" }
+    ],
     'route1_bugcatcher': [
         { speaker: 'Bug Catcher', text: "I'm looking for rare bugs in the tall grass.", portrait: 'portrait_bugcatcher' },
         { speaker: 'Bug Catcher', text: "Be careful, wild Pokémon will jump out at you if you walk through it!", portrait: 'portrait_bugcatcher' }

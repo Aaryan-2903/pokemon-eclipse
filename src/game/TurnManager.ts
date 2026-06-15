@@ -19,10 +19,15 @@ export class TurnManager {
         // --- Player Turn ---
         actions.push({ message: `${playerMon.name} used ${playerMove.name}!` });
         
-        const pDamage = DamageCalculator.calculate(playerMon, enemyMon, playerMove);
-        if (pDamage > 0) {
-            enemyMon.currentHp = Math.max(0, enemyMon.currentHp - pDamage);
-            actions.push({ message: `It did ${pDamage} damage.`, target: 'enemy', damage: pDamage });
+        const pResult = DamageCalculator.calculate(playerMon, enemyMon, playerMove);
+        if (pResult.damage > 0) {
+            enemyMon.currentHp = Math.max(0, enemyMon.currentHp - pResult.damage);
+            if (pResult.modifier === 'strong') {
+                actions.push({ message: "It's a strong hit!" });
+            } else if (pResult.modifier === 'weak') {
+                actions.push({ message: "It's a weak hit!" });
+            }
+            actions.push({ message: `It did ${pResult.damage} damage.`, target: 'enemy', damage: pResult.damage });
         } else if (playerMove.power === 0) {
             actions.push({ message: `Wild ${enemyMon.name}'s stats fell!` });
         }
@@ -33,10 +38,15 @@ export class TurnManager {
 
         // --- Enemy Turn ---
         actions.push({ message: `Wild ${enemyMon.name} used ${enemyMove.name}!` });
-        const eDamage = DamageCalculator.calculate(enemyMon, playerMon, enemyMove);
-        if (eDamage > 0) {
-            playerMon.currentHp = Math.max(0, playerMon.currentHp - eDamage);
-            actions.push({ message: `It did ${eDamage} damage.`, target: 'player', damage: eDamage });
+        const eResult = DamageCalculator.calculate(enemyMon, playerMon, enemyMove);
+        if (eResult.damage > 0) {
+            playerMon.currentHp = Math.max(0, playerMon.currentHp - eResult.damage);
+            if (eResult.modifier === 'strong') {
+                actions.push({ message: "It's a strong hit!" });
+            } else if (eResult.modifier === 'weak') {
+                actions.push({ message: "It's a weak hit!" });
+            }
+            actions.push({ message: `It did ${eResult.damage} damage.`, target: 'player', damage: eResult.damage });
         }
         if (playerMon.currentHp <= 0) {
             actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });
@@ -52,10 +62,15 @@ export class TurnManager {
         const enemyMove = Moves[enemyMoveId];
 
         actions.push({ message: `Wild ${enemyMon.name} used ${enemyMove.name}!` });
-        const eDamage = DamageCalculator.calculate(enemyMon, playerMon, enemyMove);
-        if (eDamage > 0) {
-            playerMon.currentHp = Math.max(0, playerMon.currentHp - eDamage);
-            actions.push({ message: `It did ${eDamage} damage.`, target: 'player', damage: eDamage });
+        const eResult = DamageCalculator.calculate(enemyMon, playerMon, enemyMove);
+        if (eResult.damage > 0) {
+            playerMon.currentHp = Math.max(0, playerMon.currentHp - eResult.damage);
+            if (eResult.modifier === 'strong') {
+                actions.push({ message: "It's a strong hit!" });
+            } else if (eResult.modifier === 'weak') {
+                actions.push({ message: "It's a weak hit!" });
+            }
+            actions.push({ message: `It did ${eResult.damage} damage.`, target: 'player', damage: eResult.damage });
         }
         if (playerMon.currentHp <= 0) {
             actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });

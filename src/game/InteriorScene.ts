@@ -21,6 +21,7 @@ export class InteriorScene extends Scene {
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
+    private badgeKey!: Phaser.Input.Keyboard.Key;
     private interactionText!: Phaser.GameObjects.Text;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
@@ -85,6 +86,7 @@ export class InteriorScene extends Scene {
             this.spaceKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.SPACE);
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
+            this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
         this.interactionText = this.add.text(0, 0, 'Press E to Exit', {
@@ -123,6 +125,11 @@ export class InteriorScene extends Scene {
         } else if (this.entranceId === 'home') {
             // Add a visible center rug for visual movement reference
             this.add.rectangle(400, 300, 120, 80, 0x7f1d1d).setDepth(-0.5);
+        } else if (this.entranceId === 'gym') {
+            // Add Gym Leader Aurora
+            const aurora = new NPC(this, 400, 200, 'npc_aurora', 'gym_aurora_intro', 'gym_aurora');
+            this.obstacles.add(aurora);
+            this.npcZones.add(aurora.interactionZone);
         }
         // Can add else-if blocks for 'mart', 'kai_home', etc.
     }
@@ -205,6 +212,9 @@ export class InteriorScene extends Scene {
             });
             console.log('All Pokémon have been healed.', PlayerState.pokemonTeam);
 
+            // Save the healed state
+            SaveManager.save(this, this.player.x, this.player.y);
+
             // 3. Wait a moment, then fade back in
             this.time.delayedCall(1000, () => {
                 this.cameras.main.fadeIn(500, 255, 255, 255);
@@ -224,6 +234,12 @@ export class InteriorScene extends Scene {
                     this.endDialogue();
                 }
             }
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.badgeKey)) {
+            this.scene.pause();
+            this.scene.launch('BadgeScene', { fromScene: this.scene.key });
             return;
         }
 

@@ -4,6 +4,8 @@ import { Player } from './Player';
 import { NPC } from './NPC';
 import { DialogueBox } from './DialogueBox';
 import { Dialogues, DialogueNode } from './dialogues';
+import { PlayerState } from './PlayerData';
+import { getTrainer, Trainer } from './TrainerData';
 import { QuestTracker } from './QuestTracker';
 import { SaveManager } from './SaveManager';
 
@@ -19,6 +21,7 @@ export class OverworldScene extends Scene {
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
     private teamKey!: Phaser.Input.Keyboard.Key;
+    private badgeKey!: Phaser.Input.Keyboard.Key;
     private currentEntrance: string | null = null;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
@@ -133,6 +136,7 @@ export class OverworldScene extends Scene {
         addBuilding(1000, 1300, 'lab', "Prof. Nova's Lab", 'lab');
         addBuilding(750, 1060, 'center', "Pokemon Center", 'center');
         addBuilding(1250, 1060, 'mart', "Poke Mart", 'mart');
+        addBuilding(700, 500, 'building_gym', 'Eclipse Gym', 'gym');
 
         // Add NPCs
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string) => {
@@ -184,6 +188,7 @@ export class OverworldScene extends Scene {
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
             this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
+            this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
         // Setup Dialogue Box UI
@@ -256,6 +261,53 @@ export class OverworldScene extends Scene {
         this.player.setMovementEnabled(true);
     }
 
+    private startTrainerBattle(trainer: Trainer) {
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+    
+        // Show pre-battle dialogue
+        this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
+        this.currentDialogueIndex = 0;
+        this.showCurrentDialogue();
+    
+        // Temporarily override progressDialogue to launch the battle after the dialogue finishes
+        const originalProgress = this.progressDialogue.bind(this);
+        this.progressDialogue = () => {
+            this.progressDialogue = originalProgress; // Restore original function
+            this.dialogueBox.hide();
+            this.activeDialogue = null;
+    
+            this.cameras.main.flash(300, 0, 0, 0);
+            this.time.delayedCall(300, () => {
+                this.scene.pause();
+                this.scene.launch('BattleScene', { trainer });
+    
+                this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
+                    console.log(`Trainer battle ended with result: ${result}`);
+                    this.scene.stop('BattleScene');
+                    this.cameras.main.fadeIn(250, 0, 0, 0);
+                    this.scene.resume();
+                    
+                    if (result === 'win') {
+                        PlayerState.defeatedTrainers.add(trainer.id);
+                        PlayerState.money += trainer.rewardMoney;
+                        SaveManager.save(this, this.player.x, this.player.y); // Auto-save after winning
+
+                        if (trainer.id === 'gym_aurora') {
+                            PlayerState.badges.add('Sky Badge');
+                            this.startDialogue('gym_aurora_victory');
+                        } else {
+                            this.startDialogue(`${trainer.id}_defeated`);
+                        }
+                    } else if (result === 'loss') {
+                        PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
+                        this.scene.start('InteriorScene', { entranceId: 'center' }); // Go to pokecenter on loss
+                    }
+                });
+            });
+        };
+    }
+
     update(time: number, delta: number) {
         if (this.activeDialogue) {
             if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) {
@@ -269,6 +321,12 @@ export class OverworldScene extends Scene {
         if (Input.Keyboard.JustDown(this.teamKey)) {
             this.scene.pause();
             this.scene.launch('TeamScene', { fromScene: this.scene.key, inBattle: false });
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.badgeKey)) {
+            this.scene.pause();
+            this.scene.launch('BadgeScene', { fromScene: this.scene.key });
             return;
         }
 
@@ -300,14 +358,20 @@ export class OverworldScene extends Scene {
         }
 
         this.currentNPC = null;
+        let currentTrainerId: string | null = null;
         this.physics.overlap(this.player, this.npcZones, (_player, zoneObj) => {
             const zone = zoneObj as Phaser.GameObjects.GameObject;
             this.currentNPC = zone.getData('dialogueId');
+            currentTrainerId = zone.getData('trainerId');
         });
 
         let interactionMessage = '';
         if (this.currentNPC) {
-            interactionMessage = 'Press E to Talk';
+            if (currentTrainerId && !PlayerState.defeatedTrainers.has(currentTrainerId)) {
+                interactionMessage = 'Press E to Battle';
+            } else {
+                interactionMessage = 'Press E to Talk';
+            }
         } else if (this.currentEntrance) {
             interactionMessage = 'Press E to Enter';
         }
@@ -317,8 +381,11 @@ export class OverworldScene extends Scene {
             this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true);
             
             if (Input.Keyboard.JustDown(this.interactKey)) {
-                if (this.currentNPC) {
-                    this.startDialogue(this.currentNPC);
+                const trainer = currentTrainerId ? getTrainer(currentTrainerId) : null;
+                if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
+                    this.startTrainerBattle(trainer);
+                } else if (this.currentNPC) {
+                    this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
                 } else if (this.currentEntrance) {
                     SaveManager.save(this, this.player.x, this.player.y);
                     this.scene.start('InteriorScene', { entranceId: this.currentEntrance });
