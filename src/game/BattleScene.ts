@@ -1,7 +1,5 @@
 import { Scene } from 'phaser';
 import { PokemonInstance } from './PokemonData';
-import { TurnManager, TurnAction } from './TurnManager';
-import { Moves } from './Moves';
 import { EventBus } from './EventBus';
 
 export class BattleScene extends Scene {
@@ -10,14 +8,11 @@ export class BattleScene extends Scene {
 
     private messageText!: Phaser.GameObjects.Text;
     private actionMenu!: Phaser.GameObjects.Container;
-    private movesMenu!: Phaser.GameObjects.Container;
     
     private enemyHpBar!: Phaser.GameObjects.Rectangle;
     private playerHpBar!: Phaser.GameObjects.Rectangle;
     private enemyHpText!: Phaser.GameObjects.Text;
     private playerHpText!: Phaser.GameObjects.Text;
-
-    private isProcessingTurn: boolean = false;
 
     constructor() {
         super('BattleScene');
@@ -26,7 +21,6 @@ export class BattleScene extends Scene {
     init(data: { playerMon: PokemonInstance, enemyMon: PokemonInstance }) {
         this.playerMon = data.playerMon;
         this.enemyMon = data.enemyMon;
-        this.isProcessingTurn = false;
     }
 
     create() {
@@ -36,8 +30,8 @@ export class BattleScene extends Scene {
         this.add.rectangle(400, 300, 800, 600, 0x4ade80); // Light green terrain
 
         // Placeholder Sprites
-        this.add.image(600, 200, 'pokemon_placeholder').setScale(2).setTint(0xef4444); // Enemy
-        this.add.image(200, 400, 'pokemon_placeholder').setScale(2).setTint(0x3b82f6); // Player
+        this.add.image(600, 220, 'pokemon_placeholder').setScale(2.5); // Wild Pokémon on the right
+        this.add.image(200, 400, 'pokemon_placeholder').setScale(2.5).setFlipX(true); // Player Pokémon on the left
 
         this.createUI();
         this.updateHpBars(0); // instant initial update
@@ -67,22 +61,12 @@ export class BattleScene extends Scene {
         // Main Action Menu
         this.actionMenu = this.add.container(600, 520);
         this.actionMenu.add([
-            ...createBtn(-80, -25, 'FIGHT', () => this.showMovesMenu()),
+            ...createBtn(-80, -25, 'FIGHT', () => this.showMessage('Fight logic not implemented.', () => this.showActionMenu())),
             ...createBtn(80, -25, 'BAG', () => this.showMessage('Your bag is empty!', () => this.showActionMenu())),
             ...createBtn(-80, 25, 'POKEMON', () => this.showMessage('No other Pokemon!', () => this.showActionMenu())),
             ...createBtn(80, 25, 'RUN', () => this.runAway())
         ]);
         this.actionMenu.setVisible(false);
-
-        // Moves Menu
-        this.movesMenu = this.add.container(600, 520);
-        const move1 = this.playerMon.moves[0];
-        const move2 = this.playerMon.moves[1];
-        
-        if (move1) this.movesMenu.add([...createBtn(-80, -25, Moves[move1].name.toUpperCase(), () => this.executeTurn(move1))]);
-        if (move2) this.movesMenu.add([...createBtn(80, -25, Moves[move2].name.toUpperCase(), () => this.executeTurn(move2))]);
-        this.movesMenu.add([...createBtn(0, 25, 'CANCEL', () => this.showActionMenu())]);
-        this.movesMenu.setVisible(false);
 
         // Enemy Status UI (Top Left)
         this.add.rectangle(200, 100, 280, 70, 0xf3f4f6).setStrokeStyle(2, 0x000000);
@@ -111,7 +95,6 @@ export class BattleScene extends Scene {
 
     private showMessage(text: string, onComplete?: () => void) {
         this.actionMenu.setVisible(false);
-        this.movesMenu.setVisible(false);
         this.messageText.setText(text);
         this.time.delayedCall(1200, () => {
             if (onComplete) onComplete();
@@ -121,38 +104,10 @@ export class BattleScene extends Scene {
     private showActionMenu() {
         this.messageText.setText('What will you do?');
         this.actionMenu.setVisible(true);
-        this.movesMenu.setVisible(false);
-    }
-
-    private showMovesMenu() {
-        this.messageText.setText('');
-        this.actionMenu.setVisible(false);
-        this.movesMenu.setVisible(true);
     }
 
     private runAway() {
         this.showMessage('Got away safely!', () => this.endBattle());
-    }
-
-    private executeTurn(moveId: string) {
-        if (this.isProcessingTurn) return;
-        this.isProcessingTurn = true;
-        this.movesMenu.setVisible(false);
-
-        // Fallback to tackle if array errors
-        const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
-        this.processActions(TurnManager.processTurn(this.playerMon, moveId, this.enemyMon, enemyMoveId));
-    }
-
-    private processActions(actions: TurnAction[]) {
-        if (actions.length === 0) { this.isProcessingTurn = false; this.showActionMenu(); return; }
-        const action = actions.shift()!;
-        
-        this.showMessage(action.message, () => {
-            if (action.damage !== undefined) this.updateHpBars(300);
-            if (action.isFaint) this.time.delayedCall(1000, () => this.endBattle());
-            else this.processActions(actions);
-        });
     }
 
     private endBattle() {
