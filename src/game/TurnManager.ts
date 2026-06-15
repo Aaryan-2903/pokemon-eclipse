@@ -46,4 +46,22 @@ export class TurnManager {
 
         return actions;
     }
+
+    public static processEnemyTurn(playerMon: PokemonInstance, enemyMon: PokemonInstance, enemyMoveId: string): TurnAction[] {
+        const actions: TurnAction[] = [];
+        const enemyMove = Moves[enemyMoveId];
+
+        actions.push({ message: `Wild ${enemyMon.name} used ${enemyMove.name}!` });
+        const eDamage = DamageCalculator.calculate(enemyMon, playerMon, enemyMove);
+        if (eDamage > 0) {
+            playerMon.currentHp = Math.max(0, playerMon.currentHp - eDamage);
+            actions.push({ message: `It did ${eDamage} damage.`, target: 'player', damage: eDamage });
+        }
+        if (playerMon.currentHp <= 0) {
+            actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });
+            actions.push({ message: `You blacked out!`, isGameOver: true });
+        }
+
+        return actions;
+    }
 }

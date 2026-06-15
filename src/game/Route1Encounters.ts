@@ -5,8 +5,7 @@ export interface EncounterData {
 }
 
 export const Route1Encounters: EncounterData[] = [
-    { name: 'Pidgey', levelRange: [2, 4], weight: 45 },
-    { name: 'Rattata', levelRange: [2, 4], weight: 45 },
-    { name: 'Caterpie', levelRange: [3, 5], weight: 5 },
-    { name: 'Weedle', levelRange: [3, 5], weight: 5 },
+    { name: 'Pidgey', levelRange: [2, 4], weight: 40 },
+    { name: 'Rattata', levelRange: [2, 4], weight: 35 },
+    { name: 'Caterpie', levelRange: [3, 5], weight: 25 },
 ];

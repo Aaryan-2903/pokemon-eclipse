@@ -4,9 +4,11 @@ export interface IPlayerData {
     name: string;
     starterPokemon?: string;
     pokemonTeam: PokemonInstance[];
+    inventory: Record<string, number>;
 }
 
 export const PlayerState: IPlayerData = {
     name: 'Max',
-    pokemonTeam: []
+    pokemonTeam: [],
+    inventory: { 'Pokeball': 10 }
 };

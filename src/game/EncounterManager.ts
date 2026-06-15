@@ -1,4 +1,5 @@
 import { Route1Encounters, EncounterData } from './Route1Encounters';
+import { PokemonInstance, generateWildPokemon } from './PokemonData';
 
 // A simple map to hold encounter tables for different routes.
 const encounterTables: Record<string, EncounterData[]> = {
@@ -21,7 +22,7 @@ export class EncounterManager {
      * @param routeKey The key of the current route scene (e.g., 'Route1Scene').
      * @returns The encountered Pokémon data or null if no encounter happens.
      */
-    public checkEncounter(routeKey: string): EncounterData | null {
+    public checkEncounter(routeKey: string): PokemonInstance | null {
         this.stepsSinceLastEncounter++;
         if (this.stepsSinceLastEncounter < this.ENCOUNTER_COOLDOWN_STEPS) {
             return null;
@@ -31,7 +32,10 @@ export class EncounterManager {
             const encounterTable = encounterTables[routeKey];
             if (encounterTable) {
                 this.stepsSinceLastEncounter = 0; // Reset for cooldown
-                return this.selectRandomPokemon(encounterTable);
+                const encounterData = this.selectRandomPokemon(encounterTable);
+                console.log(`[EncounterManager] Generated wild encounter: ${encounterData.name}`);
+                const level = EncounterManager.getRandomLevel(encounterData);
+                return generateWildPokemon(encounterData.name, level);
             }
         }
 

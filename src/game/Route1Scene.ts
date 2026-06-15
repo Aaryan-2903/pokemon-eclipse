@@ -8,8 +8,7 @@ import { QuestTracker } from './QuestTracker';
 import { StoryManager, StoryFlag } from './StoryManager';
 import { Route1Data } from './RouteData';
 import { EncounterManager } from './EncounterManager';
-import { EncounterData } from './Route1Encounters';
-import { generatePlayerPokemon, generateWildPokemon } from './PokemonData';
+import { generatePlayerPokemon, PokemonInstance } from './PokemonData';
 import { PlayerState } from './PlayerData';
 
 export class Route1Scene extends Scene {
@@ -187,7 +186,7 @@ export class Route1Scene extends Scene {
     private showCurrentDialogue() { this.dialogueBox.show(this.activeDialogue![this.currentDialogueIndex].speaker, this.activeDialogue![this.currentDialogueIndex].text, this.activeDialogue![this.currentDialogueIndex].portrait); }
     private progressDialogue() { this.currentDialogueIndex++; if (this.currentDialogueIndex >= this.activeDialogue!.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
 
-    private triggerEncounter(pokemon: EncounterData) {
+    private triggerEncounter(enemyMon: PokemonInstance) {
         console.log('Encounter triggered!');
         this.player.setMovementEnabled(false);
 
@@ -198,9 +197,6 @@ export class Route1Scene extends Scene {
         this.time.delayedCall(300, () => {
             console.log('About to start BattleScene...');
             this.scene.pause();
-            
-            const enemyLevel = EncounterManager.getRandomLevel(pokemon);
-            const enemyMon = generateWildPokemon(pokemon.name, enemyLevel);
             
             const playerMon = PlayerState.pokemonTeam[0];
             console.log('Current playerPokemon on encounter:', playerMon);
