@@ -30,6 +30,14 @@ export class StoryManager {
         return this.flags.has(flag);
     }
 
+    public getFlags(): Set<StoryFlag> {
+        return this.flags;
+    }
+
+    public setFlags(flags: Set<StoryFlag>) {
+        this.flags = flags;
+    }
+
     public setActiveQuest(questId: string | null) {
         this.activeQuest = questId;
     }

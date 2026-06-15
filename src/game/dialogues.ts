@@ -34,6 +34,14 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'Nurse', text: "Welcome to the Pokémon Center.", portrait: 'portrait_nurse' },
         { speaker: 'Nurse', text: "We'll be able to heal your Pokémon once your journey begins.", portrait: 'portrait_nurse' }
     ],
+    'nurse_center_welcome': [
+        { speaker: 'Nurse', text: "Welcome to our Pokémon Center. We can heal your Pokémon to perfect health.", portrait: 'portrait_nurse' },
+        { speaker: 'Nurse', text: "Okay, I'll take your Pokémon for a few seconds.", portrait: 'portrait_nurse' }
+    ],
+    'nurse_center_complete': [
+        { speaker: 'Nurse', text: "All done! Your Pokémon are fighting fit.", portrait: 'portrait_nurse' },
+        { speaker: 'Nurse', text: "We hope to see you again!", portrait: 'portrait_nurse' }
+    ],
     'shopkeeper_intro': [
         { speaker: 'Shopkeeper', text: "Our shelves are still being stocked.", portrait: 'portrait_shopkeeper' },
         { speaker: 'Shopkeeper', text: "Come back soon.", portrait: 'portrait_shopkeeper' }

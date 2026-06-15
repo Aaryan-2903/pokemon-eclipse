@@ -5,6 +5,7 @@ import { NPC } from './NPC';
 import { DialogueBox } from './DialogueBox';
 import { Dialogues, DialogueNode } from './dialogues';
 import { QuestTracker } from './QuestTracker';
+import { SaveManager } from './SaveManager';
 
 export class OverworldScene extends Scene {
     private player!: Player;
@@ -25,6 +26,8 @@ export class OverworldScene extends Scene {
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
     private spawnEntrance?: string;
+    private spawnX?: number;
+    private spawnY?: number;
 
     constructor() {
         super('OverworldScene');
@@ -32,6 +35,8 @@ export class OverworldScene extends Scene {
 
     init(data: any) {
         this.spawnEntrance = data.spawnEntrance;
+        this.spawnX = data.spawnX;
+        this.spawnY = data.spawnY;
     }
 
     create() {
@@ -147,13 +152,16 @@ export class OverworldScene extends Scene {
         addNPC(1250, 1130, 'npc_shopkeeper', 'shopkeeper_intro', 'Shopkeeper');
 
         // Set spawn point based on which building the player exited
-        let spawnX = 800, spawnY = 850;
-        if (this.spawnEntrance === 'home') { spawnX = 800; spawnY = 850; }
-        else if (this.spawnEntrance === 'kai_home') { spawnX = 1200; spawnY = 850; }
-        else if (this.spawnEntrance === 'lab') { spawnX = 1000; spawnY = 1420; }
-        else if (this.spawnEntrance === 'center') { spawnX = 750; spawnY = 1140; }
-        else if (this.spawnEntrance === 'mart') { spawnX = 1250; spawnY = 1140; }
-        else if (this.spawnEntrance === 'route1') { spawnX = 1000; spawnY = 450; }
+        let spawnX = this.spawnX, spawnY = this.spawnY;
+        if (spawnX === undefined || spawnY === undefined) {
+            spawnX = 800; spawnY = 850; // default
+            if (this.spawnEntrance === 'home') { spawnX = 800; spawnY = 850; }
+            else if (this.spawnEntrance === 'kai_home') { spawnX = 1200; spawnY = 850; }
+            else if (this.spawnEntrance === 'lab') { spawnX = 1000; spawnY = 1420; }
+            else if (this.spawnEntrance === 'center') { spawnX = 750; spawnY = 1140; }
+            else if (this.spawnEntrance === 'mart') { spawnX = 1250; spawnY = 1140; }
+            else if (this.spawnEntrance === 'route1') { spawnX = 1000; spawnY = 450; }
+        }
 
         this.player = new Player(this, spawnX, spawnY);
 
@@ -190,6 +198,28 @@ export class OverworldScene extends Scene {
             backgroundColor: '#00000099',
             padding: { x: 8, y: 8 }
         }).setScrollFactor(0).setDepth(100);
+
+        // Save/Load Buttons
+        const buttonStyle = { fontFamily: 'monospace', fontSize: '14px', color: '#000000', backgroundColor: '#ffffff', padding: { x: 8, y: 4 } };
+        const saveButton = this.add.text(16, 50, 'Save Game', buttonStyle)
+            .setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        
+        saveButton.on('pointerdown', () => {
+            SaveManager.save(this, this.player.x, this.player.y);
+            this.hudText.setText(`Location: Eclipse Town\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}\n\nGame Saved!`);
+            this.time.delayedCall(2000, () => this.hudText.setText(`Location: Eclipse Town\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`));
+        });
+
+        const loadButton = this.add.text(16, 80, 'Load Game', buttonStyle)
+            .setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+
+        loadButton.on('pointerdown', () => {
+            if (SaveManager.hasSaveData()) {
+                this.hudText.setText('Loading...');
+                // Reloading the page is the simplest way to apply loaded state from scratch
+                window.location.reload();
+            }
+        });
 
         // Notify React that the scene is ready
         EventBus.emit('current-scene-ready', this);
@@ -264,6 +294,7 @@ export class OverworldScene extends Scene {
         });
 
         if (transitionScene) {
+            SaveManager.save(this, this.player.x, this.player.y);
             this.scene.start(transitionScene, { spawnEntrance: 'town' });
             return;
         }
@@ -289,6 +320,7 @@ export class OverworldScene extends Scene {
                 if (this.currentNPC) {
                     this.startDialogue(this.currentNPC);
                 } else if (this.currentEntrance) {
+                    SaveManager.save(this, this.player.x, this.player.y);
                     this.scene.start('InteriorScene', { entranceId: this.currentEntrance });
                 }
             }

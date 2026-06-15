@@ -282,11 +282,29 @@ export class BattleScene extends Scene {
         PlayerState.inventory['Pokeball']--;
 
         this.showMessage(`You threw a Pokeball!`, () => {
-            // Simple catch formula: higher chance at lower HP.
-            // Base 10% chance, up to 60% at 1 HP.
-            const catchChance = (1 - (this.enemyMon.currentHp / this.enemyMon.maxHp)) * 0.5 + 0.1;
+            // Define base catch rates for early-game Pokémon
+            const BASE_CATCH_RATES: Record<string, number> = {
+                'Pidgey': 0.60,
+                'Rattata': 0.65,
+                'Caterpie': 0.75,
+                'default': 0.25 // A reasonable default for other wild pokemon
+            };
 
-            if (Math.random() < catchChance) {
+            // Calculate HP-based bonus
+            const hpPercent = this.enemyMon.currentHp / this.enemyMon.maxHp;
+            let hpBonus = 0;
+            if (this.enemyMon.currentHp === 1) {
+                hpBonus = 0.50; // +50% for Critical HP (1 HP)
+            } else if (hpPercent <= 0.25) {
+                hpBonus = 0.35; // +35% for being below 25% HP
+            } else if (hpPercent <= 0.50) {
+                hpBonus = 0.20; // +20% for being below 50% HP
+            }
+
+            const baseRate = BASE_CATCH_RATES[this.enemyMon.name] || BASE_CATCH_RATES['default'];
+            const finalCatchChance = Math.min(1.0, baseRate + hpBonus); // Cap at 100%
+
+            if (Math.random() < finalCatchChance) {
                 // --- SUCCESS ---
                 PlayerState.pokemonTeam.push(this.enemyMon);
                 this.showMessage(`Gotcha! ${this.enemyMon.name} was caught!`, () => {
@@ -294,7 +312,9 @@ export class BattleScene extends Scene {
                 });
             } else {
                 // --- FAILURE ---
-                this.showMessage(`Oh no! The Pokemon broke free!`, () => {
+                const failureMessages = ["The Pokemon broke free!", "Almost had it!"];
+                const failureMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
+                this.showMessage(failureMessage, () => {
                     // On failure, the enemy gets to attack.
                     const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
                     this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));

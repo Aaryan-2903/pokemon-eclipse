@@ -4,6 +4,7 @@ import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
 import { BattleScene } from './BattleScene';
+import { TeamScene } from './TeamScene';
 import { Types, Game } from 'phaser';
 
 const config: Types.Core.GameConfig = {
@@ -32,7 +33,8 @@ const config: Types.Core.GameConfig = {
         OverworldScene,
         InteriorScene,
         Route1Scene,
-        BattleScene
+        BattleScene,
+        TeamScene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

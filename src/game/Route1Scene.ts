@@ -11,6 +11,7 @@ import { EncounterManager } from './EncounterManager';
 import { generatePlayerPokemon, PokemonInstance } from './PokemonData';
 import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
+import { SaveManager } from './SaveManager';
 
 export class Route1Scene extends Scene {
     private player!: Player;
@@ -31,6 +32,8 @@ export class Route1Scene extends Scene {
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
     private spawnEntrance?: string;
+    private spawnX?: number;
+    private spawnY?: number;
     private encounterManager!: EncounterManager;
     private playerLastPosForEncounter!: Phaser.Math.Vector2;
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
@@ -41,6 +44,8 @@ export class Route1Scene extends Scene {
 
     init(data: any) {
         this.spawnEntrance = data.spawnEntrance;
+        this.spawnX = data.spawnX;
+        this.spawnY = data.spawnY;
     }
 
     create() {
@@ -135,8 +140,15 @@ export class Route1Scene extends Scene {
         this.entrances.add(townZone);
 
         // Spawn location logic
-        let spawnX = 1000, spawnY = 2850;
-        if (this.spawnEntrance === 'town') { spawnX = 1000; spawnY = 2850; }
+        let spawnX = this.spawnX, spawnY = this.spawnY;
+        if (spawnX === undefined || spawnY === undefined) {
+            spawnX = 1000; spawnY = 2850; // default
+            if (this.spawnEntrance === 'town') { 
+                spawnX = 1000; 
+                spawnY = 2850; 
+            }
+        }
+
         this.player = new Player(this, spawnX, spawnY);
         this.playerLastPosForEncounter = new Phaser.Math.Vector2(this.player.x, this.player.y);
 
@@ -234,6 +246,9 @@ export class Route1Scene extends Scene {
                     PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
                     this.scene.start('InteriorScene', { entranceId: 'home' });
                 } else {
+                    if (result === 'win') { // This also covers catching, as it ends in a 'win'
+                        SaveManager.save(this, this.player.x, this.player.y);
+                    }
                     this.cameras.main.fadeIn(250, 0, 0, 0);
                     this.scene.resume(); // Explicitly resume the scene
                     this.player.setMovementEnabled(true);
@@ -272,6 +287,7 @@ export class Route1Scene extends Scene {
                     if (result === 'win') {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
+                        SaveManager.save(this, this.player.x, this.player.y); // Auto-save after winning
                         this.startDialogue(`${trainer.id}_defeated`);
                         // Post-battle dialogue will re-enable player movement
                     } else if (result === 'loss') {
@@ -302,7 +318,11 @@ export class Route1Scene extends Scene {
 
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
-        if (transitionScene) { this.scene.start(transitionScene, { spawnEntrance: 'route1' }); return; }
+        if (transitionScene) { 
+            SaveManager.save(this, this.player.x, this.player.y);
+            this.scene.start(transitionScene, { spawnEntrance: 'route1' }); 
+            return; 
+        }
 
         this.currentNPC = null;
         let currentTrainerId: string | null = null;

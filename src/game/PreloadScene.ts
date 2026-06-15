@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { SaveManager } from './SaveManager';
 
 export class PreloadScene extends Scene {
     constructor() {
@@ -186,6 +187,14 @@ export class PreloadScene extends Scene {
         graphics.generateTexture('sign', 32, 32);
         graphics.clear();
 
+        // Generate Desk
+        graphics.fillStyle(0x854d0e, 1); // Brown
+        graphics.fillRect(0, 0, 200, 60);
+        graphics.fillStyle(0x522d01, 1); // Darker brown for front panel
+        graphics.fillRect(0, 10, 200, 50);
+        graphics.generateTexture('desk_texture', 200, 60);
+        graphics.clear();
+
         // Generate Water
         graphics.fillStyle(0x38bdf8, 1);
         graphics.fillRect(0, 0, 64, 64);
@@ -226,7 +235,20 @@ export class PreloadScene extends Scene {
     }
 
     create() {
-        console.log('PreloadScene: create - starting InteriorScene');
-        this.scene.start('InteriorScene', { entranceId: 'home' });
+        console.log('PreloadScene: create - checking for save data...');
+        const saveData = SaveManager.load();
+
+        if (saveData) {
+            console.log('Save data found, loading last scene.');
+            // The SaveManager.load() already hydrated the global state.
+            // We just need to start the correct scene with the correct player position.
+            this.scene.start(saveData.scene.key, { 
+                spawnX: saveData.scene.x, 
+                spawnY: saveData.scene.y 
+            });
+        } else {
+            console.log('No save data, starting new game.');
+            this.scene.start('InteriorScene', { entranceId: 'home' });
+        }
     }
 }

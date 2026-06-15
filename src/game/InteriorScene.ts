@@ -8,6 +8,8 @@ import { QuestTracker } from './QuestTracker';
 import { StarterSelectionUI } from './StarterSelectionUI';
 import { PlayerState } from './PlayerData';
 import { generatePlayerPokemon } from './PokemonData';
+import { NPC } from './NPC';
+import { SaveManager } from './SaveManager';
 
 export class InteriorScene extends Scene {
     private player!: Player;
@@ -20,11 +22,16 @@ export class InteriorScene extends Scene {
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
     private interactionText!: Phaser.GameObjects.Text;
+    private obstacles!: Phaser.Physics.Arcade.StaticGroup;
+    private npcZones!: Phaser.Physics.Arcade.StaticGroup;
     
     private activeDialogueKey: string | null = null;
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
+    private currentNPC: string | null = null;
     public starterUIOpen: boolean = false;
+    private spawnX?: number;
+    private spawnY?: number;
 
     constructor() {
         super('InteriorScene');
@@ -32,6 +39,8 @@ export class InteriorScene extends Scene {
 
     init(data: any) {
         this.entranceId = data.entranceId || 'home';
+        this.spawnX = data.spawnX;
+        this.spawnY = data.spawnY;
     }
 
     create() {
@@ -44,16 +53,21 @@ export class InteriorScene extends Scene {
         this.add.rectangle(400, 300, 620, 420, 0x333333).setDepth(-1.5);
         this.add.tileSprite(400, 300, 600, 400, floorTex).setDepth(-1);
         this.physics.world.setBounds(100, 100, 600, 400); // Create walls naturally
-        
-        // Add a visible center rug for visual movement reference
-        this.add.rectangle(400, 300, 120, 80, 0x7f1d1d).setDepth(-0.5);
+        this.obstacles = this.physics.add.staticGroup();
 
         // Add a visible exit door
         this.add.rectangle(400, 500, 100, 20, 0x000000).setDepth(0); // Doorway gap
         this.add.image(400, 490, 'exit_mat').setDepth(0);
         
-        this.player = new Player(this, 400, 300);
+        let playerX = 400, playerY = 450;
+        if (this.spawnX !== undefined && this.spawnY !== undefined) {
+            playerX = this.spawnX;
+            playerY = this.spawnY;
+        }
+
+        this.player = new Player(this, playerX, playerY);
         this.player.setCollideWorldBounds(true);
+        this.physics.add.collider(this.player, this.obstacles);
         
         this.exitZone = this.add.zone(400, 490, 100, 40);
         this.physics.add.existing(this.exitZone, true);
@@ -64,6 +78,7 @@ export class InteriorScene extends Scene {
 
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
+        this.npcZones = this.physics.add.staticGroup();
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
@@ -76,6 +91,9 @@ export class InteriorScene extends Scene {
             fontFamily: 'monospace', fontSize: '12px', color: '#000000',
             backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
         }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
+
+        // Location-specific setup
+        this.setupLocation();
 
         // Process Opening Story Events
         if (this.entranceId === 'home' && !StoryManager.getInstance().hasFlag(StoryFlag.INTRO_DONE)) {
@@ -92,6 +110,21 @@ export class InteriorScene extends Scene {
         }
         
         EventBus.emit('current-scene-ready', this);
+    }
+
+    private setupLocation() {
+        if (this.entranceId === 'center') {
+            // Add desk and nurse for Pokemon Center
+            const desk = this.obstacles.create(400, 280, 'desk_texture');
+            desk.refreshBody();
+
+            const nurse = new NPC(this, 400, 250, 'npc_nurse', 'nurse_center_welcome');
+            this.npcZones.add(nurse.interactionZone);
+        } else if (this.entranceId === 'home') {
+            // Add a visible center rug for visual movement reference
+            this.add.rectangle(400, 300, 120, 80, 0x7f1d1d).setDepth(-0.5);
+        }
+        // Can add else-if blocks for 'mart', 'kai_home', etc.
     }
 
     private startDialogue(dialogueId: string) {
@@ -152,9 +185,34 @@ export class InteriorScene extends Scene {
             StoryManager.getInstance().setActiveQuest("Travel to Route 1");
             EventBus.emit('quest-updated');
             this.player.setMovementEnabled(true);
+        } else if (previousDialogueKey === 'nurse_center_welcome') {
+            this.startHealingSequence();
         } else {
             this.player.setMovementEnabled(true);
         }
+    }
+
+    private startHealingSequence() {
+        this.player.setMovementEnabled(false);
+
+        // 1. Fade to white
+        this.cameras.main.fadeOut(500, 255, 255, 255);
+
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            // 2. Heal all Pokémon in the party
+            PlayerState.pokemonTeam.forEach(pokemon => {
+                if (pokemon) pokemon.currentHp = pokemon.maxHp;
+            });
+            console.log('All Pokémon have been healed.', PlayerState.pokemonTeam);
+
+            // 3. Wait a moment, then fade back in
+            this.time.delayedCall(1000, () => {
+                this.cameras.main.fadeIn(500, 255, 255, 255);
+                this.cameras.main.once('camerafadeincomplete', () => {
+                    this.startDialogue('nurse_center_complete');
+                });
+            });
+        });
     }
 
     update(time: number, delta: number) {
@@ -176,10 +234,28 @@ export class InteriorScene extends Scene {
             nearExit = true;
         });
 
-        if (nearExit) {
-            this.interactionText.setPosition(this.player.x, this.player.y - 56).setVisible(true);
+        this.currentNPC = null;
+        this.physics.overlap(this.player, this.npcZones, (_player, zone) => {
+            this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId');
+        });
+
+        let interactionMessage = '';
+        if (this.currentNPC) {
+            interactionMessage = 'Press E to Talk';
+        } else if (nearExit) {
+            interactionMessage = 'Press E to Exit';
+        }
+
+        if (interactionMessage) {
+            this.interactionText.setText(interactionMessage).setPosition(this.player.x, this.player.y - 56).setVisible(true);
+            
             if (Input.Keyboard.JustDown(this.interactKey)) {
-                this.scene.start('OverworldScene', { spawnEntrance: this.entranceId });
+                if (this.currentNPC) {
+                    this.startDialogue(this.currentNPC);
+                } else if (nearExit) {
+                    SaveManager.save(this, this.player.x, this.player.y);
+                    this.scene.start('OverworldScene', { spawnEntrance: this.entranceId });
+                }
             }
         } else {
             this.interactionText.setVisible(false);
