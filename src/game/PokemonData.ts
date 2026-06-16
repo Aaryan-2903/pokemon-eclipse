@@ -31,6 +31,7 @@ export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Kakuna': 14,
     'Beedrill': 15,
     'Pidgeotto': 17,
+    'Pidgeot': 18,
     'Raticate': 20,
 };
 
@@ -49,6 +50,7 @@ const POKEMON_TYPES_MAP: Record<string, string[]> = {
     'Kakuna': ['Bug', 'Poison'],
     'Beedrill': ['Bug', 'Poison'],
     'Pidgeotto': ['Normal', 'Flying'],
+    'Pidgeot': ['Normal', 'Flying'],
     'Raticate': ['Normal'],
 };
 
@@ -119,6 +121,7 @@ export const handleLevelUp = (pokemon: PokemonInstance): { leveledUp: boolean, m
 
 export const evolvePokemon = (pokemon: PokemonInstance, to: string) => {
     const oldName = pokemon.name;
+    const hpPercent = pokemon.currentHp / pokemon.maxHp;
     pokemon.name = to;
     pokemon.id = POKEMON_SPECIES_ID_MAP[to] || pokemon.id;
     pokemon.types = POKEMON_TYPES_MAP[to] || pokemon.types;
@@ -128,7 +131,7 @@ export const evolvePokemon = (pokemon: PokemonInstance, to: string) => {
     pokemon.attack += 5;
     pokemon.defense += 5;
     pokemon.speed += 5;
-    pokemon.currentHp = pokemon.maxHp; // Fully heal on evolution
+    pokemon.currentHp = Math.round(pokemon.maxHp * hpPercent); // Preserve HP percentage
 
     console.log(`${oldName} evolved into ${to}!`, pokemon);
 };

@@ -8,6 +8,7 @@ import { QuestTracker } from './QuestTracker';
 import { StarterSelectionUI } from './StarterSelectionUI';
 import { PlayerState } from './PlayerData';
 import { generatePlayerPokemon } from './PokemonData';
+import { getTrainer, Trainer } from './TrainerData';
 import { NPC } from './NPC';
 import { SaveManager } from './SaveManager';
 
@@ -32,9 +33,11 @@ export class InteriorScene extends Scene {
     private activeDialogue: DialogueNode[] | null = null;
     private currentDialogueIndex: number = 0;
     private currentNPC: string | null = null;
+    private parentScene!: string;
     public starterUIOpen: boolean = false;
     private spawnX?: number;
     private spawnY?: number;
+    private isPausedByMenu: boolean = false;
 
     constructor() {
         super('InteriorScene');
@@ -44,6 +47,7 @@ export class InteriorScene extends Scene {
         this.entranceId = data.entranceId || 'home';
         this.spawnX = data.spawnX;
         this.spawnY = data.spawnY;
+        this.parentScene = data.parentScene || 'OverworldScene';
     }
 
     create() {
@@ -131,6 +135,14 @@ export class InteriorScene extends Scene {
             domElement.destroy();
         });
 
+        this.events.on('resume', () => {
+            this.isPausedByMenu = false;
+            // When the scene resumes from a paused state (e.g., closing the menu), re-enable player movement.
+            if (!this.activeDialogue && !this.starterUIOpen) {
+                this.player.setMovementEnabled(true);
+            }
+        });
+
         // Location-specific setup
         this.setupLocation();
 
@@ -151,7 +163,58 @@ export class InteriorScene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
+    private startTrainerBattle(trainer: Trainer) {
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+    
+        // Show pre-battle dialogue
+        this.activeDialogueKey = trainer.id; // Use trainer id as a key
+        this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
+        this.currentDialogueIndex = 0;
+        this.showCurrentDialogue();
+    
+        // Temporarily override progressDialogue to launch the battle after the dialogue finishes
+        const originalProgress = this.progressDialogue.bind(this);
+        this.progressDialogue = () => {
+            this.progressDialogue = originalProgress; // Restore original function
+            this.dialogueBox.hide();
+            this.activeDialogue = null;
+    
+            this.cameras.main.flash(300, 0, 0, 0);
+            this.time.delayedCall(300, () => {
+                this.scene.pause();
+                this.scene.launch('BattleScene', { trainer });
+    
+                this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
+                    console.log(`Trainer battle ended with result: ${result}`);
+                    this.scene.stop('BattleScene');
+                    this.cameras.main.fadeIn(250, 0, 0, 0);
+                    this.scene.resume();
+                    
+                    if (result === 'win') {
+                        PlayerState.defeatedTrainers.add(trainer.id);
+                        PlayerState.money += trainer.rewardMoney;
+                        this.autoSave(); // Auto-save after winning
+
+                        if (trainer.id === 'gym_aurora') {
+                            PlayerState.badges.add('Sky Badge');
+                            this.startDialogue('gym_aurora_victory');
+                        } else {
+                            this.startDialogue(`${trainer.id}_defeated`);
+                        }
+                    } else if (result === 'loss') {
+                        this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' }); // Go to pokecenter on loss, assume it's in Eclipse Town
+                    }
+                });
+            });
+        };
+    }
+
     private openMenu() {
+        this.isPausedByMenu = true;
+        // Explicitly disable player movement before pausing the scene to prevent background input.
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false); // Hide interaction prompts
         this.scene.pause();
         this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
@@ -172,6 +235,15 @@ export class InteriorScene extends Scene {
             const aurora = new NPC(this, 400, 200, 'npc_aurora', 'gym_aurora_intro', 'gym_aurora');
             this.obstacles.add(aurora);
             this.npcZones.add(aurora.interactionZone);
+        } else if (this.entranceId === 'mart') {
+            // Add shopkeeper
+            const shopkeeper = new NPC(this, 400, 250, 'npc_shopkeeper', 'shopkeeper_menu');
+            this.obstacles.add(shopkeeper);
+            this.npcZones.add(shopkeeper.interactionZone);
+        } else if (this.entranceId === 'school') {
+            this.add.text(400, 300, 'Trainer School\n(Under Construction)', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', align: 'center' }).setOrigin(0.5);
+        } else if (this.entranceId === 'house1' || this.entranceId === 'house2') {
+            this.add.text(400, 300, 'This is a private residence.', { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff' }).setOrigin(0.5);
         }
         // Can add else-if blocks for 'mart', 'kai_home', etc.
     }
@@ -233,9 +305,17 @@ export class InteriorScene extends Scene {
             StoryManager.getInstance().setFlag(StoryFlag.HAS_RECEIVED_POKEDEX);
             StoryManager.getInstance().setActiveQuest("Travel to Route 1");
             EventBus.emit('quest-updated');
-            this.player.setMovementEnabled(true);
+            this.startDialogue('nova_give_items');
+        } else if (previousDialogueKey === 'shopkeeper_menu') {
+            this.scene.pause();
+            this.scene.launch('ShopScene', { fromScene: this.scene.key });
         } else if (previousDialogueKey === 'nurse_center_welcome') {
             this.startHealingSequence();
+        } else if (previousDialogueKey === 'nova_give_items') {
+            PlayerState.inventory['Pokeball'] = (PlayerState.inventory['Pokeball'] || 0) + 5;
+            PlayerState.inventory['Potion'] = (PlayerState.inventory['Potion'] || 0) + 2;
+            console.log('Items added. Current inventory:', PlayerState.inventory);
+            this.player.setMovementEnabled(true);
         } else {
             this.player.setMovementEnabled(true);
         }
@@ -268,6 +348,11 @@ export class InteriorScene extends Scene {
     }
 
     update(time: number, delta: number) {
+        // If the menu is open, do not process any game logic for this scene.
+        if (this.isPausedByMenu) {
+            return;
+        }
+
         if (this.starterUIOpen || this.activeDialogue) {
             if (this.activeDialogue && !this.starterUIOpen) {
                 if (Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey) || Input.Keyboard.JustDown(this.interactKey)) {
@@ -304,13 +389,20 @@ export class InteriorScene extends Scene {
         });
 
         this.currentNPC = null;
+        let currentTrainerId: string | null = null;
         this.physics.overlap(this.player, this.npcZones, (_player, zone) => {
-            this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId');
+            const go = zone as Phaser.GameObjects.GameObject;
+            this.currentNPC = go.getData('dialogueId');
+            currentTrainerId = go.getData('trainerId');
         });
 
         let interactionMessage = '';
         if (this.currentNPC) {
-            interactionMessage = 'Press E to Talk';
+            if (currentTrainerId && !PlayerState.defeatedTrainers.has(currentTrainerId)) {
+                interactionMessage = 'Press E to Battle';
+            } else {
+                interactionMessage = 'Press E to Talk';
+            }
         } else if (nearExit) {
             interactionMessage = 'Press E to Exit';
         }
@@ -319,11 +411,14 @@ export class InteriorScene extends Scene {
             this.interactionText.setText(interactionMessage).setPosition(this.player.x, this.player.y - 56).setVisible(true);
             
             if (Input.Keyboard.JustDown(this.interactKey)) {
-                if (this.currentNPC) {
-                    this.startDialogue(this.currentNPC);
+                const trainer = currentTrainerId ? getTrainer(currentTrainerId) : null;
+                if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
+                    this.startTrainerBattle(trainer);
+                } else if (this.currentNPC) {
+                    this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
                 } else if (nearExit) {
                     this.autoSave();
-                    this.scene.start('OverworldScene', { spawnEntrance: this.entranceId });
+                    this.scene.start(this.parentScene, { spawnEntrance: this.entranceId });
                 }
             }
         } else {

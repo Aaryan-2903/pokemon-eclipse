@@ -1,6 +1,7 @@
 import { Scene, Input } from 'phaser';
 import { PokemonInstance, handleLevelUp, getXpForNextLevel } from './PokemonData';
 import { TurnManager, TurnAction } from './TurnManager';
+import { Items, useItem } from './Items';
 import { Moves } from './Moves';
 import { EventBus } from './EventBus';
 import { PlayerState } from './PlayerData';
@@ -16,6 +17,7 @@ export class BattleScene extends Scene {
     private actionMenu!: Phaser.GameObjects.Container;
     private movesMenu!: Phaser.GameObjects.Container;
     private itemsMenu!: Phaser.GameObjects.Container;
+    private pokemonSelectMenu!: Phaser.GameObjects.Container;
     
     private enemyHpBar!: Phaser.GameObjects.Rectangle;
     private playerHpBar!: Phaser.GameObjects.Rectangle;
@@ -124,7 +126,7 @@ export class BattleScene extends Scene {
         const createBtn = (x: number, y: number, text: string, callback: () => void) => {
             const btnBg = this.add.rectangle(x, y, 140, 40, 0xe5e7eb).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
             const btnText = this.add.text(x, y, text, { fontFamily: 'monospace', fontSize: '18px', color: '#000000' }).setOrigin(0.5);
-            btnBg.on('pointerdown', callback);
+            btnBg.on('pointerdown', () => { /* this.sound.play('menu_confirm'); */ callback(); });
             return [btnBg, btnText];
         };
 
@@ -132,8 +134,8 @@ export class BattleScene extends Scene {
         // Main Action Menu
         this.actionMenu = this.add.container(600, 520);
         this.actionMenu.add([
-            ...createBtn(-80, -25, 'FIGHT', () => this.showMovesMenu()),
-            ...createBtn(80, -25, 'BAG', () => this.showItemsMenu()),
+            ...createBtn(-80, -25, 'FIGHT', () => this.openMovesMenu()),
+            ...createBtn(80, -25, 'BAG', () => this.openBagMenu()),
             ...createBtn(-80, 25, 'POKEMON', () => this.openTeamMenu()),
             ...createBtn(80, 25, 'RUN', runCallback)
         ]);
@@ -141,22 +143,14 @@ export class BattleScene extends Scene {
 
         // Moves Menu
         this.movesMenu = this.add.container(600, 520);
-        const move1 = this.playerMon.moves[0];
-        const move2 = this.playerMon.moves[1];
-        
-        if (move1) this.movesMenu.add([...createBtn(-80, -25, Moves[move1].name.toUpperCase(), () => this.executeTurn(move1))]);
-        if (move2) this.movesMenu.add([...createBtn(80, -25, Moves[move2].name.toUpperCase(), () => this.executeTurn(move2))]);
-        this.movesMenu.add([...createBtn(0, 25, 'CANCEL', () => this.showActionMenu())]);
         this.movesMenu.setVisible(false);
 
         // Items Menu
         this.itemsMenu = this.add.container(600, 520);
-        const pokeballCount = PlayerState.inventory['Pokeball'] || 0;
-        if (pokeballCount > 0 && !this.isTrainerBattle) {
-            this.itemsMenu.add([...createBtn(-80, -25, `POKEBALL (${pokeballCount})`, () => this.attemptCatch())]);
-        }
-        this.itemsMenu.add([...createBtn(0, 25, 'CANCEL', () => this.showActionMenu())]);
         this.itemsMenu.setVisible(false);
+
+        this.pokemonSelectMenu = this.add.container(600, 520);
+        this.pokemonSelectMenu.setVisible(false);
 
         // Enemy Status UI (Top Left)
         this.add.rectangle(200, 100, 280, 70, 0xf3f4f6).setStrokeStyle(2, 0x000000);
@@ -197,10 +191,18 @@ export class BattleScene extends Scene {
         this.actionMenu.setVisible(false);
         this.movesMenu.setVisible(false);
         this.itemsMenu.setVisible(false);
+        this.pokemonSelectMenu.setVisible(false);
         this.messageText.setText(text);
         this.time.delayedCall(1200, () => {
             if (onComplete) onComplete();
         });
+    }
+
+    private hideAllMenus() {
+        this.actionMenu.setVisible(false);
+        this.movesMenu.setVisible(false);
+        this.itemsMenu.setVisible(false);
+        this.pokemonSelectMenu.setVisible(false);
     }
 
     private showActionMenu() {
@@ -209,18 +211,54 @@ export class BattleScene extends Scene {
         this.actionMenu.setVisible(true);
         this.movesMenu.setVisible(false);
         this.itemsMenu.setVisible(false);
+        this.pokemonSelectMenu.setVisible(false);
     }
 
-    private showMovesMenu() {
+    private openMovesMenu() {
         this.messageText.setText('');
         this.actionMenu.setVisible(false);
+        this.movesMenu.removeAll(true);
+
+        const move1 = this.playerMon.moves[0];
+        const move2 = this.playerMon.moves[1];
+        
+        if (move1) this.movesMenu.add(this.createMenuButton(-80, -25, Moves[move1].name.toUpperCase(), () => this.executeTurn(move1)));
+        if (move2) this.movesMenu.add(this.createMenuButton(80, -25, Moves[move2].name.toUpperCase(), () => this.executeTurn(move2)));
+        this.movesMenu.add(this.createMenuButton(0, 25, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
+
         this.movesMenu.setVisible(true);
         this.itemsMenu.setVisible(false);
     }
 
-    private showItemsMenu() {
+    private openBagMenu() {
         this.messageText.setText('');
         this.actionMenu.setVisible(false);
+        this.itemsMenu.removeAll(true);
+
+        const usableItems = Object.keys(PlayerState.inventory).filter(id => Items[id]?.canUseInBattle && PlayerState.inventory[id] > 0);
+
+        if (usableItems.length === 0) {
+            this.showMessage('Your bag is empty.', () => this.showActionMenu());
+            return;
+        }
+
+        const positions = [
+            { x: -80, y: -25 }, { x: 80, y: -25 },
+            { x: -80, y: 25 }, { x: 80, y: 25 }
+        ];
+
+        usableItems.slice(0, 4).forEach((itemId, index) => {
+            const item = Items[itemId];
+            const count = PlayerState.inventory[itemId];
+            const pos = positions[index];
+            this.itemsMenu.add(this.createMenuButton(pos.x, pos.y, `${item.name} x${count}`, () => this.selectItemInBattle(itemId)));
+        });
+
+        if (usableItems.length > 4) {
+            // Simple pagination not implemented, just show first 4
+        }
+
+        this.itemsMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
         this.movesMenu.setVisible(false);
         this.itemsMenu.setVisible(true);
     }
@@ -229,6 +267,15 @@ export class BattleScene extends Scene {
         if (this.isProcessingTurn) return;
         this.scene.pause();
         this.scene.launch('TeamScene', { fromScene: 'BattleScene', inBattle: true });
+    }
+
+    private createMenuButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Container {
+        const container = this.add.container(x, y);
+        const btnBg = this.add.rectangle(0, 0, 140, 40, 0xe5e7eb).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
+        const btnText = this.add.text(0, 0, text, { fontFamily: 'monospace', fontSize: '16px', color: '#000000' }).setOrigin(0.5);
+        btnBg.on('pointerdown', () => { /* this.sound.play('menu_confirm'); */ callback(); });
+        container.add([btnBg, btnText]);
+        return container;
     }
 
     private onSceneResume() {
@@ -279,6 +326,57 @@ export class BattleScene extends Scene {
         this.processActions(TurnManager.processTurn(this.playerMon, moveId, this.enemyMon, enemyMoveId));
     }
 
+    private selectItemInBattle(itemId: string) {
+        const item = Items[itemId];
+        if (!item) return;
+
+        this.hideAllMenus();
+
+        if (itemId === 'Pokeball') {
+            this.attemptCatch();
+        } else if (itemId === 'Revive') {
+            this.showFaintedPokemonMenu();
+        } else { // Potions, etc.
+            this.useItemOnActive(itemId);
+        }
+    }
+
+    private useItemOnActive(itemId: string) {
+        if (this.isProcessingTurn) return;
+        this.isProcessingTurn = true;
+
+        const result = useItem(itemId, this.playerMon);
+        this.showMessage(result.message, () => {
+            if (result.success) {
+                // this.sound.play('item_use');
+                this.updateHpBars();
+                this.enemyTurnAfterItemUse();
+            } else {
+                this.isProcessingTurn = false;
+                // this.sound.play('item_error');
+                this.showActionMenu();
+            }
+        });
+    }
+
+    private showFaintedPokemonMenu() {
+        this.pokemonSelectMenu.removeAll(true);
+        const fainted = PlayerState.pokemonTeam.filter(p => p && p.currentHp === 0);
+
+        if (fainted.length === 0) {
+            this.showMessage('No fainted Pokémon to revive.', () => this.showActionMenu());
+            return;
+        }
+
+        fainted.forEach((pokemon, index) => {
+            const y = -25 + (index * 50);
+            this.pokemonSelectMenu.add(this.createMenuButton(0, y, pokemon.name, () => this.useItemOnBenched('Revive', pokemon)));
+        });
+
+        this.pokemonSelectMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
+        this.pokemonSelectMenu.setVisible(true);
+    }
+
     private attemptCatch() {
         if (this.isProcessingTurn) return;
         this.isProcessingTurn = true;
@@ -286,14 +384,16 @@ export class BattleScene extends Scene {
 
         if (this.isTrainerBattle) {
             this.showMessage("You can't steal another trainer's Pokémon!", () => {
+                // this.sound.play('item_error');
                 this.isProcessingTurn = false;
                 this.showActionMenu();
             });
             return;
         }
 
-        PlayerState.inventory['Pokeball']--;
+        useItem('Pokeball', this.enemyMon); // This will decrement the count
 
+        // this.sound.play('pokeball_throw');
         this.showMessage(`You threw a Pokeball!`, () => {
             // Define base catch rates for early-game Pokémon
             const BASE_CATCH_RATES: Record<string, number> = {
@@ -322,11 +422,13 @@ export class BattleScene extends Scene {
                 if (PlayerState.pokemonTeam.length < 6) {
                     PlayerState.pokemonTeam.push(this.enemyMon);
                     this.showMessage(`Gotcha! ${this.enemyMon.name} was caught!`, () => {
+                        // this.sound.play('item_use'); // Success sound
                         this.time.delayedCall(1000, () => this.endBattle('win'));
                     });
                 } else {
                     PlayerState.pokemonBox.push(this.enemyMon);
                     this.showMessage(`Gotcha! ${this.enemyMon.name} was caught and sent to the PC Box!`, () => {
+                        // this.sound.play('item_use'); // Success sound
                         this.time.delayedCall(1000, () => this.endBattle('win'));
                     });
                 }
@@ -335,10 +437,30 @@ export class BattleScene extends Scene {
                 const failureMessages = ["The Pokemon broke free!", "Almost had it!"];
                 const failureMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
                 this.showMessage(failureMessage, () => {
+                    // this.sound.play('item_error');
                     // On failure, the enemy gets to attack.
                     const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
                     this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
                 });
+            }
+        });
+    }
+
+    private useItemOnBenched(itemId: string, target: PokemonInstance) {
+        if (this.isProcessingTurn) return;
+        this.isProcessingTurn = true;
+        this.hideAllMenus();
+
+        const result = useItem(itemId, target);
+        this.showMessage(result.message, () => {
+            if (result.success) {
+                // this.sound.play('item_use');
+                // The benched pokemon is revived. The enemy gets their turn.
+                this.enemyTurnAfterItemUse();
+            } else {
+                this.isProcessingTurn = false;
+                // this.sound.play('item_error');
+                this.showActionMenu();
             }
         });
     }
@@ -492,6 +614,12 @@ export class BattleScene extends Scene {
 
     private enemyTurnAfterSwap() {
         // Enemy gets a free turn after a switch
+        const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
+        this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
+    }
+
+    private enemyTurnAfterItemUse() {
+        // Enemy gets a free turn after an item is used
         const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
         this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
     }

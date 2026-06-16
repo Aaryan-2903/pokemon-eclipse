@@ -36,6 +36,15 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         postBattleDialogue: "You're a good trainer! My bugs will get stronger!",
         rewardMoney: 120,
     },
+    'route1_lass': {
+        id: 'route1_lass',
+        name: 'Lass Chloe',
+        spriteKey: 'npc_traveler', // Using traveler sprite for now
+        teamSpec: [{ name: 'Pidgey', level: 5 }, { name: 'Rattata', level: 5 }],
+        preBattleDialogue: "You look like a strong trainer. Let's see what you've got!",
+        postBattleDialogue: "Wow, you're really good!",
+        rewardMoney: 150,
+    },
     'gym_aurora': {
         id: 'gym_aurora',
         name: 'Gym Leader Aurora',

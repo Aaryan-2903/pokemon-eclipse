@@ -11,5 +11,6 @@ export const EvolutionTable: Record<string, EvolutionStep> = {
     'Weedle': { level: 7, to: 'Kakuna' },
     'Kakuna': { level: 10, to: 'Beedrill' },
     'Pidgey': { level: 18, to: 'Pidgeotto' },
+    'Pidgeotto': { level: 36, to: 'Pidgeot' },
     'Rattata': { level: 20, to: 'Raticate' },
 };

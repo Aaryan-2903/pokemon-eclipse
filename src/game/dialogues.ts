@@ -20,6 +20,16 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'Professor Nova', text: "Take this Pokédex.", portrait: 'portrait_nova' },
         { speaker: 'Professor Nova', text: "It will help you document Pokémon across the Eclipse Region.", portrait: 'portrait_nova' }
     ],
+    'nova_give_items': [
+        { speaker: 'Professor Nova', text: "It's dangerous to go alone! Take these.", portrait: 'portrait_nova' },
+        { speaker: 'System', text: 'You received 5 Pokéballs and 2 Potions!' }
+    ],
+    'found_potion': [
+        { speaker: 'System', text: 'You found a Potion!' }
+    ],
+    'found_pokeball': [
+        { speaker: 'System', text: 'You found a Pokéball!' }
+    ],
     'nova_intro': [
         { speaker: 'Professor Nova', text: "Welcome to Eclipse Town, Max.", portrait: 'portrait_nova' },
         { speaker: 'Professor Nova', text: "The Eclipse Shards have been behaving strangely lately.", portrait: 'portrait_nova' },
@@ -42,12 +52,14 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'Nurse', text: "All done! Your Pokémon are fighting fit.", portrait: 'portrait_nurse' },
         { speaker: 'Nurse', text: "We hope to see you again!", portrait: 'portrait_nurse' }
     ],
-    'shopkeeper_intro': [
-        { speaker: 'Shopkeeper', text: "Our shelves are still being stocked.", portrait: 'portrait_shopkeeper' },
-        { speaker: 'Shopkeeper', text: "Come back soon.", portrait: 'portrait_shopkeeper' }
+    'shopkeeper_menu': [
+        { speaker: 'Shopkeeper', text: "Welcome to the Poké Mart! How can I help you today?", portrait: 'portrait_shopkeeper' }
     ],
     'route1_youngster': [
         { speaker: 'Youngster', text: "I like wearing shorts! They're comfy and easy to wear!", portrait: 'portrait_youngster' }
+    ],
+    'route1_lass_defeated': [
+        { speaker: 'Lass Chloe', text: "Aww, I lost!", portrait: 'portrait_traveler' }
     ],
     'route1_joey_defeated': [
         { speaker: 'Youngster Joey', text: "My Rattata will be stronger next time!", portrait: 'portrait_youngster' }
@@ -74,5 +86,38 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route1_traveler': [
         { speaker: 'Traveler', text: "I've been traveling across the Eclipse Region.", portrait: 'portrait_traveler' },
         { speaker: 'Traveler', text: "The sky has been looking strange lately, hasn't it?", portrait: 'portrait_traveler' }
+    ],
+    'route1_hiker': [
+        { speaker: 'Hiker', text: "This route is long, but the view from Lunar City is worth it." }
+    ],
+    'route1_kid': [
+        { speaker: 'Kid', text: "I'm trying to catch a Pidgey! They're super fast." }
+    ],
+    'route1_collector': [
+        { speaker: 'Collector', text: "I heard there are rare items hidden on this route if you look carefully." }
+    ],
+    'route1_scientist': [
+        { speaker: 'Scientist', text: "The biodiversity on this route is fascinating. So many different species in one place." }
+    ],
+    'route1_veteran': [
+        { speaker: 'Veteran Trainer', text: "A true trainer knows the journey is more important than the destination." }
+    ],
+    'eclipse_citizen_1': [
+        { speaker: 'Townsfolk', text: "It's a quiet town, but we like it that way." }
+    ],
+    'lunar_citizen_1': [
+        { speaker: 'Scientist', text: "Lunar City is famous for its advanced research facilities.", portrait: 'portrait_traveler' }
+    ],
+    'lunar_citizen_2': [
+        { speaker: 'Aspiring Trainer', text: "The Gym Leader here, Aurora, is a master of Flying-type Pokémon.", portrait: 'portrait_youngster' }
+    ],
+    'lunar_citizen_3': [ { speaker: 'Bug Enthusiast', text: "I came all the way from Viridian Forest to see the bugs here." } ],
+    'lunar_citizen_4': [ { speaker: 'Off-duty Nurse', text: "Even when I'm not at the Center, I worry about trainers and their Pokémon." } ],
+    'lunar_citizen_5': [ { speaker: 'Cool Guy', text: "This city is the place to be if you want to get strong." } ],
+    'lunar_citizen_6': [ { speaker: 'Kid', text: "The Trainer School is tough, but I'm learning a lot!" } ],
+    'lunar_citizen_7': [ { speaker: 'Tourist', text: "I'm just here to see the sights. The Gym building is impressive!" } ],
+    'lunar_citizen_8': [ { speaker: 'Collector', text: "The Poké Mart here has a great selection." } ],
+    'lunar_citizen_9': [ { speaker: 'Student', text: "I'm studying to be a Pokémon Professor, just like Professor Nova." } ],
+    'lunar_citizen_10': [ { speaker: 'Researcher', text: "We're studying the effects of lunar cycles on Pokémon evolution." }
     ]
 };

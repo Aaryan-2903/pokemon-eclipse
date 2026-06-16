@@ -19,8 +19,9 @@ export class PokedexScene extends Scene {
         const closeButton = this.add.text(400, 450, 'Close', { fontFamily: 'monospace', fontSize: '20px', color: '#000000', backgroundColor: '#ffffff', padding: { x: 16, y: 8 }})
             .setOrigin(0.5).setInteractive({ useHandCursor: true });
         
-        closeButton.on('pointerdown', () => this.closeScene());
-        this.input.keyboard?.once('keydown-ESC', () => this.closeScene());
+        const doClose = () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.closeScene(); };
+        closeButton.on('pointerdown', doClose);
+        this.input.keyboard?.once('keydown-ESC', doClose);
     }
 
     private closeScene() {

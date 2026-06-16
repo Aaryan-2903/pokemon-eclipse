@@ -15,7 +15,7 @@ export const PlayerState: IPlayerData = {
     name: 'Max',
     pokemonTeam: [],
     pokemonBox: [],
-    inventory: { 'Pokeball': 10 },
+    inventory: { 'Pokeball': 5, 'Potion': 3 },
     money: 1000,
     defeatedTrainers: new Set(),
     badges: new Set(),

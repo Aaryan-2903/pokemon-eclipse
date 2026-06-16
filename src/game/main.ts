@@ -3,9 +3,11 @@ import { PreloadScene } from './PreloadScene';
 import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
+import { LunarCityScene } from './LunarCityScene';
 import { BattleScene } from './BattleScene';
 import { MenuScene } from './MenuScene';
 import { PokedexScene } from './PokedexScene';
+import { ShopScene } from './ShopScene';
 import { BagScene } from './BagScene';
 import { SettingsScene } from './SettingsScene';
 import { TeamScene } from './TeamScene';
@@ -42,9 +44,11 @@ const config: Types.Core.GameConfig = {
         OverworldScene,
         InteriorScene,
         Route1Scene,
+        LunarCityScene,
         BattleScene,
         MenuScene,
         PokedexScene,
+        ShopScene,
         BagScene,
         SettingsScene,
         TeamScene,

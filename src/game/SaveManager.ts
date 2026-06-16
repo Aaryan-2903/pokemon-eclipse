@@ -74,6 +74,13 @@ export class SaveManager {
             PlayerState.pokemonTeam = saveData.playerState.pokemonTeam;
             PlayerState.pokemonBox = saveData.playerState.pokemonBox || [];
             PlayerState.inventory = saveData.playerState.inventory;
+
+            // Migration for old saves or empty inventories.
+            if (!PlayerState.inventory || Object.keys(PlayerState.inventory).length === 0) {
+                console.log('Saved inventory is missing or empty, initializing starter items.');
+                PlayerState.inventory = { 'Pokeball': 5, 'Potion': 3 };
+            }
+
             PlayerState.money = saveData.playerState.money;
             PlayerState.defeatedTrainers = new Set(saveData.playerState.defeatedTrainers);
             PlayerState.badges = new Set(saveData.playerState.badges || []);

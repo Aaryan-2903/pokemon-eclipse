@@ -50,9 +50,10 @@ export class TeamScene extends Scene {
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true });
         
-        closeButton.on('pointerdown', () => this.closeScene());
+        const doClose = () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.closeScene(); };
+        closeButton.on('pointerdown', doClose);
         if (this.input.keyboard) {
-            this.input.keyboard.once('keydown-ESC', () => this.closeScene());
+            this.input.keyboard.once('keydown-ESC', doClose);
         }
 
         // Separator line
@@ -92,6 +93,7 @@ export class TeamScene extends Scene {
         const cardBg = this.add.rectangle(0, 0, 320, 70, bgColor).setStrokeStyle(2, 0x4b5563);
         cardBg.setInteractive({ useHandCursor: true });
         cardBg.on('pointerdown', () => {
+            // if (this.selectedPokemonIndex !== index) this.sound.play('menu_select', { volume: 0.7 });
             this.selectedPokemonIndex = index;
             this.renderTeamList();
             this.renderSummary(index);
@@ -186,7 +188,10 @@ export class TeamScene extends Scene {
                 .setOrigin(0.5)
                 .setInteractive({ useHandCursor: true });
             
-            makeActiveBtn.on('pointerdown', () => this.makePokemonActive(index));
+            makeActiveBtn.on('pointerdown', () => {
+                // this.sound.play('menu_confirm');
+                this.makePokemonActive(index);
+            });
             this.summaryContainer.add(makeActiveBtn);
         }
     }

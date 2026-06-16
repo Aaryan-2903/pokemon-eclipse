@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Scene, Math as PhaserMath } from 'phaser';
 import { SaveManager } from './SaveManager';
 
 export class PreloadScene extends Scene {
@@ -203,6 +203,17 @@ export class PreloadScene extends Scene {
         graphics.fillStyle(0xffffff, 1);
         graphics.fillCircle(16, 16, 4);
         graphics.generateTexture('badge_sky', 32, 32);
+        graphics.clear();
+
+        // Generate Item Pickup Sprite
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillCircle(16, 16, 12);
+        graphics.fillStyle(0xef4444, 1);
+        graphics.slice(16, 16, 12, PhaserMath.DegToRad(180), PhaserMath.DegToRad(360));
+        graphics.fillPath();
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillCircle(16, 16, 4);
+        graphics.generateTexture('pokeball_item', 32, 32);
         graphics.clear();
 
         // Generate Water

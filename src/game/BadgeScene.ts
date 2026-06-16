@@ -36,10 +36,11 @@ export class BadgeScene extends Scene {
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true });
         
-        closeButton.on('pointerdown', () => this.closeScene());
+        const doClose = () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.closeScene(); };
+        closeButton.on('pointerdown', doClose);
         if (this.input.keyboard) {
-            this.input.keyboard.once('keydown-ESC', () => this.closeScene());
-            this.input.keyboard.once('keydown-B', () => this.closeScene());
+            this.input.keyboard.once('keydown-ESC', doClose);
+            this.input.keyboard.once('keydown-B', doClose);
         }
 
         // Display badges

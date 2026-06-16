@@ -17,6 +17,7 @@ export class Route1Scene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
+    private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
     private hudText!: Phaser.GameObjects.Text;
     private autoSaveIndicator!: Phaser.GameObjects.Text;
@@ -38,6 +39,7 @@ export class Route1Scene extends Scene {
     private spawnY?: number;
     private encounterManager!: EncounterManager;
     private playerLastPosForEncounter!: Phaser.Math.Vector2;
+    private isPausedByMenu: boolean = false;
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
 
     constructor() {
@@ -66,15 +68,15 @@ export class Route1Scene extends Scene {
         console.log(`Loading Route Data: ${Route1Data.name}`);
 
         // Larger World Bounds for exploration (2000x3000)
-        const worldWidth = 2000;
-        const worldHeight = 3000;
+        const worldWidth = 2500;
+        const worldHeight = 9000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
         // Grass Background
         this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
 
         // Main dirt pathway leading north
-        this.add.tileSprite(1000, 1500, 128, 3000, 'path').setDepth(1);
+        this.add.tileSprite(1250, worldHeight / 2, 256, worldHeight, 'path').setDepth(1);
 
         // Exploration Areas: Tall Grass Patches (Future Encounter Zones)
         this.tallGrassZones = this.physics.add.staticGroup();
@@ -82,23 +84,32 @@ export class Route1Scene extends Scene {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(800, 2500, 256, 256);
-        addTallGrass(1200, 2000, 256, 384);
-        addTallGrass(800, 1200, 384, 256);
-        addTallGrass(1200, 600, 256, 256);
+        // Southern area
+        addTallGrass(1000, 8500, 384, 512);
+        addTallGrass(1500, 8000, 512, 256);
+        // Mid area
+        addTallGrass(1000, 6000, 256, 1024);
+        addTallGrass(1600, 5500, 512, 512);
+        addTallGrass(1250, 4000, 1024, 256);
+        // Northern area
+        addTallGrass(1000, 2000, 384, 1024);
+        addTallGrass(1500, 1000, 512, 512);
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
         this.npcZones = this.physics.add.staticGroup();
+        this.itemPickups = this.physics.add.staticGroup();
 
         // Environment: Route Boundaries (Trees)
-        for (let x = 500; x <= 1500; x += 64) {
-            this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
-            if (x < 900 || x > 1100) this.obstacles.create(x, 2900, 'tree').setDepth(2); // South Edge Gap for Town
+        for (let x = 800; x <= 1700; x += 64) {
+            if (x < 1150 || x > 1350) {
+                this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
+                this.obstacles.create(x, 8900, 'tree').setDepth(2); // South Edge
+            }
         }
-        for (let y = 100; y <= 2900; y += 64) {
-            this.obstacles.create(500, y, 'tree').setDepth(2); // West Edge
-            this.obstacles.create(1500, y, 'tree').setDepth(2); // East Edge
+        for (let y = 100; y <= 8900; y += 64) {
+            this.obstacles.create(800, y, 'tree').setDepth(2); // West Edge
+            this.obstacles.create(1700, y, 'tree').setDepth(2); // East Edge
         }
 
         // Decorative environment items
@@ -106,14 +117,14 @@ export class Route1Scene extends Scene {
         this.add.image(850, 2350, 'flower').setDepth(0.5);
 
         // Water hazard area
-        this.add.tileSprite(1250, 1000, 256, 256, 'water').setDepth(0.5);
-        const pondZone = this.add.zone(1250, 1000, 256, 256);
+        this.add.tileSprite(1500, 3000, 256, 512, 'water').setDepth(0.5);
+        const pondZone = this.add.zone(1500, 3000, 256, 512);
         this.physics.add.existing(pondZone, true);
         this.obstacles.add(pondZone);
 
         // Route sign
-        this.obstacles.create(1100, 2800, 'sign').setDepth(2);
-        this.add.text(1100, 2770, 'Route 1\nNorth: Lunar City', {
+        this.obstacles.create(1400, 8800, 'sign').setDepth(2);
+        this.add.text(1400, 8770, 'Route 1\nNorth: Lunar City\nSouth: Eclipse Town', {
             fontFamily: 'monospace', fontSize: '12px', color: '#ffffff',
             backgroundColor: '#000000aa', padding: { x: 4, y: 2 }, align: 'center'
         }).setOrigin(0.5).setDepth(5);
@@ -130,24 +141,44 @@ export class Route1Scene extends Scene {
         };
 
         // Add Trainers
-        addNPC(1000, 2200, 'npc_youngster', 'route1_youngster', 'Youngster Joey', 'route1_joey');
-        addNPC(1000, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai');
-        addNPC(800, 1300, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher Tim', 'route1_tim');
-        addNPC(1000, 500, 'npc_traveler', 'route1_traveler', 'Traveler');
+        addNPC(1250, 8200, 'npc_youngster', 'route1_youngster', 'Youngster Joey', 'route1_joey');
+        addNPC(1250, 7000, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher Tim', 'route1_tim');
+        addNPC(1250, 5000, 'npc_traveler', 'route1_lass', 'Lass Chloe', 'route1_lass'); // New trainer
+        addNPC(1250, 1000, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai');
+
+        // Add regular NPCs
+        addNPC(1400, 8500, 'npc_traveler', 'route1_hiker', 'Hiker');
+        addNPC(1000, 7500, 'npc_youngster', 'route1_kid', 'Kid');
+        addNPC(1400, 4500, 'npc_bugcatcher', 'route1_collector', 'Collector');
+        addNPC(1000, 3500, 'npc_traveler', 'route1_scientist', 'Scientist');
+        addNPC(1400, 1500, 'npc_traveler', 'route1_veteran', 'Veteran Trainer');
+
+        // Add Item Pickups
+        this.addItemPickup(1000, 8000, 'Potion');
+        this.addItemPickup(1600, 2500, 'Pokeball');
 
         // Map Transition: Return to Eclipse Town
-        const townZone = this.add.zone(1000, 2950, 200, 40);
+        const townZone = this.add.zone(1250, 8950, 200, 40);
         this.physics.add.existing(townZone, true);
         townZone.setData('targetScene', 'OverworldScene');
         this.entrances.add(townZone);
 
+        // Map Transition: North to Lunar City
+        const lunarCityZone = this.add.zone(1250, 50, 200, 40);
+        this.physics.add.existing(lunarCityZone, true);
+        lunarCityZone.setData('targetScene', 'LunarCityScene');
+        this.entrances.add(lunarCityZone);
+
         // Spawn location logic
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = 1000; spawnY = 2850; // default
+            spawnX = 1250; spawnY = 8850; // default
             if (this.spawnEntrance === 'town') { 
-                spawnX = 1000; 
-                spawnY = 2850; 
+                spawnX = 1250; 
+                spawnY = 8850; 
+            } else if (this.spawnEntrance === 'lunar_city') {
+                spawnX = 1250;
+                spawnY = 100;
             }
         }
 
@@ -178,34 +209,18 @@ export class Route1Scene extends Scene {
             backgroundColor: '#000000aa', padding: { x: 8, y: 4 }
         }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
 
-        // Save/Load Buttons
-        const menuButton = document.createElement('button');
-        menuButton.innerHTML = '&#9776; Menu'; // Hamburger icon
-        menuButton.style.position = 'absolute';
-        menuButton.style.top = '60px';
-        menuButton.style.right = '20px';
-        menuButton.style.padding = '8px 12px';
-        menuButton.style.backgroundColor = '#111827';
-        menuButton.style.color = 'white';
-        menuButton.style.border = '2px solid #4b5563';
-        menuButton.style.borderRadius = '5px';
-        menuButton.style.cursor = 'pointer';
-        menuButton.style.fontFamily = 'monospace';
-        menuButton.style.zIndex = '100';
-
-        menuButton.onclick = () => {
-            console.log("Menu button clicked");
-            this.openMenu();
-        };
-
-        // Add the button as a DOM element, which will overlay the canvas
-        const domElement = this.add.dom(0, 0, menuButton).setOrigin(0, 0);
-
         EventBus.on('save-game-from-menu', this.manualSave, this);
         this.events.on('shutdown', () => {
             // Clean up listeners and DOM elements to prevent memory leaks
             EventBus.off('save-game-from-menu', this.manualSave, this);
-            domElement.destroy();
+        });
+
+        this.events.on('resume', () => {
+            this.isPausedByMenu = false;
+            // When the scene resumes from a paused state (e.g., closing the menu), re-enable player movement.
+            if (!this.activeDialogue) {
+                this.player.setMovementEnabled(true);
+            }
         });
 
         this.interactionText = this.add.text(0, 0, 'Press E to Talk', {
@@ -239,7 +254,17 @@ export class Route1Scene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
+    private addItemPickup(x: number, y: number, itemId: string) {
+        const itemSprite = this.itemPickups.create(x, y, 'pokeball_item').setDepth(1);
+        itemSprite.setData('itemId', itemId);
+        itemSprite.refreshBody();
+    }
+
     private openMenu() {
+        this.isPausedByMenu = true;
+        // Explicitly disable player movement before pausing the scene to prevent background input.
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false); // Hide interaction prompts
         this.scene.pause();
         this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
@@ -336,8 +361,8 @@ export class Route1Scene extends Scene {
                         this.startDialogue(`${trainer.id}_defeated`);
                         // Post-battle dialogue will re-enable player movement
                     } else if (result === 'loss') {
-                        PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
-                        this.scene.start('InteriorScene', { entranceId: 'home' });
+                        // On loss, send player to the nearest Pokemon Center (Eclipse Town)
+                        this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                     }
                 });
             });
@@ -345,6 +370,11 @@ export class Route1Scene extends Scene {
     }
 
     update(time: number, delta: number) {
+        // If the menu is open, do not process any game logic for this scene.
+        if (this.isPausedByMenu) {
+            return;
+        }
+
         if (this.activeDialogue) {
             if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) this.progressDialogue();
             return;
@@ -376,9 +406,20 @@ export class Route1Scene extends Scene {
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { 
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'route1' }); 
+            this.scene.start(transitionScene, { spawnEntrance: transitionScene === 'OverworldScene' ? 'route1' : 'lunar_city' }); 
             return; 
         }
+
+        // Item Pickup Logic
+        this.physics.overlap(this.player, this.itemPickups, (_player, itemPickupObj) => {
+            const itemPickup = itemPickupObj as Phaser.GameObjects.GameObject;
+            const itemId = itemPickup.getData('itemId') as string;
+            if (itemId) {
+                PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1;
+                this.startDialogue(`found_${itemId.toLowerCase()}`);
+                itemPickup.destroy();
+            }
+        });
 
         this.currentNPC = null;
         let currentTrainerId: string | null = null;

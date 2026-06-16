@@ -29,14 +29,14 @@ export class MenuScene extends Scene {
         this.menuPanel = this.add.rectangle(startX, this.cameras.main.height / 2, menuWidth, 450, 0x111827, 0.9).setStrokeStyle(4, 0x4b5563);
         
         const options = [
-            { name: 'POKÉMON', action: () => this.launchSubScene('TeamScene', { inBattle: false }) },
-            { name: 'BAG', action: () => this.launchSubScene('BagScene') },
+            { name: 'POKÉMON', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('TeamScene', { inBattle: false }); } },
+            { name: 'BAG', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('BagScene'); } },
             { name: 'SAVE', action: () => this.saveGame() },
             { name: 'LOAD', action: () => this.loadGame() },
-            { name: 'POKÉDEX', action: () => this.launchSubScene('PokedexScene') },
-            { name: 'BADGES', action: () => this.launchSubScene('BadgeScene') },
-            { name: 'SETTINGS', action: () => this.launchSubScene('SettingsScene') },
-            { name: 'QUIT', action: () => window.location.href = '/' }
+            { name: 'POKÉDEX', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('PokedexScene'); } },
+            { name: 'BADGES', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('BadgeScene'); } },
+            { name: 'SETTINGS', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('SettingsScene'); } },
+            { name: 'QUIT', action: () => { /* this.sound.play('menu_confirm'); */ window.location.href = '/'; } }
         ];
 
         const startY = (this.cameras.main.height - (options.length * 50)) / 2 + 25;
@@ -62,6 +62,7 @@ export class MenuScene extends Scene {
         this.input.keyboard?.on('keydown-DOWN', this.moveSelectionDown, this);
         this.input.keyboard?.on('keydown-ENTER', () => options[this.selectedIndex].action(), this);
         this.input.keyboard?.on('keydown-SPACE', () => options[this.selectedIndex].action(), this);
+        this.input.keyboard?.on('keydown-E', () => options[this.selectedIndex].action(), this);
         this.input.keyboard?.on('keydown-ESC', this.closeMenu, this);
 
         this.updateSelector();
@@ -76,11 +77,13 @@ export class MenuScene extends Scene {
     }
 
     private moveSelectionUp() {
+        // this.sound.play('menu_select', { volume: 0.7 });
         this.selectedIndex = (this.selectedIndex - 1 + this.menuItems.length) % this.menuItems.length;
         this.updateSelector();
     }
 
     private moveSelectionDown() {
+        // this.sound.play('menu_select', { volume: 0.7 });
         this.selectedIndex = (this.selectedIndex + 1) % this.menuItems.length;
         this.updateSelector();
     }
@@ -101,11 +104,13 @@ export class MenuScene extends Scene {
     }
 
     private saveGame() {
+        // this.sound.play('item_use'); // Using a success sound for saving
         EventBus.emit('save-game-from-menu');
         this.showSaveMessage('Game Saved Successfully');
     }
 
     private loadGame() {
+        // this.sound.play('menu_confirm');
         if (SaveManager.hasSaveData()) {
             window.location.reload();
         } else {
