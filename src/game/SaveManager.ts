@@ -97,4 +97,20 @@ export class SaveManager {
         localStorage.removeItem(SAVE_KEY);
         console.log('Save data cleared.');
     }
+
+    public static getLastSaveTimestamp(): string | null {
+        try {
+            const savedString = localStorage.getItem(SAVE_KEY);
+            if (!savedString) return null;
+
+            // Partially parse to avoid loading everything just for the timestamp
+            const saveData: { timestamp: number } = JSON.parse(savedString);
+            if (!saveData.timestamp) return null;
+
+            return new Date(saveData.timestamp).toLocaleString();
+        } catch (e) {
+            console.error('Failed to get last save timestamp:', e);
+            return null;
+        }
+    }
 }

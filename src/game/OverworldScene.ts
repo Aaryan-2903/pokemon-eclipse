@@ -14,6 +14,7 @@ export class OverworldScene extends Scene {
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private autoSaveIndicator!: Phaser.GameObjects.Text;
     private hudText!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
@@ -201,33 +202,53 @@ export class OverworldScene extends Scene {
             fontSize: '14px',
             color: '#ffffff',
             backgroundColor: '#00000099',
-            padding: { x: 8, y: 8 }
+            padding: { x: 8, y: 8 },
+            wordWrap: { width: 250 }
         }).setScrollFactor(0).setDepth(100);
 
+        // Autosave indicator
+        this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', {
+            fontFamily: 'monospace', fontSize: '14px', color: '#22c55e',
+            backgroundColor: '#000000aa', padding: { x: 8, y: 4 }
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
+
         // Save/Load Buttons
-        const buttonStyle = { fontFamily: 'monospace', fontSize: '14px', color: '#000000', backgroundColor: '#ffffff', padding: { x: 8, y: 4 } };
-        const saveButton = this.add.text(16, 50, 'Save Game', buttonStyle)
-            .setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
-        
-        saveButton.on('pointerdown', () => {
-            SaveManager.save(this, this.player.x, this.player.y);
-            this.hudText.setText(`Location: Eclipse Town\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}\n\nGame Saved!`);
-            this.time.delayedCall(2000, () => this.hudText.setText(`Location: Eclipse Town\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`));
-        });
+        const menuButton = document.createElement('button');
+        menuButton.innerHTML = '&#9776; Menu'; // Hamburger icon
+        menuButton.style.position = 'absolute';
+        menuButton.style.top = '60px';
+        menuButton.style.right = '20px';
+        menuButton.style.padding = '8px 12px';
+        menuButton.style.backgroundColor = '#111827';
+        menuButton.style.color = 'white';
+        menuButton.style.border = '2px solid #4b5563';
+        menuButton.style.borderRadius = '5px';
+        menuButton.style.cursor = 'pointer';
+        menuButton.style.fontFamily = 'monospace';
+        menuButton.style.zIndex = '100';
 
-        const loadButton = this.add.text(16, 80, 'Load Game', buttonStyle)
-            .setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        menuButton.onclick = () => {
+            console.log("Menu button clicked");
+            this.openMenu();
+        };
 
-        loadButton.on('pointerdown', () => {
-            if (SaveManager.hasSaveData()) {
-                this.hudText.setText('Loading...');
-                // Reloading the page is the simplest way to apply loaded state from scratch
-                window.location.reload();
-            }
+        // Add the button as a DOM element, which will overlay the canvas
+        const domElement = this.add.dom(0, 0, menuButton).setOrigin(0, 0);
+
+        EventBus.on('save-game-from-menu', this.manualSave, this);
+        this.events.on('shutdown', () => {
+            // Clean up listeners and DOM elements to prevent memory leaks
+            EventBus.off('save-game-from-menu', this.manualSave, this);
+            domElement.destroy();
         });
 
         // Notify React that the scene is ready
         EventBus.emit('current-scene-ready', this);
+    }
+
+    private openMenu() {
+        this.scene.pause();
+        this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
 
     private startDialogue(dialogueId: string) {
@@ -291,7 +312,7 @@ export class OverworldScene extends Scene {
                     if (result === 'win') {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
-                        SaveManager.save(this, this.player.x, this.player.y); // Auto-save after winning
+                        this.autoSave(); // Auto-save after winning
 
                         if (trainer.id === 'gym_aurora') {
                             PlayerState.badges.add('Sky Badge');
@@ -316,6 +337,11 @@ export class OverworldScene extends Scene {
                 this.endDialogue();
             }
             return; // Skip normal update logic while in dialogue
+        }
+
+        if (Input.Keyboard.JustDown(this.escKey)) {
+            this.openMenu();
+            return;
         }
 
         if (Input.Keyboard.JustDown(this.teamKey)) {
@@ -352,7 +378,7 @@ export class OverworldScene extends Scene {
         });
 
         if (transitionScene) {
-            SaveManager.save(this, this.player.x, this.player.y);
+            this.autoSave();
             this.scene.start(transitionScene, { spawnEntrance: 'town' });
             return;
         }
@@ -387,12 +413,34 @@ export class OverworldScene extends Scene {
                 } else if (this.currentNPC) {
                     this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
                 } else if (this.currentEntrance) {
-                    SaveManager.save(this, this.player.x, this.player.y);
+                    this.autoSave();
                     this.scene.start('InteriorScene', { entranceId: this.currentEntrance });
                 }
             }
         } else {
             this.interactionText.setVisible(false);
         }
+    }
+
+    private manualSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+    }
+
+    private autoSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+        this.showAutoSaveIndicator('Autosaving...');
+    }
+
+    private showAutoSaveIndicator(text: string) {
+        this.autoSaveIndicator.setText(text);
+        this.autoSaveIndicator.setAlpha(1);
+        this.tweens.killTweensOf(this.autoSaveIndicator);
+        this.tweens.add({
+            targets: this.autoSaveIndicator,
+            alpha: 0,
+            delay: 1500,
+            duration: 500,
+            ease: 'Power2'
+        });
     }
 }

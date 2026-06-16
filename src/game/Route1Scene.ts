@@ -19,6 +19,7 @@ export class Route1Scene extends Scene {
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
     private hudText!: Phaser.GameObjects.Text;
+    private autoSaveIndicator!: Phaser.GameObjects.Text;
     private tallGrassZones!: Phaser.Physics.Arcade.StaticGroup;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
@@ -167,9 +168,46 @@ export class Route1Scene extends Scene {
         this.questTracker = new QuestTracker(this);
         this.hudText = this.add.text(16, 16, '', {
             fontFamily: 'monospace', fontSize: '14px', color: '#ffffff',
-            backgroundColor: '#00000099', padding: { x: 8, y: 8 }
+            backgroundColor: '#00000099', padding: { x: 8, y: 8 },
+            wordWrap: { width: 250 }
         }).setScrollFactor(0).setDepth(100);
-        
+
+        // Autosave indicator
+        this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', {
+            fontFamily: 'monospace', fontSize: '14px', color: '#22c55e',
+            backgroundColor: '#000000aa', padding: { x: 8, y: 4 }
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
+
+        // Save/Load Buttons
+        const menuButton = document.createElement('button');
+        menuButton.innerHTML = '&#9776; Menu'; // Hamburger icon
+        menuButton.style.position = 'absolute';
+        menuButton.style.top = '60px';
+        menuButton.style.right = '20px';
+        menuButton.style.padding = '8px 12px';
+        menuButton.style.backgroundColor = '#111827';
+        menuButton.style.color = 'white';
+        menuButton.style.border = '2px solid #4b5563';
+        menuButton.style.borderRadius = '5px';
+        menuButton.style.cursor = 'pointer';
+        menuButton.style.fontFamily = 'monospace';
+        menuButton.style.zIndex = '100';
+
+        menuButton.onclick = () => {
+            console.log("Menu button clicked");
+            this.openMenu();
+        };
+
+        // Add the button as a DOM element, which will overlay the canvas
+        const domElement = this.add.dom(0, 0, menuButton).setOrigin(0, 0);
+
+        EventBus.on('save-game-from-menu', this.manualSave, this);
+        this.events.on('shutdown', () => {
+            // Clean up listeners and DOM elements to prevent memory leaks
+            EventBus.off('save-game-from-menu', this.manualSave, this);
+            domElement.destroy();
+        });
+
         this.interactionText = this.add.text(0, 0, 'Press E to Talk', {
             fontFamily: 'monospace', fontSize: '12px', color: '#000000',
             backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
@@ -199,6 +237,11 @@ export class Route1Scene extends Scene {
         }
 
         EventBus.emit('current-scene-ready', this);
+    }
+
+    private openMenu() {
+        this.scene.pause();
+        this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
 
     private startDialogue(dialogueId: string) {
@@ -249,7 +292,7 @@ export class Route1Scene extends Scene {
                     this.scene.start('InteriorScene', { entranceId: 'home' });
                 } else {
                     if (result === 'win') { // This also covers catching, as it ends in a 'win'
-                        SaveManager.save(this, this.player.x, this.player.y);
+                        this.autoSave();
                     }
                     this.cameras.main.fadeIn(250, 0, 0, 0);
                     this.scene.resume(); // Explicitly resume the scene
@@ -289,7 +332,7 @@ export class Route1Scene extends Scene {
                     if (result === 'win') {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
-                        SaveManager.save(this, this.player.x, this.player.y); // Auto-save after winning
+                        this.autoSave(); // Auto-save after winning
                         this.startDialogue(`${trainer.id}_defeated`);
                         // Post-battle dialogue will re-enable player movement
                     } else if (result === 'loss') {
@@ -304,6 +347,11 @@ export class Route1Scene extends Scene {
     update(time: number, delta: number) {
         if (this.activeDialogue) {
             if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) this.progressDialogue();
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.escKey)) {
+            this.openMenu();
             return;
         }
 
@@ -327,7 +375,7 @@ export class Route1Scene extends Scene {
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { 
-            SaveManager.save(this, this.player.x, this.player.y);
+            this.autoSave();
             this.scene.start(transitionScene, { spawnEntrance: 'route1' }); 
             return; 
         }
@@ -382,5 +430,27 @@ export class Route1Scene extends Scene {
             // to prevent a large distance jump when re-entering grass.
             this.playerLastPosForEncounter.set(this.player.x, this.player.y);
         }
+    }
+
+    private manualSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+    }
+
+    private autoSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+        this.showAutoSaveIndicator('Autosaving...');
+    }
+
+    private showAutoSaveIndicator(text: string) {
+        this.autoSaveIndicator.setText(text);
+        this.autoSaveIndicator.setAlpha(1);
+        this.tweens.killTweensOf(this.autoSaveIndicator);
+        this.tweens.add({
+            targets: this.autoSaveIndicator,
+            alpha: 0,
+            delay: 1500,
+            duration: 500,
+            ease: 'Power2'
+        });
     }
 }

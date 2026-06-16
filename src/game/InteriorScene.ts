@@ -21,7 +21,9 @@ export class InteriorScene extends Scene {
     private spaceKey!: Phaser.Input.Keyboard.Key;
     private enterKey!: Phaser.Input.Keyboard.Key;
     private escKey!: Phaser.Input.Keyboard.Key;
+    private teamKey!: Phaser.Input.Keyboard.Key;
     private badgeKey!: Phaser.Input.Keyboard.Key;
+    private autoSaveIndicator!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
@@ -86,6 +88,7 @@ export class InteriorScene extends Scene {
             this.spaceKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.SPACE);
             this.enterKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ENTER);
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
+            this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
@@ -93,6 +96,40 @@ export class InteriorScene extends Scene {
             fontFamily: 'monospace', fontSize: '12px', color: '#000000',
             backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
         }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
+
+        this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', {
+            fontFamily: 'monospace', fontSize: '14px', color: '#22c55e',
+            backgroundColor: '#000000aa', padding: { x: 8, y: 4 }
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
+
+        const menuButton = document.createElement('button');
+        menuButton.innerHTML = '&#9776; Menu'; // Hamburger icon
+        menuButton.style.position = 'absolute';
+        menuButton.style.top = '60px';
+        menuButton.style.right = '20px';
+        menuButton.style.padding = '8px 12px';
+        menuButton.style.backgroundColor = '#111827';
+        menuButton.style.color = 'white';
+        menuButton.style.border = '2px solid #4b5563';
+        menuButton.style.borderRadius = '5px';
+        menuButton.style.cursor = 'pointer';
+        menuButton.style.fontFamily = 'monospace';
+        menuButton.style.zIndex = '100';
+
+        menuButton.onclick = () => {
+            console.log("Menu button clicked");
+            this.openMenu();
+        };
+
+        // Add the button as a DOM element, which will overlay the canvas
+        const domElement = this.add.dom(0, 0, menuButton).setOrigin(0, 0);
+
+        EventBus.on('save-game-from-menu', this.manualSave, this);
+        this.events.on('shutdown', () => {
+            // Clean up listeners and DOM elements to prevent memory leaks
+            EventBus.off('save-game-from-menu', this.manualSave, this);
+            domElement.destroy();
+        });
 
         // Location-specific setup
         this.setupLocation();
@@ -112,6 +149,11 @@ export class InteriorScene extends Scene {
         }
         
         EventBus.emit('current-scene-ready', this);
+    }
+
+    private openMenu() {
+        this.scene.pause();
+        this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
 
     private setupLocation() {
@@ -212,8 +254,8 @@ export class InteriorScene extends Scene {
             });
             console.log('All Pokémon have been healed.', PlayerState.pokemonTeam);
 
-            // Save the healed state
-            SaveManager.save(this, this.player.x, this.player.y);
+            // Auto-save the healed state
+            this.autoSave();
 
             // 3. Wait a moment, then fade back in
             this.time.delayedCall(1000, () => {
@@ -234,6 +276,17 @@ export class InteriorScene extends Scene {
                     this.endDialogue();
                 }
             }
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.escKey)) {
+            this.openMenu();
+            return;
+        }
+
+        if (Input.Keyboard.JustDown(this.teamKey)) {
+            this.scene.pause();
+            this.scene.launch('TeamScene', { fromScene: this.scene.key, inBattle: false });
             return;
         }
 
@@ -269,12 +322,34 @@ export class InteriorScene extends Scene {
                 if (this.currentNPC) {
                     this.startDialogue(this.currentNPC);
                 } else if (nearExit) {
-                    SaveManager.save(this, this.player.x, this.player.y);
+                    this.autoSave();
                     this.scene.start('OverworldScene', { spawnEntrance: this.entranceId });
                 }
             }
         } else {
             this.interactionText.setVisible(false);
         }
+    }
+
+    private manualSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+    }
+
+    private autoSave() {
+        SaveManager.save(this, this.player.x, this.player.y);
+        this.showAutoSaveIndicator('Autosaving...');
+    }
+
+    private showAutoSaveIndicator(text: string) {
+        this.autoSaveIndicator.setText(text);
+        this.autoSaveIndicator.setAlpha(1);
+        this.tweens.killTweensOf(this.autoSaveIndicator);
+        this.tweens.add({
+            targets: this.autoSaveIndicator,
+            alpha: 0,
+            delay: 1500,
+            duration: 500,
+            ease: 'Power2'
+        });
     }
 }

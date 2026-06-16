@@ -234,6 +234,23 @@ export class PreloadScene extends Scene {
         createBuilding('mart', 160, 128, 0x0ea5e9);         // Sky blue roof
         createBuilding('building_gym', 192, 160, 0xf59e0b); // Amber roof
 
+        // UI Elements
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillRect(0, 0, 32, 4);
+        graphics.fillRect(0, 10, 32, 4);
+        graphics.fillRect(0, 20, 32, 4);
+        graphics.generateTexture('menu_icon', 32, 24);
+        graphics.clear();
+
+        graphics.fillStyle(0xfcd34d, 1); // Yellow
+        graphics.fillPoints([
+            { x: 0, y: 0 },
+            { x: 16, y: 8 },
+            { x: 0, y: 16 }
+        ]);
+        graphics.generateTexture('selector_arrow', 16, 16);
+        graphics.clear();
+
         graphics.destroy();
 
         // Map the generated player texture into individual frames

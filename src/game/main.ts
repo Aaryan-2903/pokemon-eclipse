@@ -4,6 +4,10 @@ import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
 import { BattleScene } from './BattleScene';
+import { MenuScene } from './MenuScene';
+import { PokedexScene } from './PokedexScene';
+import { BagScene } from './BagScene';
+import { SettingsScene } from './SettingsScene';
 import { TeamScene } from './TeamScene';
 import { EvolutionScene } from './EvolutionScene';
 import { BadgeScene } from './BadgeScene';
@@ -14,6 +18,9 @@ const config: Types.Core.GameConfig = {
     width: 800,
     height: 600,
     parent: 'game-container',
+    dom: {
+        createContainer: true
+    },
     backgroundColor: '#2d2d2d',
     scale: {
         mode: Phaser.Scale.FIT,
@@ -36,6 +43,10 @@ const config: Types.Core.GameConfig = {
         InteriorScene,
         Route1Scene,
         BattleScene,
+        MenuScene,
+        PokedexScene,
+        BagScene,
+        SettingsScene,
         TeamScene,
         EvolutionScene,
         BadgeScene
