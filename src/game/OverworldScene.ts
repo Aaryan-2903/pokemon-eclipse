@@ -111,15 +111,6 @@ export class OverworldScene extends Scene {
         route1Zone.setData('targetScene', 'Route1Scene');
         this.entrances.add(route1Zone);
 
-        // Route 2 Preparation & Transition (North-East)
-        this.add.tileSprite(1400, 450, 128, 100, 'path').setDepth(roadDepth);
-        this.obstacles.create(1480, 450, 'sign').setDepth(2);
-        this.add.text(1480, 420, 'Route 2', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(5);
-        const route2Zone = this.add.zone(1400, 380, 128, 40);
-        this.physics.add.existing(route2Zone, true);
-        route2Zone.setData('targetScene', 'Route2Scene');
-        this.entrances.add(route2Zone);
-
         const addBuilding = (x: number, y: number, key: string, label: string, entranceId: string) => {
             const building = this.obstacles.create(x, y, key) as Phaser.Physics.Arcade.Image;
             building.setDepth(2);

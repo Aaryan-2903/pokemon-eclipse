@@ -30,6 +30,12 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'found_pokeball': [
         { speaker: 'System', text: 'You found a Pokéball!' }
     ],
+    'found_super_potion': [
+        { speaker: 'System', text: 'You found a Super Potion!' }
+    ],
+    'found_revive': [
+        { speaker: 'System', text: 'You found a Revive!' }
+    ],
     'nova_intro': [
         { speaker: 'Professor Nova', text: "Welcome to Eclipse Town, Max.", portrait: 'portrait_nova' },
         { speaker: 'Professor Nova', text: "The Eclipse Shards have been behaving strangely lately.", portrait: 'portrait_nova' },
@@ -131,21 +137,26 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route2_bugcatcher_sam_defeated': [
         { speaker: 'Bug Catcher', text: "My bugs will evolve and be stronger next time!", portrait: 'portrait_bugcatcher' }
     ],
-    'route2_hiker': [
-        { speaker: 'Hiker', text: "I heard there's a hidden cave somewhere on this route." }
+    'route2_hiker_liam_defeated': [
+        { speaker: 'Hiker Liam', text: "You've got grit, kid.", portrait: 'portrait_traveler' }
     ],
-    'route2_camper': [
-        { speaker: 'Camper', text: "The wild Pokémon here are tougher than on Route 1." }
+    'route2_camper_shane_defeated': [
+        { speaker: 'Camper Shane', text: "Whoa, your Pokémon is strong!", portrait: 'portrait_youngster' }
     ],
-    'route2_fisher': [
-        { speaker: 'Fisherman', text: "The river here has some rare water Pokémon." }
+    'route2_picnicker': [
+        { speaker: 'Picnicker', text: "I was going to have a picnic, but I saw some shady people in black coats heading north. It gave me the creeps." }
+    ],
+    'route2_fork_sign': [
+        { speaker: 'Sign', text: '<< West Path: Winding Trail\n>> East Path: To Eclipse Forest' }
     ],
     'route2_team_umbra_grunt': [
         { speaker: 'Team Umbra Grunt', text: "Hmph, another weak trainer. Don't get in our way.", portrait: 'portrait_umbra_grunt' },
         { speaker: 'Team Umbra Grunt', text: "Team Umbra has important work to do here.", portrait: 'portrait_umbra_grunt' }
     ],
     'route2_team_umbra_grunt_defeated': [
-        { speaker: 'Team Umbra Grunt', text: "You may have won this battle, but you won't stop Team Umbra!", portrait: 'portrait_umbra_grunt' }
+        { speaker: 'Team Umbra Grunt', text: "Hmph! You're stronger than you look. But it doesn't matter.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Team Umbra Grunt', text: "We will gather all the Eclipse Shards, and no one can stop us!", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'System', text: 'The grunt dropped something as they fled...' }
     ],
     'route1_veteran': [
         { speaker: 'Veteran Trainer', text: "A true trainer knows the journey is more important than the destination." }
@@ -167,5 +178,69 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'lunar_citizen_8': [ { speaker: 'Collector', text: "The Poké Mart here has a great selection." } ],
     'lunar_citizen_9': [ { speaker: 'Student', text: "I'm studying to be a Pokémon Professor, just like Professor Nova." } ],
     'lunar_citizen_10': [ { speaker: 'Researcher', text: "We're studying the effects of lunar cycles on Pokémon evolution." }
+    ],
+    'forest_entry': [
+        { speaker: 'System', text: "You've entered the Eclipse Forest. The air is thick and still." }
+    ],
+    'forest_entrance_sign': [
+        { speaker: 'Sign', text: 'Eclipse Forest\nBeware of getting lost.' }
+    ],
+    'forest_bug_catcher_dave_defeated': [
+        { speaker: 'Bug Catcher Dave', text: "My bugs need more training!", portrait: 'portrait_bugcatcher' }
+    ],
+    'forest_hiker_barry_defeated': [
+        { speaker: 'Hiker Barry', text: "Tough battle! You must be on the right path.", portrait: 'portrait_traveler' }
+    ],
+    'forest_lost_child': [
+        { speaker: 'Lost Child', text: "I can't find my way back... I saw some scary people in black coats go deeper into the forest." }
+    ],
+    'forest_explorer': [
+        { speaker: 'Explorer', text: "This forest is a maze! I heard a rumor of a hidden clearing where rare Pokémon gather." }
+    ],
+    'forest_umbra_intro': [
+        { speaker: 'Team Umbra Grunt', text: "You again! Meddling kids have no place here!", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Team Umbra Grunt', text: "We're searching for Eclipse Shards, and you won't interfere!", portrait: 'portrait_umbra_grunt' }
+    ],
+    'forest_umbra_grunt_1_defeated': [
+        { speaker: 'Team Umbra Grunt', text: "Argh! How are you so strong?!", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Team Umbra Grunt', text: "This won't stop us. The power of the Eclipse Shards will be ours!", portrait: 'portrait_umbra_grunt' }
+    ],
+    'route3_entry': [
+        { speaker: 'System', text: "You've entered Route 3. The path ahead is clear." }
+    ],
+    'route3_sign': [
+        { speaker: 'Sign', text: 'Route 3\nNorth: Veridia City\nSouth: Eclipse Forest' }
+    ],
+    'route3_youngster_toby_defeated': [
+        { speaker: 'Youngster Toby', text: "I'll get stronger, just you wait!", portrait: 'portrait_youngster' }
+    ],
+    'route3_hiker': [
+        { speaker: 'Hiker', text: "Veridia City is just ahead. It's a beautiful city surrounded by nature." }
+    ],
+    'route3_lass': [
+        { speaker: 'Lass', text: "I heard the Gym Leader in Veridia City uses Grass-type Pokémon." }
+    ],
+    'veridia_city_entry': [
+        { speaker: 'System', text: "You've arrived in Veridia City. The air is fresh and green." }
+    ],
+    'veridia_city_sign': [
+        { speaker: 'Sign', text: 'Welcome to Veridia City!\nThe Green Jewel' }
+    ],
+    'veridia_citizen_1': [
+        { speaker: 'Citizen', text: "This city is known for its beautiful gardens and the Grass-type Gym." }
+    ],
+    'veridia_citizen_2': [
+        { speaker: 'Citizen', text: "Gym Leader Lily is very kind, but her Pokémon are tough!" }
+    ],
+    'veridia_citizen_3': [
+        { speaker: 'Citizen', text: "The Pokémon Center here is always busy with trainers preparing for the Gym." }
+    ],
+    'gym_lily_intro': [
+        { speaker: 'Gym Leader Lily', text: "Welcome to my Gym, challenger. I am Lily, and my Grass-type Pokémon are ready to test your bond!", portrait: 'portrait_nova' } // Using Nova's portrait as placeholder
+    ],
+    'gym_lily_victory': [
+        { speaker: 'Gym Leader Lily', text: "Your growth is truly remarkable! You've earned this badge.", portrait: 'portrait_nova' },
+        { speaker: 'System', text: "You received the Grass Badge!" },
+        { speaker: 'Gym Leader Lily', text: "With this, you can now use the move Cut outside of battle! (Placeholder)", portrait: 'portrait_nova' }
     ]
 };

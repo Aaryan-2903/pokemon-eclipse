@@ -202,6 +202,11 @@ export class InteriorScene extends Scene {
                             StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM1);
                             StoryManager.getInstance().setActiveQuest("Meet Kai on Route 2");
                             EventBus.emit('quest-updated');
+                        } else if (trainer.id === 'gym_lily') {
+                            PlayerState.badges.add('Grass Badge');
+                            this.startDialogue('gym_lily_victory');
+                            StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM2);
+                            // StoryManager.getInstance().setActiveQuest("Explore Route 4"); // Future quest
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
                         }
@@ -238,6 +243,10 @@ export class InteriorScene extends Scene {
             const aurora = new NPC(this, 400, 200, 'npc_aurora', 'gym_aurora_intro', 'gym_aurora');
             this.obstacles.add(aurora);
             this.npcZones.add(aurora.interactionZone);
+        } else if (this.entranceId === 'gym_veridia') {
+            const lily = new NPC(this, 400, 200, 'npc_nova', 'gym_lily_intro', 'gym_lily'); // Using Nova's sprite as placeholder for Lily
+            this.obstacles.add(lily);
+            this.npcZones.add(lily.interactionZone);
         } else if (this.entranceId === 'mart') {
             // Add shopkeeper
             const shopkeeper = new NPC(this, 400, 250, 'npc_shopkeeper', 'shopkeeper_menu');

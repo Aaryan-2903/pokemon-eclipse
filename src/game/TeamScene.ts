@@ -41,6 +41,9 @@ export class TeamScene extends Scene {
     }
 
     create() {
+        console.log('TeamScene loaded. Player party:', JSON.stringify(PlayerState.pokemonTeam));
+        console.log(`Found ${PlayerState.pokemonTeam.length} Pokemon in the party.`);
+
         // Dim background
         this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
 
@@ -54,15 +57,15 @@ export class TeamScene extends Scene {
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true });
         
-        const doClose = () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.closeScene(); };
-        if (this.forceSwitch) {
-            // In a forced switch, check if the currently active Pokémon is healthy.
-            // If not, prevent closing and prompt the user to select a healthy one.
-            if (PlayerState.pokemonTeam[0] && PlayerState.pokemonTeam[0].currentHp === 0) { // Ensure PlayerState.pokemonTeam[0] exists
+        const doClose = () => {
+            // When a switch is forced, prevent closing if the player hasn't chosen a healthy replacement.
+            if (this.forceSwitch && PlayerState.pokemonTeam[0]?.currentHp === 0) {
                 this.showMessage('You must choose a healthy Pokémon!');
                 return;
             }
-        }
+            /* this.sound.play('menu_select', { volume: 0.7 }); */
+            this.closeScene();
+        };
         closeButton.on('pointerdown', doClose);
         if (this.input.keyboard) {
             this.input.keyboard.once('keydown-ESC', doClose);
@@ -78,6 +81,8 @@ export class TeamScene extends Scene {
     private renderTeamList() {
         this.pokemonCards.forEach(card => card.destroy());
         this.pokemonCards = [];
+
+        console.log(`[TeamScene] Rendering cards for ${PlayerState.pokemonTeam.length} Pokémon.`);
 
         for (let i = 0; i < 6; i++) {
             const pokemon = PlayerState.pokemonTeam[i];

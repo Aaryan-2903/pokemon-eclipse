@@ -33,6 +33,7 @@ export class Route2Scene extends Scene {
     private dialogueBox!: DialogueBox;
     private questTracker!: QuestTracker;
     private activeDialogue: DialogueNode[] | null = null;
+    private activeDialogueKey: string | null = null;
     private currentDialogueIndex: number = 0;
     private spawnEntrance?: string;
     private spawnX?: number;
@@ -63,39 +64,49 @@ export class Route2Scene extends Scene {
         }
         // --- END DEBUG ---
 
-        // Larger World Bounds for exploration (3000x3000)
-        const worldWidth = 3000;
-        const worldHeight = 3000;
+        // Expanded Route 2: Larger and more explorable
+        const worldWidth = 6000;
+        const worldHeight = 6000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
         // Background
         this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
 
-        // Main dirt pathway
-        this.add.tileSprite(worldWidth / 2, worldHeight / 2, 256, worldHeight, 'path').setDepth(1);
+        // --- Path Layout ---
+        this.add.tileSprite(3000, 5500, 256, 1000, 'path').setDepth(1); // South entrance path
+        this.add.tileSprite(3000, 4750, 1500, 256, 'path').setDepth(1); // Fork
+        // East Path (Main)
+        this.add.tileSprite(3750, 3500, 256, 2500, 'path').setDepth(1);
+        this.add.tileSprite(3000, 2250, 1500, 256, 'path').setDepth(1);
+        // West Path (Winding)
+        this.add.tileSprite(2250, 4000, 256, 1500, 'path').setDepth(1);
+        this.add.tileSprite(1500, 3250, 1500, 256, 'path').setDepth(1);
+        this.add.tileSprite(1500, 2250, 256, 2000, 'path').setDepth(1);
+        // North Path to Exit
+        this.add.tileSprite(3000, 1150, 256, 2200, 'path').setDepth(1);
 
-        // Exploration Areas: Tall Grass Patches
+        // --- Tall Grass Patches ---
         this.tallGrassZones = this.physics.add.staticGroup();
         const addTallGrass = (x: number, y: number, width: number, height: number) => {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(500, 500, 512, 256);
-        addTallGrass(2500, 500, 512, 256);
-        addTallGrass(1500, 1000, 768, 512);
-        addTallGrass(500, 2000, 256, 512);
-        addTallGrass(2500, 2000, 256, 512);
-        addTallGrass(1500, 2500, 1024, 256);
+        addTallGrass(4500, 4000, 1024, 1500); // Large eastern field
+        addTallGrass(1500, 4500, 1024, 1024); // Large western field
+        addTallGrass(2500, 1500, 2048, 512);  // Central northern field
+        addTallGrass(500, 1000, 512, 1024);   // Hidden northwest patch
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
         this.npcZones = this.physics.add.staticGroup();
         this.itemPickups = this.physics.add.staticGroup();
 
-        // Environment: Route Boundaries (Trees)
+        // --- Scenery and Boundaries ---
         for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 1400 || x > 1600) {
+            if (x < 2900 || x > 3100) {
                 this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
+            }
+            if (x < 2900 || x > 3100) {
                 this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South Edge
             }
         }
@@ -104,24 +115,21 @@ export class Route2Scene extends Scene {
             this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East Edge
         }
 
-        // Decorative environment items
-        this.obstacles.create(worldWidth / 2 - 500, worldHeight / 2 - 300, 'fence').setDepth(2);
-        this.add.image(worldWidth / 2 - 500, worldHeight / 2 - 250, 'flower').setDepth(0.5);
-
-        // Water hazard area
-        this.add.tileSprite(worldWidth / 2 + 800, worldHeight / 2, 256, 512, 'water').setDepth(0.5);
-        const riverZone = this.add.zone(worldWidth / 2 + 800, worldHeight / 2, 256, 512);
-        this.physics.add.existing(riverZone, true);
-        this.obstacles.add(riverZone);
-
-        // Route sign
-        this.obstacles.create(worldWidth / 2, worldHeight - 200, 'sign').setDepth(2);
-        this.add.text(worldWidth / 2, worldHeight - 230, 'Route 2\nNorth: Forest Entrance\nSouth: Eclipse Town', {
+        // --- Signs ---
+        this.obstacles.create(3200, 5800, 'sign').setDepth(2);
+        this.add.text(3200, 5770, 'Route 2\nNorth: Eclipse Forest\nSouth: Lunar City', {
             fontFamily: 'monospace', fontSize: '12px', color: '#ffffff',
             backgroundColor: '#000000aa', padding: { x: 4, y: 2 }, align: 'center'
         }).setOrigin(0.5).setDepth(5);
 
-        // NPCs
+        const addSign = (x: number, y: number, dialogueId: string) => {
+            const sign = new NPC(this, x, y, 'sign', dialogueId);
+            this.obstacles.add(sign);
+            this.npcZones.add(sign.interactionZone);
+        };
+        addSign(3300, 4850, 'route2_fork_sign');
+
+        // --- NPCs and Trainers ---
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
             const npc = new NPC(this, x, y, key, dialogueId, trainerId);
             this.obstacles.add(npc); 
@@ -133,45 +141,49 @@ export class Route2Scene extends Scene {
         };
 
         // Add Trainers
-        addNPC(worldWidth / 2 - 200, worldHeight - 500, 'npc_youngster', 'route2_youngster_ben', 'Youngster Ben', 'route2_youngster_ben');
-        addNPC(worldWidth / 2 + 200, worldHeight - 1000, 'npc_traveler', 'route2_lass_amy', 'Lass Amy', 'route2_lass_amy');
-        addNPC(worldWidth / 2 - 400, worldHeight / 2, 'npc_bugcatcher', 'route2_bugcatcher_sam', 'Bug Catcher Sam', 'route2_bugcatcher_sam');
+        addNPC(3750, 4500, 'npc_youngster', 'route2_youngster_ben', 'Youngster Ben', 'route2_youngster_ben'); // East path
+        addNPC(2250, 3500, 'npc_bugcatcher', 'route2_bugcatcher_sam', 'Bug Catcher Sam', 'route2_bugcatcher_sam'); // West path
+        addNPC(1500, 2800, 'npc_traveler', 'route2_lass_amy', 'Lass Amy', 'route2_lass_amy'); // West path
+        // Optional trainers
+        addNPC(500, 500, 'npc_traveler', 'route2_hiker_liam', 'Hiker Liam', 'route2_hiker_liam'); // Hidden northwest
+        addNPC(1000, 4000, 'npc_youngster', 'route2_camper_shane', 'Camper Shane', 'route2_camper_shane'); // West path side area
 
         // Add regular NPCs
-        addNPC(worldWidth / 2 + 500, worldHeight - 700, 'npc_traveler', 'route2_hiker', 'Hiker');
-        addNPC(worldWidth / 2 - 600, worldHeight / 2 + 500, 'npc_youngster', 'route2_camper', 'Camper');
-        addNPC(worldWidth / 2 + 800, worldHeight / 2 + 100, 'npc_traveler', 'route2_fisher', 'Fisherman');
+        addNPC(4000, 2250, 'npc_traveler', 'route2_picnicker', 'Picnicker');
 
         // Team Umbra Grunt
         if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM1) && !StoryManager.getInstance().hasFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2)) {
-            addNPC(worldWidth / 2 + 100, worldHeight / 2 - 500, 'npc_kai', 'route2_team_umbra_grunt', 'Team Umbra Grunt', 'route2_team_umbra_grunt');
+            // Blocks the main path north
+            addNPC(3000, 2000, 'npc_kai', 'route2_team_umbra_grunt', 'Team Umbra Grunt', 'route2_team_umbra_grunt');
         }
 
-        // Add Item Pickups
-        this.addItemPickup(worldWidth / 2 - 300, worldHeight - 800, 'Pokeball');
-        this.addItemPickup(worldWidth / 2 + 700, worldHeight / 2 + 300, 'Potion');
+        // --- Item Pickups ---
+        this.addItemPickup(5500, 5500, 'Potion'); // Hidden in SE corner
+        this.addItemPickup(500, 3000, 'Super Potion'); // Hidden on west path
+        this.addItemPickup(3000, 500, 'Revive'); // Dead end near exit
 
-        // Map Transition: Return to Eclipse Town
-        const townZone = this.add.zone(worldWidth / 2, worldHeight - 50, 200, 40);
+        // --- Transitions ---
+        // Return to Lunar City (South)
+        const townZone = this.add.zone(3000, worldHeight - 50, 200, 40);
         this.physics.add.existing(townZone, true);
-        townZone.setData('targetScene', 'OverworldScene');
+        townZone.setData('targetScene', 'LunarCityScene');
         this.entrances.add(townZone);
 
-        // Map Transition: North to Forest Entrance (Placeholder)
-        const forestZone = this.add.zone(worldWidth / 2, 50, 200, 40);
+        // North to Forest Entrance
+        const forestZone = this.add.zone(3000, 50, 200, 40);
         this.physics.add.existing(forestZone, true);
         forestZone.setData('targetScene', 'EclipseForestScene');
         this.entrances.add(forestZone);
 
-        // Spawn location logic
+        // --- Player Spawn ---
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = worldWidth / 2; spawnY = worldHeight - 150; // default from Eclipse Town
-            if (this.spawnEntrance === 'town') { 
-                spawnX = worldWidth / 2; 
+            spawnX = 3000; spawnY = worldHeight - 150; // default from Lunar City
+            if (this.spawnEntrance === 'lunar_city' || this.spawnEntrance === 'route2') { // Coming from LunarCityScene
+                spawnX = 3000; 
                 spawnY = worldHeight - 150; 
-            } else if (this.spawnEntrance === 'forest') {
-                spawnX = worldWidth / 2;
+            } else if (this.spawnEntrance === 'forest') { // Coming from EclipseForestScene
+                spawnX = 3000;
                 spawnY = 150;
             }
         }
@@ -179,16 +191,15 @@ export class Route2Scene extends Scene {
         this.player = new Player(this, spawnX, spawnY);
         this.playerLastPosForEncounter = new Phaser.Math.Vector2(this.player.x, this.player.y);
 
-        // Camera Setup
+        // --- Camera and Colliders ---
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         this.cameras.main.setZoom(1.5);
         this.physics.add.collider(this.player, this.obstacles);
 
-        // Encounter System
+        // --- Systems and UI ---
         this.encounterManager = new EncounterManager(this);
 
-        // UI & Quest System Trigger
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
         this.hudText = this.add.text(16, 16, '', {
@@ -196,8 +207,6 @@ export class Route2Scene extends Scene {
             backgroundColor: '#00000099', padding: { x: 8, y: 8 },
             wordWrap: { width: 250 }
         }).setScrollFactor(0).setDepth(100);
-
-        // Autosave indicator
         this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', {
             fontFamily: 'monospace', fontSize: '14px', color: '#22c55e',
             backgroundColor: '#000000aa', padding: { x: 8, y: 4 }
@@ -229,7 +238,7 @@ export class Route2Scene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        // Story Progression: Meet Kai on Route 2
+        // --- Story Events ---
         if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM1) && !StoryManager.getInstance().hasFlag(StoryFlag.MET_KAI_ROUTE2)) {
             this.time.delayedCall(500, () => {
                 this.startDialogue('kai_route2_encounter');
@@ -258,6 +267,7 @@ export class Route2Scene extends Scene {
 
     private startDialogue(dialogueId: string) {
         if (!Dialogues[dialogueId]) return;
+        this.activeDialogueKey = dialogueId;
         this.activeDialogue = Dialogues[dialogueId];
         this.currentDialogueIndex = 0;
         this.player.setMovementEnabled(false);
@@ -272,12 +282,34 @@ export class Route2Scene extends Scene {
     private progressDialogue() { 
         this.currentDialogueIndex++; 
         if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { 
-            this.activeDialogue = null; 
-            this.dialogueBox.hide(); 
-            this.player.setMovementEnabled(true); 
+            this.endDialogue();
         } else { 
             this.showCurrentDialogue(); 
         } 
+    }
+
+    private endDialogue() {
+        this.dialogueBox.hide();
+        const previousDialogueKey = this.activeDialogueKey;
+        
+        this.activeDialogueKey = null;
+        this.activeDialogue = null;
+
+        if (previousDialogueKey === 'route2_team_umbra_grunt_defeated') {
+            PlayerState.inventory['Revive'] = (PlayerState.inventory['Revive'] || 0) + 1;
+            this.startDialogue('found_revive');
+
+            const gruntNPC = this.obstacles.getChildren().find(obj => (obj as NPC).trainerId === 'route2_team_umbra_grunt');
+            if (gruntNPC) gruntNPC.destroy();
+            const gruntZone = this.npcZones.getChildren().find(obj => (obj as Phaser.GameObjects.Zone).getData('trainerId') === 'route2_team_umbra_grunt');
+            if (gruntZone) gruntZone.destroy();
+
+        } else if (previousDialogueKey && previousDialogueKey.startsWith('found_')) {
+            // After finding any item, re-enable movement
+            this.player.setMovementEnabled(true);
+        } else {
+            this.player.setMovementEnabled(true);
+        }
     }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
@@ -348,12 +380,12 @@ export class Route2Scene extends Scene {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
                         this.autoSave();
-                        this.startDialogue(`${trainer.id}_defeated`);
                         if (trainer.id === 'route2_team_umbra_grunt') {
                             StoryManager.getInstance().setFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2);
                             StoryManager.getInstance().setActiveQuest("Report to Professor Nova");
                             EventBus.emit('quest-updated');
                         }
+                        this.startDialogue(`${trainer.id}_defeated`);
                     } else if (result === 'loss') {
                         this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                     }
@@ -398,7 +430,7 @@ export class Route2Scene extends Scene {
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { 
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'route2' }); 
+            this.scene.start(transitionScene, { spawnEntrance: 'route2' }); // Let the next scene know we came from Route 2
             return; 
         }
 
@@ -407,7 +439,7 @@ export class Route2Scene extends Scene {
             const itemId = itemPickup.getData('itemId') as string;
             if (itemId) {
                 PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1;
-                this.startDialogue(`found_${itemId.toLowerCase()}`);
+                this.startDialogue(`found_${itemId.toLowerCase()}`); // e.g., found_potion
                 itemPickup.destroy();
             }
         });

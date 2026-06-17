@@ -71,7 +71,7 @@ export class SaveManager {
             // Hydrate state
             PlayerState.name = saveData.playerState.name;
             PlayerState.starterPokemon = saveData.playerState.starterPokemon;
-            PlayerState.pokemonTeam = saveData.playerState.pokemonTeam;
+            PlayerState.pokemonTeam = saveData.playerState.pokemonTeam || [];
             PlayerState.pokemonBox = saveData.playerState.pokemonBox || [];
             PlayerState.inventory = saveData.playerState.inventory;
 

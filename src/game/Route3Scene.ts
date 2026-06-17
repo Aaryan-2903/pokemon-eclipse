@@ -7,12 +7,13 @@ import { Dialogues, DialogueNode } from './dialogues';
 import { QuestTracker } from './QuestTracker';
 import { StoryManager, StoryFlag } from './StoryManager';
 import { EncounterManager } from './EncounterManager';
+import { PokemonInstance, generatePlayerPokemon } from './PokemonData';
 import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
-import { PokemonInstance } from './PokemonData';
+import { Route3Encounters } from './Route3Encounters';
 
-export class EclipseForestScene extends Scene {
+export class Route3Scene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
@@ -40,10 +41,10 @@ export class EclipseForestScene extends Scene {
     private encounterManager!: EncounterManager;
     private playerLastPosForEncounter!: Phaser.Math.Vector2;
     private isPausedByMenu: boolean = false;
-    private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32;
+    private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
 
     constructor() {
-        super('EclipseForestScene');
+        super('Route3Scene');
     }
 
     init(data: any) {
@@ -53,99 +54,106 @@ export class EclipseForestScene extends Scene {
     }
 
     create() {
+        console.log('Route3Scene loaded');
+
+        // --- DEBUG: Ensure player has a Pokémon for testing ---
+        if (PlayerState.pokemonTeam.length === 0) {
+            console.warn('No player Pokémon found! Creating a default Charmander for testing.');
+            const defaultStarter = generatePlayerPokemon('Charmander', 5);
+            PlayerState.pokemonTeam.push(defaultStarter);
+        }
+        // --- END DEBUG ---
+
         const worldWidth = 4000;
         const worldHeight = 4000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
         this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
 
-        this.obstacles = this.physics.add.staticGroup();
-        this.entrances = this.physics.add.staticGroup();
-        this.itemPickups = this.physics.add.staticGroup();
-        this.npcZones = this.physics.add.staticGroup();
+        // Main path
+        this.add.tileSprite(worldWidth / 2, worldHeight / 2, 256, worldHeight, 'path').setDepth(1);
+
+        // Tall Grass Patches
         this.tallGrassZones = this.physics.add.staticGroup();
-
-        // --- Forest Layout ---
-        // Outer walls
-        for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 1900 || x > 2100) this.obstacles.create(x, 100, 'tree').setDepth(2); // North
-            if (x < 1900 || x > 2100) this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South
-        }
-        for (let y = 100; y <= worldHeight - 100; y += 64) {
-            this.obstacles.create(100, y, 'tree').setDepth(2); // West
-            this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East
-        }
-
-        // Internal maze-like trees
-        for (let i = 0; i < 150; i++) {
-            const x = Phaser.Math.Between(100, worldWidth - 100);
-            const y = Phaser.Math.Between(100, worldHeight - 100);
-            // Avoid blocking entry/exit paths
-            if ((x > 1800 && x < 2200 && y > 3500) || (x > 1800 && x < 2200 && y < 500)) continue;
-            this.obstacles.create(x, y, 'tree').setDepth(Phaser.Math.Between(2, 4));
-        }
-
-        // --- Tall Grass ---
         const addTallGrass = (x: number, y: number, width: number, height: number) => {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(1000, 3000, 1024, 512);
-        addTallGrass(3000, 3000, 1024, 512);
-        addTallGrass(2000, 1000, 1500, 768); // Central large patch
+        addTallGrass(1000, 1000, 512, 512);
+        addTallGrass(3000, 1500, 768, 512);
+        addTallGrass(1500, 3000, 1024, 256);
 
-        // --- NPCs and Trainers ---
+        this.obstacles = this.physics.add.staticGroup();
+        this.entrances = this.physics.add.staticGroup();
+        this.npcZones = this.physics.add.staticGroup();
+        this.itemPickups = this.physics.add.staticGroup();
+
+        // Environment: Trees and Rocks
+        for (let x = 0; x <= worldWidth; x += 64) {
+            if (x < 1900 || x > 2100) this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
+            if (x < 1900 || x > 2100) this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South Edge
+        }
+        for (let y = 100; y <= worldHeight - 100; y += 64) {
+            this.obstacles.create(100, y, 'tree').setDepth(2); // West Edge
+            this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East Edge
+        }
+        this.obstacles.create(500, 2000, 'rock').setDepth(2);
+        this.obstacles.create(3500, 1000, 'rock').setDepth(2);
+
+        // Signs
+        this.obstacles.create(2200, 3800, 'sign').setDepth(2);
+        this.add.text(2200, 3770, 'Route 3\nNorth: Veridia City\nSouth: Eclipse Forest', {
+            fontFamily: 'monospace', fontSize: '12px', color: '#ffffff',
+            backgroundColor: '#000000aa', padding: { x: 4, y: 2 }, align: 'center'
+        }).setOrigin(0.5).setDepth(5);
+
+        // NPCs
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
             const npc = new NPC(this, x, y, key, dialogueId, trainerId);
-            this.obstacles.add(npc);
+            this.obstacles.add(npc); 
             this.npcZones.add(npc.interactionZone);
             this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
         };
-        addNPC(1000, 3500, 'npc_bugcatcher', 'forest_bug_catcher_dave', 'Bug Catcher', 'forest_bug_catcher_dave');
-        addNPC(3000, 1500, 'npc_traveler', 'forest_hiker_barry', 'Hiker', 'forest_hiker_barry');
-        addNPC(500, 500, 'npc_youngster', 'forest_lost_child', 'Lost Child');
-        addNPC(3500, 3500, 'npc_traveler', 'forest_explorer', 'Explorer');
 
-        // --- Items ---
-        this.addItemPickup(3500, 500, 'Pokeball');
-        this.addItemPickup(500, 2000, 'Potion');
-        this.addItemPickup(2000, 2000, 'Revive'); // In secret clearing
+        // Trainers
+        addNPC(2000, 3000, 'npc_youngster', 'route3_youngster_toby', 'Youngster Toby', 'route3_youngster_toby');
 
-        // --- Signs and Transitions ---
-        const addSign = (x: number, y: number, dialogueId: string) => {
-            const sign = new NPC(this, x, y, 'sign', dialogueId);
-            this.obstacles.add(sign);
-            this.npcZones.add(sign.interactionZone);
-        };
-        addSign(2200, 3800, 'forest_entrance_sign');
+        // Regular NPCs
+        addNPC(1500, 1500, 'npc_traveler', 'route3_hiker', 'Hiker');
+        addNPC(2500, 1000, 'npc_traveler', 'route3_lass', 'Lass');
 
-        const route2Zone = this.add.zone(2000, worldHeight - 50, 200, 40);
-        this.physics.add.existing(route2Zone, true);
-        route2Zone.setData('targetScene', 'Route2Scene');
-        this.entrances.add(route2Zone);
+        // Item Pickups
+        this.addItemPickup(1000, 2500, 'Pokeball');
+        this.addItemPickup(3000, 500, 'Super Potion');
 
-        const route3Zone = this.add.zone(2000, 50, 200, 40); // North exit
-        this.physics.add.existing(route3Zone, true);
-        route3Zone.setData('targetScene', 'Route3Scene');
-        // This exit will be conditionally active based on story progression
-        route3Zone.setData('blocked', !StoryManager.getInstance().hasFlag(StoryFlag.UNLOCKED_ROUTE3));
-        this.entrances.add(route3Zone);
+        // Transitions
+        // South to Eclipse Forest
+        const forestZone = this.add.zone(worldWidth / 2, worldHeight - 50, 200, 40);
+        this.physics.add.existing(forestZone, true);
+        forestZone.setData('targetScene', 'EclipseForestScene');
+        this.entrances.add(forestZone);
 
-        // --- Player ---
+        // North to Veridia City
+        const cityZone = this.add.zone(worldWidth / 2, 50, 200, 40);
+        this.physics.add.existing(cityZone, true);
+        cityZone.setData('targetScene', 'VeridiaCityScene');
+        this.entrances.add(cityZone);
+
+        // Player Spawn
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = 2000; spawnY = worldHeight - 150; // Default from Route 2
+            spawnX = worldWidth / 2; spawnY = worldHeight - 150; // Default from Eclipse Forest
         }
         this.player = new Player(this, spawnX, spawnY);
         this.playerLastPosForEncounter = new Phaser.Math.Vector2(this.player.x, this.player.y);
         this.physics.add.collider(this.player, this.obstacles);
 
-        // --- Camera ---
+        // Camera
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         this.cameras.main.setZoom(1.5);
 
-        // --- Systems and UI ---
+        // Systems and UI
         this.encounterManager = new EncounterManager(this);
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
@@ -165,18 +173,12 @@ export class EclipseForestScene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        // --- Story Events ---
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST)) {
-            addNPC(2000, 500, 'npc_kai', 'forest_umbra_intro', 'Team Umbra Grunt', 'forest_umbra_grunt_1');
-        }
-
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.ENTERED_ECLIPSE_FOREST)) {
-            this.time.delayedCall(500, () => {
-                this.startDialogue('forest_entry');
-                StoryManager.getInstance().setFlag(StoryFlag.ENTERED_ECLIPSE_FOREST);
-                StoryManager.getInstance().setActiveQuest("Find the source of the disturbance");
-                EventBus.emit('quest-updated');
-            });
+        // Story Events
+        if (!StoryManager.getInstance().hasFlag(StoryFlag.UNLOCKED_ROUTE3)) {
+            // This scene should only be accessible if UNLOCKED_ROUTE3 is true,
+            // but as a fallback, if somehow entered, set quest.
+            StoryManager.getInstance().setActiveQuest("Travel to Veridia City via Route 3");
+            EventBus.emit('quest-updated');
         }
 
         EventBus.on('save-game-from-menu', this.manualSave, this);
@@ -202,49 +204,35 @@ export class EclipseForestScene extends Scene {
         this.scene.pause();
         this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
+
     private startDialogue(dialogueId: string) {
         if (!Dialogues[dialogueId]) return;
         this.activeDialogueKey = dialogueId;
         this.activeDialogue = Dialogues[dialogueId];
         this.currentDialogueIndex = 0;
         this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
         this.showCurrentDialogue();
     }
 
-    private showCurrentDialogue() {
+    private showCurrentDialogue() { 
         if (!this.activeDialogue) return;
-        this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait);
+        this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); 
     }
 
-    private progressDialogue() {
-        this.currentDialogueIndex++;
-        if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) {
+    private progressDialogue() { 
+        this.currentDialogueIndex++; 
+        if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { 
             this.endDialogue();
-        } else {
-            this.showCurrentDialogue();
-        }
+        } else { 
+            this.showCurrentDialogue(); 
+        } 
     }
 
     private endDialogue() {
         this.dialogueBox.hide();
-        const previousDialogueKey = this.activeDialogueKey;
         this.activeDialogueKey = null;
         this.activeDialogue = null;
-
-        if (previousDialogueKey === 'forest_umbra_grunt_1_defeated') {
-            // After defeating the grunt, unlock Route 3
-            const gruntNPC = this.obstacles.getChildren().find(obj => (obj as NPC).trainerId === 'forest_umbra_grunt_1');
-            if (gruntNPC) gruntNPC.destroy();
-            const gruntZone = this.npcZones.getChildren().find(obj => (obj as Phaser.GameObjects.Zone).getData('trainerId') === 'forest_umbra_grunt_1');
-            if (gruntZone) gruntZone.destroy();
-            StoryManager.getInstance().setFlag(StoryFlag.UNLOCKED_ROUTE3);
-            StoryManager.getInstance().setActiveQuest("Travel to Veridia City via Route 3");
-            EventBus.emit('quest-updated');
-            // Re-enable the exit zone to Route 3
-            const route3Exit = this.entrances.getChildren().find(zone => (zone as Phaser.GameObjects.Zone).getData('targetScene') === 'Route3Scene');
-            if (route3Exit) route3Exit.setData('blocked', false);
-        }
-
         this.player.setMovementEnabled(true);
     }
 
@@ -292,11 +280,6 @@ export class EclipseForestScene extends Scene {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
                         this.autoSave();
-                        if (trainer.id === 'forest_umbra_grunt_1') {
-                            StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST);
-                            StoryManager.getInstance().setActiveQuest("Find a way out of the forest");
-                            EventBus.emit('quest-updated');
-                        }
                         this.startDialogue(`${trainer.id}_defeated`);
                     } else if (result === 'loss') {
                         this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
@@ -321,18 +304,13 @@ export class EclipseForestScene extends Scene {
         if (!this.player.canMove()) return;
 
         this.player.update(time, delta);
-        this.hudText.setText(`Location: Eclipse Forest\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
+        this.hudText.setText(`Location: Route 3\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
 
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) {
-            const entranceZone = this.entrances.getChildren().find(zone => (zone as Phaser.GameObjects.GameObject).getData('targetScene') === transitionScene);
-            if (entranceZone && entranceZone.getData('blocked')) {
-                this.startDialogue('forest_umbra_intro'); // Grunt is blocking
-            } else {
-                this.autoSave();
-                this.scene.start(transitionScene, { spawnEntrance: 'forest' }); // Let the next scene know we came from the forest
-            }
+            this.autoSave();
+            this.scene.start(transitionScene, { spawnEntrance: 'route3' });
             return;
         }
 
@@ -374,7 +352,7 @@ export class EclipseForestScene extends Scene {
             const distance = this.playerLastPosForEncounter.distance({ x: this.player.x, y: this.player.y });
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
-                const encounter = this.encounterManager.checkEncounter('EclipseForestScene');
+                const encounter = this.encounterManager.checkEncounter('Route3Scene');
                 if (encounter) this.triggerEncounter(encounter);
             }
         } else {

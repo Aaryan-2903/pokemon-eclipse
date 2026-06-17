@@ -57,7 +57,9 @@ export class LunarCityScene extends Scene {
 
         // Boundaries
         for (let x = 500; x <= 2500; x += 64) {
-            this.obstacles.create(x, 500, 'tree').setDepth(2);
+            if (x < 1400 || x > 1600) { // Gap for Route 2 exit
+                this.obstacles.create(x, 500, 'tree').setDepth(2);
+            }
             if (x < 1400 || x > 1600) {
                 this.obstacles.create(x, 2500, 'tree').setDepth(2); // South Edge Gap for Route 1
             }
@@ -79,6 +81,18 @@ export class LunarCityScene extends Scene {
         this.physics.add.existing(route1Zone, true);
         route1Zone.setData('targetScene', 'Route1Scene');
         this.entrances.add(route1Zone);
+
+        // Route 2 Transition (North)
+        this.add.tileSprite(1500, 550, 128, 100, 'path').setDepth(1);
+        this.obstacles.create(1580, 550, 'sign').setDepth(2);
+        this.add.text(1580, 520, 'Route 2', {
+            fontFamily: 'monospace', fontSize: '14px', color: '#ffffff',
+            backgroundColor: '#000000aa', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+        const route2Zone = this.add.zone(1500, 480, 128, 40);
+        this.physics.add.existing(route2Zone, true);
+        route2Zone.setData('targetScene', 'Route2Scene');
+        this.entrances.add(route2Zone);
 
         // Welcome Sign
         this.obstacles.create(1600, 2400, 'sign').setDepth(2);
@@ -140,6 +154,7 @@ export class LunarCityScene extends Scene {
             if (this.spawnEntrance === 'mart') { spawnX = 1800; spawnY = 1580; }
             else if (this.spawnEntrance === 'gym') { spawnX = 1200; spawnY = 1580; }
             else if (this.spawnEntrance === 'center') { spawnX = 1500; spawnY = 1080; }
+            else if (this.spawnEntrance === 'route2') { spawnX = 1500; spawnY = 550; }
             // Add other house spawns if needed
         }
 
@@ -286,7 +301,7 @@ export class LunarCityScene extends Scene {
 
         if (transitionScene) {
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'lunar_city' });
+            this.scene.start(transitionScene, { spawnEntrance: transitionScene === 'Route1Scene' ? 'lunar_city' : 'route2' });
             return;
         }
 

@@ -105,6 +105,24 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         postBattleDialogue: "My bugs are still the best, even if they lost!",
         rewardMoney: 160,
     },
+    'route2_hiker_liam': {
+        id: 'route2_hiker_liam',
+        name: 'Hiker Liam',
+        spriteKey: 'npc_traveler',
+        teamSpec: [{ name: 'Geodude', level: 7 }],
+        preBattleDialogue: "This path is tough, but so am I!",
+        postBattleDialogue: "You've got grit, kid.",
+        rewardMoney: 200,
+    },
+    'route2_camper_shane': {
+        id: 'route2_camper_shane',
+        name: 'Camper Shane',
+        spriteKey: 'npc_youngster',
+        teamSpec: [{ name: 'Nidoran♀', level: 8 }],
+        preBattleDialogue: "Are you exploring the woods too?",
+        postBattleDialogue: "Whoa, your Pokémon is strong!",
+        rewardMoney: 180,
+    },
     'route2_team_umbra_grunt': {
         id: 'route2_team_umbra_grunt',
         name: 'Team Umbra Grunt',
@@ -113,6 +131,55 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         preBattleDialogue: "Hmph, another weak trainer. Don't get in our way.",
         postBattleDialogue: "You may have won this battle, but you won't stop Team Umbra!",
         rewardMoney: 250,
+    },
+    'forest_bug_catcher_dave': {
+        id: 'forest_bug_catcher_dave',
+        name: 'Bug Catcher Dave',
+        spriteKey: 'npc_bugcatcher',
+        teamSpec: [{ name: 'Weedle', level: 8 }, { name: 'Kakuna', level: 9 }],
+        preBattleDialogue: "This forest has the best bugs!",
+        postBattleDialogue: "My bugs need more training!",
+        rewardMoney: 220,
+    },
+    'forest_hiker_barry': {
+        id: 'forest_hiker_barry',
+        name: 'Hiker Barry',
+        spriteKey: 'npc_traveler',
+        teamSpec: [{ name: 'Geodude', level: 10 }],
+        preBattleDialogue: "I'm trying to find the secret clearing. Have you seen it?",
+        postBattleDialogue: "Tough battle! You must be on the right path.",
+        rewardMoney: 280,
+    },
+    'forest_umbra_grunt_1': {
+        id: 'forest_umbra_grunt_1',
+        name: 'Team Umbra Grunt',
+        spriteKey: 'npc_kai', // Placeholder
+        teamSpec: [{ name: 'Zubat', level: 10 }, { name: 'Zubat', level: 10 }],
+        preBattleDialogue: "You again! You're not supposed to be here!",
+        postBattleDialogue: "Ugh, defeated again... The boss won't be happy.",
+        rewardMoney: 400,
+    },
+    'route3_youngster_toby': {
+        id: 'route3_youngster_toby',
+        name: 'Youngster Toby',
+        spriteKey: 'npc_youngster',
+        teamSpec: [{ name: 'Pidgey', level: 10 }, { name: 'Rattata', level: 10 }],
+        preBattleDialogue: "I'm training hard to become a Gym Leader!",
+        postBattleDialogue: "You're really strong! I need to train more!",
+        rewardMoney: 250,
+    },
+    'gym_lily': {
+        id: 'gym_lily',
+        name: 'Gym Leader Lily',
+        spriteKey: 'npc_nova', // Placeholder for now, assuming a custom sprite will be added later
+        teamSpec: [
+            { name: 'Oddish', level: 15 },
+            { name: 'Bellsprout', level: 15 },
+            { name: 'Ivysaur', level: 17 }
+        ],
+        preBattleDialogue: "Welcome, challenger. I am Lily, the Grass-type Gym Leader of Veridia City. Let's see if your resolve can grow as strong as my Pokémon!",
+        postBattleDialogue: "Your growth is truly remarkable! You've earned this badge.",
+        rewardMoney: 1500,
     }
 };
 

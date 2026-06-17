@@ -4,6 +4,8 @@ import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
 import { Route2Scene } from './Route2Scene';
+import { Route3Scene } from './Route3Scene';
+import { VeridiaCityScene } from './VeridiaCityScene';
 import { EclipseForestScene } from './EclipseForestScene';
 import { LunarCityScene } from './LunarCityScene';
 import { BattleScene } from './BattleScene';
@@ -46,6 +48,8 @@ const config: Types.Core.GameConfig = {
         OverworldScene,
         InteriorScene,
         Route2Scene,
+        Route3Scene,
+        VeridiaCityScene,
         EclipseForestScene,
         Route1Scene,
         LunarCityScene,

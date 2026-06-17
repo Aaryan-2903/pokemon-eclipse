@@ -107,6 +107,8 @@ export class PreloadScene extends Scene {
         this.load.image('pokemon_sprite_front_41', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png'); // Zubat
         this.load.image('pokemon_sprite_front_43', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/43.png'); // Oddish
         this.load.image('pokemon_sprite_front_46', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/46.png'); // Paras
+        this.load.image('pokemon_sprite_front_14', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/14.png'); // Kakuna
+        this.load.image('pokemon_sprite_front_29', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/29.png'); // Nidoran♀
         this.load.image('pokemon_sprite_front_74', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/74.png'); // Geodude
         this.load.image('pokemon_sprite_front_69', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/69.png'); // Bellsprout
 
