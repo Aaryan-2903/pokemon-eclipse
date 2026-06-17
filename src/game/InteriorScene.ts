@@ -204,7 +204,7 @@ export class InteriorScene extends Scene {
                             EventBus.emit('quest-updated');
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
-                    }
+                        }
                     } else if (result === 'loss') {
                         this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' }); // Go to pokecenter on loss, assume it's in Eclipse Town
                     }
