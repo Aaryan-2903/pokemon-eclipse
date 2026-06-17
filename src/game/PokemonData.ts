@@ -18,6 +18,8 @@ export interface PokemonInstance {
 
 export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Bulbasaur': 1,
+    'Ivysaur': 2,
+    'Venusaur': 3,
     'Charmander': 4,
     'Squirtle': 7,
     'Caterpie': 10,
@@ -32,6 +34,8 @@ export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Paras': 46,
     'Bellsprout': 69,
     'Geodude': 74,
+    'Wartortle': 8,
+    'Blastoise': 9,
     'Charizard': 6,
     'Metapod': 11,
     'Butterfree': 12,
@@ -44,6 +48,8 @@ export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
 
 const POKEMON_TYPES_MAP: Record<string, string[]> = {
     'Bulbasaur': ['Grass', 'Poison'],
+    'Ivysaur': ['Grass', 'Poison'],
+    'Venusaur': ['Grass', 'Poison'],
     'Charmander': ['Fire'],
     'Squirtle': ['Water'],
     'Caterpie': ['Bug'],
@@ -56,6 +62,8 @@ const POKEMON_TYPES_MAP: Record<string, string[]> = {
     'Paras': ['Bug', 'Grass'],
     'Bellsprout': ['Grass', 'Poison'],
     'Geodude': ['Rock', 'Ground'],
+    'Wartortle': ['Water'],
+    'Blastoise': ['Water'],
     'Rattata': ['Normal'],
     'Charmeleon': ['Fire'],
     'Charizard': ['Fire', 'Flying'],

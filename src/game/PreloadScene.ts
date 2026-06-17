@@ -98,6 +98,10 @@ export class PreloadScene extends Scene {
         createStarter('starter_water', 0x3b82f6);
 
         // Generate new Pokemon sprites
+        this.load.image('pokemon_sprite_front_2', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png'); // Ivysaur
+        this.load.image('pokemon_sprite_front_3', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png'); // Venusaur
+        this.load.image('pokemon_sprite_front_8', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/8.png'); // Wartortle
+        this.load.image('pokemon_sprite_front_9', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/9.png'); // Blastoise
         this.load.image('pokemon_sprite_front_21', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/21.png'); // Spearow
         this.load.image('pokemon_sprite_front_25', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'); // Pikachu
         this.load.image('pokemon_sprite_front_41', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png'); // Zubat

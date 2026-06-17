@@ -75,6 +75,18 @@ export const Items: Record<string, Item> = {
         effect: () => {
             return { success: false, message: 'Cannot use this here.' };
         }
+    },
+    'Great Ball': {
+        id: 'Great Ball',
+        name: 'Great Ball',
+        description: 'A good Ball with a higher catch rate than a Pokéball.',
+        price: 600,
+        canUseInBattle: true,
+        canUseOutsideBattle: false,
+        effect: () => {
+            // The actual catch logic is handled in BattleScene
+            return { success: false, message: 'Cannot use this here.' };
+        }
     }
 };
 

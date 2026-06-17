@@ -351,8 +351,8 @@ export class BattleScene extends Scene {
 
         this.hideAllMenus();
 
-        if (itemId === 'Pokeball') {
-            this.attemptCatch();
+        if (itemId === 'Pokeball' || itemId === 'Great Ball') {
+            this.attemptCatch(itemId);
         } else if (itemId === 'Revive') {
             this.showFaintedPokemonMenu();
         } else { // Potions, etc.
@@ -396,7 +396,7 @@ export class BattleScene extends Scene {
         this.pokemonSelectMenu.setVisible(true);
     }
 
-    private attemptCatch() {
+    private attemptCatch(ballItemId: string) {
         if (this.isProcessingTurn) return;
         this.isProcessingTurn = true;
         this.itemsMenu.setVisible(false);
@@ -410,10 +410,10 @@ export class BattleScene extends Scene {
             return;
         }
 
-        useItem('Pokeball', this.enemyMon); // This will decrement the count
+        useItem(ballItemId, this.enemyMon); // This will decrement the count
 
         // this.sound.play('pokeball_throw');
-        this.showMessage(`You threw a Pokeball!`, () => {
+        this.showMessage(`You threw a ${Items[ballItemId].name}!`, () => {
             // Define base catch rates for early-game Pokémon
             const BASE_CATCH_RATES: Record<string, number> = {
                 'Pidgey': 0.60,
@@ -434,7 +434,8 @@ export class BattleScene extends Scene {
             }
 
             const baseRate = BASE_CATCH_RATES[this.enemyMon.name] || BASE_CATCH_RATES['default'];
-            const finalCatchChance = Math.min(1.0, baseRate + hpBonus); // Cap at 100%
+            const ballMultiplier = (ballItemId === 'Great Ball') ? 1.5 : 1.0;
+            const finalCatchChance = Math.min(1.0, (baseRate + hpBonus) * ballMultiplier); // Cap at 100%
 
             if (Math.random() < finalCatchChance) {
                 // --- SUCCESS ---
@@ -619,7 +620,12 @@ export class BattleScene extends Scene {
                 });
             }
         } else {
-            this.endBattle('win');
+            // Wild battle win
+            const moneyGained = this.enemyMon.level * 15;
+            PlayerState.money += moneyGained;
+            this.showMessage(`You received $${moneyGained} for winning!`, () => {
+                this.endBattle('win');
+            });
         }
     }
 

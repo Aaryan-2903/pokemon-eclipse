@@ -4,6 +4,10 @@ export interface EvolutionStep {
 }
 
 export const EvolutionTable: Record<string, EvolutionStep> = {
+    'Bulbasaur': { level: 16, to: 'Ivysaur' },
+    'Ivysaur': { level: 32, to: 'Venusaur' },
+    'Squirtle': { level: 16, to: 'Wartortle' },
+    'Wartortle': { level: 36, to: 'Blastoise' },
     'Charmander': { level: 16, to: 'Charmeleon' },
     'Charmeleon': { level: 36, to: 'Charizard' },
     'Caterpie': { level: 7, to: 'Metapod' },
