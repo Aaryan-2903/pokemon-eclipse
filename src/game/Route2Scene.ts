@@ -349,7 +349,7 @@ export class Route2Scene extends Scene {
                         PlayerState.money += trainer.rewardMoney;
                         this.autoSave();
                         this.startDialogue(`${trainer.id}_defeated`);
-                        if (trainer.id === 'route2_team_umbra_grunt') {
+                    if (trainer.id === 'route2_team_umbra_grunt') {
                             StoryManager.getInstance().setFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2);
                             StoryManager.getInstance().setActiveQuest("Report to Professor Nova");
                             EventBus.emit('quest-updated');

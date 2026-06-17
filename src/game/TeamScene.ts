@@ -9,14 +9,17 @@ export class TeamScene extends Scene {
     private pokemonCards: Phaser.GameObjects.Container[] = [];
     private summaryContainer!: Phaser.GameObjects.Container;
     private selectedPokemonIndex: number = 0;
+    private forceSwitch!: boolean; // Declare forceSwitch property
+    private messageText!: Phaser.GameObjects.Text; // Added for messages
 
     constructor() {
         super('TeamScene');
     }
 
-    init(data: { fromScene: string, inBattle: boolean }) {
+    init(data: { fromScene: string, inBattle: boolean, forceSwitch?: boolean }) {
         this.fromScene = data.fromScene;
-        this.inBattle = data.inBattle;
+        this.inBattle = data.inBattle; // Assign inBattle from data
+        this.forceSwitch = data.forceSwitch || false; // Initialize new member
         this.selectedPokemonIndex = 0;
     }
 
@@ -44,6 +47,7 @@ export class TeamScene extends Scene {
         // Main panel
         this.add.rectangle(400, 300, 780, 550, 0x111827).setStrokeStyle(4, 0x4b5563);
         this.add.text(400, 50, 'Your Pokémon Team', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+        this.messageText = this.add.text(400, 520, '', { fontFamily: 'monospace', fontSize: '16px', color: '#fcd34d' }).setOrigin(0.5); // Added message text
 
         // Close button
         const closeButton = this.add.text(760, 50, 'X', { fontFamily: 'monospace', fontSize: '24px', color: '#ef4444', backgroundColor: '#374151', padding: { x: 8, y: 4 }})
@@ -51,6 +55,14 @@ export class TeamScene extends Scene {
             .setInteractive({ useHandCursor: true });
         
         const doClose = () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.closeScene(); };
+        if (this.forceSwitch) {
+            // In a forced switch, check if the currently active Pokémon is healthy.
+            // If not, prevent closing and prompt the user to select a healthy one.
+            if (PlayerState.pokemonTeam[0] && PlayerState.pokemonTeam[0].currentHp === 0) { // Ensure PlayerState.pokemonTeam[0] exists
+                this.showMessage('You must choose a healthy Pokémon!');
+                return;
+            }
+        }
         closeButton.on('pointerdown', doClose);
         if (this.input.keyboard) {
             this.input.keyboard.once('keydown-ESC', doClose);
@@ -94,7 +106,9 @@ export class TeamScene extends Scene {
         cardBg.setInteractive({ useHandCursor: true });
         cardBg.on('pointerdown', () => {
             // if (this.selectedPokemonIndex !== index) this.sound.play('menu_select', { volume: 0.7 });
-            this.selectedPokemonIndex = index;
+            if (this.forceSwitch && isFainted) {
+                this.showMessage('You cannot choose a fainted Pokémon!');
+            } else this.selectedPokemonIndex = index;
             this.renderTeamList();
             this.renderSummary(index);
         });
@@ -189,9 +203,19 @@ export class TeamScene extends Scene {
                 .setInteractive({ useHandCursor: true });
             
             makeActiveBtn.on('pointerdown', () => {
-                // this.sound.play('menu_confirm');
-                this.makePokemonActive(index);
+                if (isFainted) {
+                    this.showMessage('You cannot choose a fainted Pokémon!');
+                } else {
+                    // this.sound.play('menu_confirm');
+                    this.makePokemonActive(index);
+                }
             });
+            this.summaryContainer.add(makeActiveBtn);
+        } else if (isActive && this.forceSwitch && isFainted) { // If current active is fainted and it's a forced switch
+            const makeActiveBtn = this.add.text(0, 240, 'Make Active', { fontFamily: 'monospace', fontSize: '18px', color: '#000000', backgroundColor: '#ef4444', padding: { x: 16, y: 8 }})
+                .setOrigin(0.5)
+                .setInteractive({ useHandCursor: true });
+            makeActiveBtn.setText('Cannot Use (Fainted)').setBackgroundColor('#ef4444').disableInteractive();
             this.summaryContainer.add(makeActiveBtn);
         }
     }
@@ -216,6 +240,11 @@ export class TeamScene extends Scene {
             this.renderTeamList();
             this.renderSummary(0);
         }
+    }
+
+    private showMessage(text: string) {
+        this.messageText.setText(text);
+        this.time.delayedCall(1500, () => this.messageText.setText(''));
     }
 
     private closeScene() {

@@ -50,7 +50,7 @@ export class TurnManager {
         }
         if (playerMon.currentHp <= 0) {
             actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });
-            actions.push({ message: `You blacked out!`, isGameOver: true });
+            // No longer immediately game over, handled by BattleScene
             return actions;
         }
 
@@ -74,7 +74,7 @@ export class TurnManager {
         }
         if (playerMon.currentHp <= 0) {
             actions.push({ message: `${playerMon.name} fainted!`, isFaint: true, target: 'player' });
-            actions.push({ message: `You blacked out!`, isGameOver: true });
+            // No longer immediately game over, handled by BattleScene
         }
 
         return actions;

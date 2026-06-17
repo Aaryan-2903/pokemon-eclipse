@@ -72,7 +72,7 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
             let rivalStarterName = 'Bulbasaur'; // Default if player has Squirtle
             if (playerStarter === 'Bulbasaur') rivalStarterName = 'Charmander';
             if (playerStarter === 'Charmander') rivalStarterName = 'Squirtle';
-            return [{ name: rivalStarterName, level: 7 }];
+            return [{ name: rivalStarterName, level: 6 }];
         },
         preBattleDialogue: "Max! Let's see whose Pokémon is stronger!",
         postBattleDialogue: "Hmph! I guess you got lucky this time.",

@@ -309,7 +309,7 @@ export class OverworldScene extends Scene {
                         this.autoSave(); // Auto-save after winning
                         this.startDialogue(`${trainer.id}_defeated`);
                     } else if (result === 'loss') {
-                        this.scene.start('InteriorScene', { entranceId: 'center' }); // Go to pokecenter on loss
+                    this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' }); // Go to pokecenter on loss
                     }
                 });
             });

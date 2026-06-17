@@ -38,6 +38,7 @@ export class Route1Scene extends Scene {
     private spawnX?: number;
     private spawnY?: number;
     private encounterManager!: EncounterManager;
+    private rivalTriggerZone!: Phaser.GameObjects.Zone;
     private playerLastPosForEncounter!: Phaser.Math.Vector2;
     private isPausedByMenu: boolean = false;
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
@@ -155,7 +156,9 @@ export class Route1Scene extends Scene {
         addNPC(2000, 3000, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher Tim', 'route1_tim'); // West path
         addNPC(3000, 3000, 'npc_traveler', 'route1_lass', 'Lass Chloe', 'route1_lass'); // East path
         addNPC(2000, 1500, 'npc_traveler', 'route1_hiker', 'Hiker Mike', 'route1_hiker_mike'); // West path, stronger
-        addNPC(2500, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai'); // Near the end
+
+        // Rival battle is now a triggered event, not a static NPC
+        // addNPC(2500, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai'); // Near the end
 
         // Add regular NPCs
         addNPC(1000, 3500, 'npc_youngster', 'route1_kid', 'Kid');
@@ -179,6 +182,10 @@ export class Route1Scene extends Scene {
         this.physics.add.existing(lunarCityZone, true);
         lunarCityZone.setData('targetScene', 'LunarCityScene');
         this.entrances.add(lunarCityZone);
+
+        // Rival Battle Trigger Zone
+        this.rivalTriggerZone = this.add.zone(2500, 900, 256, 40);
+        this.physics.add.existing(this.rivalTriggerZone, true);
 
         // Spawn location logic
         let spawnX = this.spawnX, spawnY = this.spawnY;
@@ -338,7 +345,7 @@ export class Route1Scene extends Scene {
         });
     }
 
-    private startTrainerBattle(trainer: Trainer) {
+    private startTrainerBattle(trainer: Trainer, onBattleEnd?: (result: 'win' | 'loss' | 'run') => void) {
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
     
@@ -363,6 +370,11 @@ export class Route1Scene extends Scene {
                     console.log(`Trainer battle ended with result: ${result}`);
                     this.scene.stop('BattleScene');
                     this.cameras.main.fadeIn(250, 0, 0, 0);
+
+                    if (onBattleEnd) {
+                        onBattleEnd(result);
+                    }
+
                     this.scene.resume();
                     
                     if (result === 'win') {
@@ -378,6 +390,46 @@ export class Route1Scene extends Scene {
                 });
             });
         };
+    }
+
+    private triggerRivalBattle() {
+        if (PlayerState.defeatedTrainers.has('route1_kai') || !this.player.canMove()) {
+            if (this.rivalTriggerZone.active) this.rivalTriggerZone.destroy();
+            return;
+        }
+    
+        this.player.setMovementEnabled(false);
+        if (this.rivalTriggerZone.active) this.rivalTriggerZone.destroy();
+    
+        const rivalNPC = this.add.sprite(this.player.x, this.player.y - 200, 'npc_kai');
+        rivalNPC.setDepth(10);
+        rivalNPC.setAlpha(0);
+    
+        this.tweens.add({
+            targets: rivalNPC,
+            y: this.player.y - 64,
+            alpha: 1,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                const trainer = getTrainer('route1_kai');
+                if (trainer) {
+                    this.startTrainerBattle(trainer, (result) => {
+                        if (result === 'win') {
+                            this.tweens.add({
+                                targets: rivalNPC,
+                                alpha: 0,
+                                y: rivalNPC.y - 50,
+                                duration: 500,
+                                onComplete: () => rivalNPC.destroy()
+                            });
+                        } else {
+                            rivalNPC.destroy();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     update(time: number, delta: number) {
@@ -419,6 +471,10 @@ export class Route1Scene extends Scene {
             this.autoSave();
             this.scene.start(transitionScene, { spawnEntrance: transitionScene === 'OverworldScene' ? 'route1' : 'lunar_city' }); 
             return; 
+        }
+
+        if (this.rivalTriggerZone.active) {
+            this.physics.overlap(this.player, this.rivalTriggerZone, this.triggerRivalBattle, undefined, this);
         }
 
         // Item Pickup Logic

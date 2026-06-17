@@ -33,6 +33,7 @@ export class BattleScene extends Scene {
     private trainer?: Trainer;
     private enemyTeam: PokemonInstance[] = [];
     private currentEnemyIndex: number = 0;
+    private isForcedSwitch: boolean = false; // New member to track forced switches
 
     constructor() {
         super('BattleScene');
@@ -42,7 +43,7 @@ export class BattleScene extends Scene {
     init(data: { playerMon?: PokemonInstance, enemyMon?: PokemonInstance, trainer?: Trainer }) {
         this.isProcessingTurn = false;
         this.trainer = data.trainer;
-        this.isTrainerBattle = !!data.trainer;
+        this.isTrainerBattle = !!data.trainer; // Ensure this is set correctly
 
         if (this.isTrainerBattle && this.trainer) {
             this.enemyTeam = this.trainer.team;
@@ -266,7 +267,7 @@ export class BattleScene extends Scene {
     private openTeamMenu() {
         if (this.isProcessingTurn) return;
         this.scene.pause();
-        this.scene.launch('TeamScene', { fromScene: 'BattleScene', inBattle: true });
+        this.scene.launch('TeamScene', { fromScene: 'BattleScene', inBattle: true, forceSwitch: false }); // Pass forceSwitch: false for voluntary switch
     }
 
     private createMenuButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Container {
@@ -280,8 +281,31 @@ export class BattleScene extends Scene {
 
     private onSceneResume() {
         // Check if the active pokemon has changed
-        if (this.playerMon.id !== PlayerState.pokemonTeam[0].id) {
-            this.handlePokemonSwap();
+        const newActivePokemon = PlayerState.pokemonTeam[0];
+
+        if (this.isForcedSwitch) {
+            this.isForcedSwitch = false; // Reset the flag
+
+            if (newActivePokemon.currentHp > 0) {
+                // A healthy Pokémon was selected, proceed with the swap animation and enemy turn
+                this.handlePokemonSwap();
+            } else {
+                // This means the player was forced to switch but somehow ended up with a fainted Pokémon as active.
+                // This should ideally be prevented by TeamScene, but as a fallback, it's game over.
+                this.showMessage(`No healthy Pokémon available! You blacked out!`, () => {
+                    this.time.delayedCall(1500, () => this.endBattle('loss'));
+                });
+            }
+        } else {
+            // This is a normal resume (e.g., from menu or voluntary switch)
+            if (this.playerMon.id !== newActivePokemon.id) {
+                // Player voluntarily switched Pokémon
+                this.handlePokemonSwap();
+            } else {
+                // Player opened TeamScene but didn't switch, or closed menu
+                this.isProcessingTurn = false;
+                this.showActionMenu();
+            }
         }
     }
 
@@ -289,21 +313,16 @@ export class BattleScene extends Scene {
         const oldPokemonName = this.playerMon.name;
         this.playerMon = PlayerState.pokemonTeam[0];
         const newPokemonName = this.playerMon.name;
-
         this.isProcessingTurn = true; // Lock controls
-
         this.showMessage(`${oldPokemonName}, come back! Go, ${newPokemonName}!`, () => {
             const newSpriteKey = `player_sprite_back_${this.playerMon.id}`;
-
             // Update UI text
             this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
             this.updateHpBars(0);
-
             const performSwap = () => {
                 this.playerSprite.setTexture(newSpriteKey);
                 this.enemyTurnAfterSwap();
             };
-
             // Handle sprite update
             if (this.textures.exists(newSpriteKey)) {
                 performSwap();
@@ -484,14 +503,32 @@ export class BattleScene extends Scene {
                 this.handleXpGain(xpGained);
             }
             // DEFEAT: Player fainted, now showing "blacked out"
-            else if (action.isGameOver) {
-                this.time.delayedCall(1500, () => this.endBattle('loss'));
+            else if (action.isFaint && action.target === 'player') {
+                this.handlePlayerPokemonFaint(); // Call new handler for player fainting
             }
             else {
                 // If not a game-ending action, continue processing the rest of the turn's actions
                 this.processActions(actions);
             }
         });
+    }
+
+    // New method to handle player's Pokémon fainting
+    private handlePlayerPokemonFaint() {
+        const healthyPokemon = PlayerState.pokemonTeam.filter(p => p && p.currentHp > 0);
+
+        if (healthyPokemon.length > 0) {
+            this.isForcedSwitch = true;
+            this.showMessage(`${this.playerMon.name} fainted! Choose a replacement.`, () => {
+                this.scene.pause();
+                this.scene.launch('TeamScene', { fromScene: 'BattleScene', inBattle: true, forceSwitch: true }); // Pass forceSwitch: true
+            });
+        } else {
+            // All Pokémon fainted, game over
+            this.showMessage(`All your Pokémon fainted! You blacked out!`, () => {
+                this.time.delayedCall(1500, () => this.endBattle('loss'));
+            });
+        }
     }
 
     private handleXpGain(xpGained: number) {
