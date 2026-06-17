@@ -1,9 +1,13 @@
 import { Route1Encounters, EncounterData } from './Route1Encounters';
+import { Route2Encounters } from './Route2Encounters';
+import { EclipseForestEncounters } from './EclipseForestEncounters';
 import { PokemonInstance, generateWildPokemon } from './PokemonData';
 
 // A simple map to hold encounter tables for different routes.
 const encounterTables: Record<string, EncounterData[]> = {
     'Route1Scene': Route1Encounters,
+    'Route2Scene': Route2Encounters,
+    'EclipseForestScene': EclipseForestEncounters,
 };
 
 export class EncounterManager {

@@ -6,14 +6,14 @@ import { DialogueBox } from './DialogueBox';
 import { Dialogues, DialogueNode } from './dialogues';
 import { QuestTracker } from './QuestTracker';
 import { StoryManager, StoryFlag } from './StoryManager';
-import { Route1Data } from './RouteData';
 import { EncounterManager } from './EncounterManager';
 import { generatePlayerPokemon, PokemonInstance } from './PokemonData';
 import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
+import { Route2Encounters } from './Route2Encounters';
 
-export class Route1Scene extends Scene {
+export class Route2Scene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
@@ -43,7 +43,7 @@ export class Route1Scene extends Scene {
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32; // pixels per step
 
     constructor() {
-        super('Route1Scene');
+        super('Route2Scene');
     }
 
     init(data: any) {
@@ -53,7 +53,7 @@ export class Route1Scene extends Scene {
     }
 
     create() {
-        console.log('Route1Scene loaded');
+        console.log('Route2Scene loaded');
 
         // --- DEBUG: Ensure player has a Pokémon for testing ---
         if (PlayerState.pokemonTeam.length === 0) {
@@ -63,36 +63,29 @@ export class Route1Scene extends Scene {
         }
         // --- END DEBUG ---
 
-        console.log('Current playerPokemon on load:', PlayerState.pokemonTeam[0]);
-
-        console.log(`Loading Route Data: ${Route1Data.name}`);
-
-        // Redesigned Route 1: 4x larger and explorable
-        const worldWidth = 5000;
-        const worldHeight = 5000;
+        // Larger World Bounds for exploration (3000x3000)
+        const worldWidth = 3000;
+        const worldHeight = 3000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
-        // Grass Background
+        // Background
         this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
 
-        // Redesigned Paths
-        this.add.tileSprite(2500, 4500, 256, 1000, 'path').setDepth(1); // South path
-        this.add.tileSprite(2500, 3750, 1000, 256, 'path').setDepth(1); // Fork
-        this.add.tileSprite(2000, 2500, 256, 2500, 'path').setDepth(1); // West path
-        this.add.tileSprite(3000, 2500, 256, 2500, 'path').setDepth(1); // East path
-        this.add.tileSprite(2500, 1250, 1000, 256, 'path').setDepth(1); // Rejoin
-        this.add.tileSprite(2500, 600, 256, 1200, 'path').setDepth(1); // North path
+        // Main dirt pathway
+        this.add.tileSprite(worldWidth / 2, worldHeight / 2, 256, worldHeight, 'path').setDepth(1);
 
-        // Redesigned Tall Grass Areas
+        // Exploration Areas: Tall Grass Patches
         this.tallGrassZones = this.physics.add.staticGroup();
         const addTallGrass = (x: number, y: number, width: number, height: number) => {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(1500, 3500, 1024, 1024); // Large west field
-        addTallGrass(3500, 3500, 1024, 1024); // Large east field
-        addTallGrass(2500, 2000, 2048, 512); // Central grass patch
-        addTallGrass(1000, 1000, 512, 512); // Hidden north-west patch
+        addTallGrass(500, 500, 512, 256);
+        addTallGrass(2500, 500, 512, 256);
+        addTallGrass(1500, 1000, 768, 512);
+        addTallGrass(500, 2000, 256, 512);
+        addTallGrass(2500, 2000, 256, 512);
+        addTallGrass(1500, 2500, 1024, 256);
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
@@ -101,43 +94,32 @@ export class Route1Scene extends Scene {
 
         // Environment: Route Boundaries (Trees)
         for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 2400 || x > 2600) {
+            if (x < 1400 || x > 1600) {
                 this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
                 this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South Edge
             }
         }
-        for (let y = 100; y <= worldHeight - 100; y += 64) {
+        for (let y = 0; y <= worldHeight; y += 64) {
             this.obstacles.create(100, y, 'tree').setDepth(2); // West Edge
             this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East Edge
         }
 
-        // Scenery, fences, rocks
-        this.obstacles.create(2200, 3750, 'fence').setDepth(2);
-        this.obstacles.create(2800, 3750, 'fence').setDepth(2);
-        this.obstacles.create(1000, 2000, 'rock').setDepth(2);
-        this.obstacles.create(4000, 1500, 'rock').setDepth(2);
-        this.obstacles.create(4200, 1600, 'rock').setDepth(2);
+        // Decorative environment items
+        this.obstacles.create(worldWidth / 2 - 500, worldHeight / 2 - 300, 'fence').setDepth(2);
+        this.add.image(worldWidth / 2 - 500, worldHeight / 2 - 250, 'flower').setDepth(0.5);
 
         // Water hazard area
-        this.add.tileSprite(3800, 1000, 512, 256, 'water').setDepth(0.5);
-        const pondZone = this.add.zone(3800, 1000, 512, 256);
-        this.physics.add.existing(pondZone, true);
-        this.obstacles.add(pondZone);
+        this.add.tileSprite(worldWidth / 2 + 800, worldHeight / 2, 256, 512, 'water').setDepth(0.5);
+        const riverZone = this.add.zone(worldWidth / 2 + 800, worldHeight / 2, 256, 512);
+        this.physics.add.existing(riverZone, true);
+        this.obstacles.add(riverZone);
 
-        // Route signs
-        this.obstacles.create(2700, 4800, 'sign').setDepth(2);
-        this.add.text(2700, 4770, 'Route 1\nNorth: Lunar City\nSouth: Eclipse Town', {
+        // Route sign
+        this.obstacles.create(worldWidth / 2, worldHeight - 200, 'sign').setDepth(2);
+        this.add.text(worldWidth / 2, worldHeight - 230, 'Route 2\nNorth: Forest Entrance\nSouth: Eclipse Town', {
             fontFamily: 'monospace', fontSize: '12px', color: '#ffffff',
             backgroundColor: '#000000aa', padding: { x: 4, y: 2 }, align: 'center'
         }).setOrigin(0.5).setDepth(5);
-
-        const addSign = (x: number, y: number, dialogueId: string) => {
-            const sign = new NPC(this, x, y, 'sign', dialogueId);
-            this.obstacles.add(sign);
-            this.npcZones.add(sign.interactionZone);
-        };
-        addSign(2200, 3850, 'route1_sign_west');
-        addSign(2800, 3850, 'route1_sign_east');
 
         // NPCs
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
@@ -151,45 +133,46 @@ export class Route1Scene extends Scene {
         };
 
         // Add Trainers
-        addNPC(2500, 4200, 'npc_youngster', 'route1_youngster', 'Youngster Joey', 'route1_joey'); // First trainer
-        addNPC(2000, 3000, 'npc_bugcatcher', 'route1_bugcatcher', 'Bug Catcher Tim', 'route1_tim'); // West path
-        addNPC(3000, 3000, 'npc_traveler', 'route1_lass', 'Lass Chloe', 'route1_lass'); // East path
-        addNPC(2000, 1500, 'npc_traveler', 'route1_hiker', 'Hiker Mike', 'route1_hiker_mike'); // West path, stronger
-        addNPC(2500, 800, 'npc_kai', 'kai_intro', 'Rival Kai', 'route1_kai'); // Near the end
+        addNPC(worldWidth / 2 - 200, worldHeight - 500, 'npc_youngster', 'route2_youngster_ben', 'Youngster Ben', 'route2_youngster_ben');
+        addNPC(worldWidth / 2 + 200, worldHeight - 1000, 'npc_traveler', 'route2_lass_amy', 'Lass Amy', 'route2_lass_amy');
+        addNPC(worldWidth / 2 - 400, worldHeight / 2, 'npc_bugcatcher', 'route2_bugcatcher_sam', 'Bug Catcher Sam', 'route2_bugcatcher_sam');
 
         // Add regular NPCs
-        addNPC(1000, 3500, 'npc_youngster', 'route1_kid', 'Kid');
-        addNPC(4000, 3500, 'npc_bugcatcher', 'route1_collector', 'Collector');
-        addNPC(1000, 1500, 'npc_traveler', 'route1_scientist', 'Scientist');
-        addNPC(4000, 800, 'npc_traveler', 'route1_veteran', 'Veteran Trainer');
+        addNPC(worldWidth / 2 + 500, worldHeight - 700, 'npc_traveler', 'route2_hiker', 'Hiker');
+        addNPC(worldWidth / 2 - 600, worldHeight / 2 + 500, 'npc_youngster', 'route2_camper', 'Camper');
+        addNPC(worldWidth / 2 + 800, worldHeight / 2 + 100, 'npc_traveler', 'route2_fisher', 'Fisherman');
+
+        // Team Umbra Grunt
+        if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM1) && !StoryManager.getInstance().hasFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2)) {
+            addNPC(worldWidth / 2 + 100, worldHeight / 2 - 500, 'npc_kai', 'route2_team_umbra_grunt', 'Team Umbra Grunt', 'route2_team_umbra_grunt');
+        }
 
         // Add Item Pickups
-        this.addItemPickup(1200, 4500, 'Potion'); // Hidden in trees south-west
-        this.addItemPickup(4500, 1200, 'Pokeball'); // Hidden in a dead-end east
-        this.addItemPickup(500, 500, 'Potion'); // Hidden in north-west corner
+        this.addItemPickup(worldWidth / 2 - 300, worldHeight - 800, 'Pokeball');
+        this.addItemPickup(worldWidth / 2 + 700, worldHeight / 2 + 300, 'Potion');
 
         // Map Transition: Return to Eclipse Town
-        const townZone = this.add.zone(2500, worldHeight - 50, 200, 40);
+        const townZone = this.add.zone(worldWidth / 2, worldHeight - 50, 200, 40);
         this.physics.add.existing(townZone, true);
         townZone.setData('targetScene', 'OverworldScene');
         this.entrances.add(townZone);
 
-        // Map Transition: North to Lunar City
-        const lunarCityZone = this.add.zone(2500, 50, 200, 40);
-        this.physics.add.existing(lunarCityZone, true);
-        lunarCityZone.setData('targetScene', 'LunarCityScene');
-        this.entrances.add(lunarCityZone);
+        // Map Transition: North to Forest Entrance (Placeholder)
+        const forestZone = this.add.zone(worldWidth / 2, 50, 200, 40);
+        this.physics.add.existing(forestZone, true);
+        forestZone.setData('targetScene', 'EclipseForestScene');
+        this.entrances.add(forestZone);
 
         // Spawn location logic
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = 2500; spawnY = worldHeight - 150; // default
+            spawnX = worldWidth / 2; spawnY = worldHeight - 150; // default from Eclipse Town
             if (this.spawnEntrance === 'town') { 
-                spawnX = 2500; 
+                spawnX = worldWidth / 2; 
                 spawnY = worldHeight - 150; 
-            } else if (this.spawnEntrance === 'lunar_city') {
-                spawnX = 2500;
-                spawnY = 100;
+            } else if (this.spawnEntrance === 'forest') {
+                spawnX = worldWidth / 2;
+                spawnY = 150;
             }
         }
 
@@ -222,13 +205,11 @@ export class Route1Scene extends Scene {
 
         EventBus.on('save-game-from-menu', this.manualSave, this);
         this.events.on('shutdown', () => {
-            // Clean up listeners and DOM elements to prevent memory leaks
             EventBus.off('save-game-from-menu', this.manualSave, this);
         });
 
         this.events.on('resume', () => {
             this.isPausedByMenu = false;
-            // When the scene resumes from a paused state (e.g., closing the menu), re-enable player movement.
             if (!this.activeDialogue) {
                 this.player.setMovementEnabled(true);
             }
@@ -248,17 +229,13 @@ export class Route1Scene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        // Story Progression
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.HAS_ENTERED_ROUTE_1)) {
-            StoryManager.getInstance().setFlag(StoryFlag.HAS_ENTERED_ROUTE_1);
-            StoryManager.getInstance().setActiveQuest("Explore Route 1");
-            EventBus.emit('quest-updated');
-            
+        // Story Progression: Meet Kai on Route 2
+        if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM1) && !StoryManager.getInstance().hasFlag(StoryFlag.MET_KAI_ROUTE2)) {
             this.time.delayedCall(500, () => {
-                this.dialogueBox.show('System', 'Quest Complete: Travel to Route 1\nNew Quest: Explore Route 1');
-                this.activeDialogue = [{ speaker: 'System', text: 'Quest Complete: Travel to Route 1\nNew Quest: Explore Route 1' }];
-                this.currentDialogueIndex = 0;
-                this.player.setMovementEnabled(false);
+                this.startDialogue('kai_route2_encounter');
+                StoryManager.getInstance().setFlag(StoryFlag.MET_KAI_ROUTE2);
+                StoryManager.getInstance().setActiveQuest("Investigate Team Umbra");
+                EventBus.emit('quest-updated');
             });
         }
 
@@ -273,9 +250,8 @@ export class Route1Scene extends Scene {
 
     private openMenu() {
         this.isPausedByMenu = true;
-        // Explicitly disable player movement before pausing the scene to prevent background input.
         this.player.setMovementEnabled(false);
-        this.interactionText.setVisible(false); // Hide interaction prompts
+        this.interactionText.setVisible(false);
         this.scene.pause();
         this.scene.launch('MenuScene', { fromScene: this.scene.key });
     }
@@ -289,28 +265,34 @@ export class Route1Scene extends Scene {
         this.showCurrentDialogue();
     }
 
-    // Reuse Dialogue functions (abbreviated here, identical to OverworldScene)
     private showCurrentDialogue() { 
         if (!this.activeDialogue) return;
         this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); 
     }
-    private progressDialogue() { this.currentDialogueIndex++; if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { this.activeDialogue = null; this.dialogueBox.hide(); this.player.setMovementEnabled(true); } else { this.showCurrentDialogue(); } }
+    private progressDialogue() { 
+        this.currentDialogueIndex++; 
+        if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { 
+            this.activeDialogue = null; 
+            this.dialogueBox.hide(); 
+            this.player.setMovementEnabled(true); 
+        } else { 
+            this.showCurrentDialogue(); 
+        } 
+    }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
         console.log('Encounter triggered!');
         this.player.setMovementEnabled(false);
 
-        // 1. Screen flash effect
         this.cameras.main.flash(300, 255, 255, 255);
 
-        // 2. Transition to encounter scene
         this.time.delayedCall(300, () => {
             console.log('About to start BattleScene...');
             this.scene.pause();
             
             if (PlayerState.pokemonTeam.length === 0) {
                 console.error("Battle triggered without a player Pokémon.");
-                this.scene.resume(); // Abort battle and resume route
+                this.scene.resume();
                 this.player.setMovementEnabled(true);
                 return;
             }
@@ -319,19 +301,18 @@ export class Route1Scene extends Scene {
                 enemyMon
             });
 
-            // 3. Resume this scene when the encounter is over
             this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
                 console.log(`Battle ended with result: ${result}`);
                 this.scene.stop('BattleScene');
                 if (result === 'loss') {
-                    PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp); // Heal party
-                    this.scene.start('InteriorScene', { entranceId: 'home' });
+                    PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp);
+                    this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                 } else {
-                    if (result === 'win') { // This also covers catching, as it ends in a 'win'
+                    if (result === 'win') {
                         this.autoSave();
                     }
                     this.cameras.main.fadeIn(250, 0, 0, 0);
-                    this.scene.resume(); // Explicitly resume the scene
+                    this.scene.resume();
                     this.player.setMovementEnabled(true);
                 }
             });
@@ -342,15 +323,13 @@ export class Route1Scene extends Scene {
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
     
-        // Show pre-battle dialogue
         this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
         this.currentDialogueIndex = 0;
         this.showCurrentDialogue();
     
-        // Temporarily override progressDialogue to launch the battle after the dialogue finishes
         const originalProgress = this.progressDialogue.bind(this);
         this.progressDialogue = () => {
-            this.progressDialogue = originalProgress; // Restore original function
+            this.progressDialogue = originalProgress;
             this.dialogueBox.hide();
             this.activeDialogue = null;
     
@@ -368,11 +347,14 @@ export class Route1Scene extends Scene {
                     if (result === 'win') {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
-                        this.autoSave(); // Auto-save after winning
+                        this.autoSave();
                         this.startDialogue(`${trainer.id}_defeated`);
-                        // Post-battle dialogue will re-enable player movement
+                        if (trainer.id === 'route2_team_umbra_grunt') {
+                            StoryManager.getInstance().setFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2);
+                            StoryManager.getInstance().setActiveQuest("Report to Professor Nova");
+                            EventBus.emit('quest-updated');
+                        }
                     } else if (result === 'loss') {
-                        // On loss, send player to the nearest Pokemon Center (Eclipse Town)
                         this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                     }
                 });
@@ -381,7 +363,6 @@ export class Route1Scene extends Scene {
     }
 
     update(time: number, delta: number) {
-        // If the menu is open, do not process any game logic for this scene.
         if (this.isPausedByMenu) {
             return;
         }
@@ -411,17 +392,16 @@ export class Route1Scene extends Scene {
         if (!this.player.canMove()) return;
 
         this.player.update(time, delta);
-        this.hudText.setText(`Location: Route 1\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
+        this.hudText.setText(`Location: Route 2\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
 
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { 
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: transitionScene === 'OverworldScene' ? 'route1' : 'lunar_city' }); 
+            this.scene.start(transitionScene, { spawnEntrance: 'route2' }); 
             return; 
         }
 
-        // Item Pickup Logic
         this.physics.overlap(this.player, this.itemPickups, (_player, itemPickupObj) => {
             const itemPickup = itemPickupObj as Phaser.GameObjects.GameObject;
             const itemId = itemPickup.getData('itemId') as string;
@@ -461,7 +441,6 @@ export class Route1Scene extends Scene {
             }
         } else { this.interactionText.setVisible(false); }
 
-        // Wild Encounter Logic
         let inTallGrass = false;
         this.physics.overlap(this.player, this.tallGrassZones, () => {
             inTallGrass = true;
@@ -472,14 +451,12 @@ export class Route1Scene extends Scene {
 
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
-                const encounter = this.encounterManager.checkEncounter('Route1Scene');
+                const encounter = this.encounterManager.checkEncounter('Route2Scene');
                 if (encounter) {
                     this.triggerEncounter(encounter);
                 }
             }
         } else {
-            // When not in grass or not moving, keep the last position updated
-            // to prevent a large distance jump when re-entering grass.
             this.playerLastPosForEncounter.set(this.player.x, this.player.y);
         }
     }

@@ -3,6 +3,8 @@ import { PreloadScene } from './PreloadScene';
 import { OverworldScene } from './OverworldScene';
 import { InteriorScene } from './InteriorScene';
 import { Route1Scene } from './Route1Scene';
+import { Route2Scene } from './Route2Scene';
+import { EclipseForestScene } from './EclipseForestScene';
 import { LunarCityScene } from './LunarCityScene';
 import { BattleScene } from './BattleScene';
 import { MenuScene } from './MenuScene';
@@ -43,6 +45,8 @@ const config: Types.Core.GameConfig = {
         PreloadScene,
         OverworldScene,
         InteriorScene,
+        Route2Scene,
+        EclipseForestScene,
         Route1Scene,
         LunarCityScene,
         BattleScene,

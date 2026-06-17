@@ -70,6 +70,9 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route1_tim_defeated': [
         { speaker: 'Bug Catcher Tim', text: "You're a good trainer! My bugs will get stronger!", portrait: 'portrait_bugcatcher' }
     ],
+    'route1_hiker_mike_defeated': [
+        { speaker: 'Hiker Mike', text: "My Pokémon need to be as tough as rocks.", portrait: 'portrait_traveler' }
+    ],
     'gym_aurora_defeated': [
         { speaker: 'Aurora', text: "That was a wonderful battle. Your bond with your Pokémon is clear.", portrait: 'portrait_aurora' }
     ],
@@ -90,6 +93,12 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'route1_hiker': [
         { speaker: 'Hiker', text: "This route is long, but the view from Lunar City is worth it." }
     ],
+    'route1_sign_west': [
+        { speaker: 'Sign', text: 'West Path: Scenic Route' }
+    ],
+    'route1_sign_east': [
+        { speaker: 'Sign', text: 'East Path: Quicker, but beware of strong trainers.' }
+    ],
     'route1_kid': [
         { speaker: 'Kid', text: "I'm trying to catch a Pidgey! They're super fast." }
     ],
@@ -98,6 +107,45 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     ],
     'route1_scientist': [
         { speaker: 'Scientist', text: "The biodiversity on this route is fascinating. So many different species in one place." }
+    ],
+    'kai_route2_encounter': [
+        { speaker: 'Kai', text: "Max! So you beat Aurora. Don't get cocky.", portrait: 'portrait_kai' },
+        { speaker: 'Kai', text: "I was just heading to the Eclipse Forest, but some weirdos in black are blocking the way.", portrait: 'portrait_kai' },
+        { speaker: 'Kai', text: "They call themselves 'Team Umbra'. Sounds lame. I'm going to check it out. See you around!", portrait: 'portrait_kai' }
+    ],
+    'route2_youngster_ben': [
+        { speaker: 'Youngster', text: "This route is full of strong trainers! Are you one of them?", portrait: 'portrait_youngster' }
+    ],
+    'route2_youngster_ben_defeated': [
+        { speaker: 'Youngster', text: "My Spearow needs to fly faster!", portrait: 'portrait_youngster' }
+    ],
+    'route2_lass_amy': [
+        { speaker: 'Lass', text: "My Pokémon love the sun on Route 2!", portrait: 'portrait_traveler' }
+    ],
+    'route2_lass_amy_defeated': [
+        { speaker: 'Lass', text: "Aww, my plants wilted!", portrait: 'portrait_traveler' }
+    ],
+    'route2_bugcatcher_sam': [
+        { speaker: 'Bug Catcher', text: "Route 2 is a great place for bug Pokémon!", portrait: 'portrait_bugcatcher' }
+    ],
+    'route2_bugcatcher_sam_defeated': [
+        { speaker: 'Bug Catcher', text: "My bugs will evolve and be stronger next time!", portrait: 'portrait_bugcatcher' }
+    ],
+    'route2_hiker': [
+        { speaker: 'Hiker', text: "I heard there's a hidden cave somewhere on this route." }
+    ],
+    'route2_camper': [
+        { speaker: 'Camper', text: "The wild Pokémon here are tougher than on Route 1." }
+    ],
+    'route2_fisher': [
+        { speaker: 'Fisherman', text: "The river here has some rare water Pokémon." }
+    ],
+    'route2_team_umbra_grunt': [
+        { speaker: 'Team Umbra Grunt', text: "Hmph, another weak trainer. Don't get in our way.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Team Umbra Grunt', text: "Team Umbra has important work to do here.", portrait: 'portrait_umbra_grunt' }
+    ],
+    'route2_team_umbra_grunt_defeated': [
+        { speaker: 'Team Umbra Grunt', text: "You may have won this battle, but you won't stop Team Umbra!", portrait: 'portrait_umbra_grunt' }
     ],
     'route1_veteran': [
         { speaker: 'Veteran Trainer', text: "A true trainer knows the journey is more important than the destination." }

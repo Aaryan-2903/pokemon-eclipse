@@ -199,6 +199,9 @@ export class InteriorScene extends Scene {
                         if (trainer.id === 'gym_aurora') {
                             PlayerState.badges.add('Sky Badge');
                             this.startDialogue('gym_aurora_victory');
+                            StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM1);
+                            StoryManager.getInstance().setActiveQuest("Meet Kai on Route 2");
+                            EventBus.emit('quest-updated');
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
                         }

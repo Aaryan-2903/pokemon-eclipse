@@ -45,6 +45,15 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         postBattleDialogue: "Wow, you're really good!",
         rewardMoney: 150,
     },
+    'route1_hiker_mike': {
+        id: 'route1_hiker_mike',
+        name: 'Hiker Mike',
+        spriteKey: 'npc_traveler', // Using traveler sprite for Hiker
+        teamSpec: [{ name: 'Geodude', level: 6 }],
+        preBattleDialogue: "A long hike is the best way to train!",
+        postBattleDialogue: "You're as tough as a rock!",
+        rewardMoney: 180,
+    },
     'gym_aurora': {
         id: 'gym_aurora',
         name: 'Gym Leader Aurora',
@@ -68,6 +77,42 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         preBattleDialogue: "Max! Let's see whose Pokémon is stronger!",
         postBattleDialogue: "Hmph! I guess you got lucky this time.",
         rewardMoney: 200,
+    },
+    'route2_youngster_ben': {
+        id: 'route2_youngster_ben',
+        name: 'Youngster Ben',
+        spriteKey: 'npc_youngster',
+        teamSpec: [{ name: 'Spearow', level: 6 }],
+        preBattleDialogue: "My Spearow is super fast! Can you keep up?",
+        postBattleDialogue: "Whoa, you're good! My Pokémon need more training!",
+        rewardMoney: 150,
+    },
+    'route2_lass_amy': {
+        id: 'route2_lass_amy',
+        name: 'Lass Amy',
+        spriteKey: 'npc_traveler',
+        teamSpec: [{ name: 'Oddish', level: 5 }, { name: 'Bellsprout', level: 5 }],
+        preBattleDialogue: "My grass Pokémon are ready to battle!",
+        postBattleDialogue: "You're stronger than I thought!",
+        rewardMoney: 180,
+    },
+    'route2_bugcatcher_sam': {
+        id: 'route2_bugcatcher_sam',
+        name: 'Bug Catcher Sam',
+        spriteKey: 'npc_bugcatcher',
+        teamSpec: [{ name: 'Caterpie', level: 6 }, { name: 'Weedle', level: 6 }],
+        preBattleDialogue: "I've caught so many bugs on this route!",
+        postBattleDialogue: "My bugs are still the best, even if they lost!",
+        rewardMoney: 160,
+    },
+    'route2_team_umbra_grunt': {
+        id: 'route2_team_umbra_grunt',
+        name: 'Team Umbra Grunt',
+        spriteKey: 'npc_kai', // Placeholder sprite
+        teamSpec: [{ name: 'Zubat', level: 8 }],
+        preBattleDialogue: "Hmph, another weak trainer. Don't get in our way.",
+        postBattleDialogue: "You may have won this battle, but you won't stop Team Umbra!",
+        rewardMoney: 250,
     }
 };
 

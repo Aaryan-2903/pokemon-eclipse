@@ -82,6 +82,7 @@ export class PreloadScene extends Scene {
         createPortrait('portrait_bugcatcher', 0x4ade80);
         createPortrait('portrait_traveler', 0x78350f);
         createPortrait('portrait_aurora', 0xa78bfa);
+        createPortrait('portrait_umbra_grunt', 0x4b5563); // Slate gray
 
         // Generate Starter Placeholders
         const createStarter = (key: string, color: number) => {
@@ -95,6 +96,15 @@ export class PreloadScene extends Scene {
         createStarter('starter_grass', 0x22c55e);
         createStarter('starter_fire', 0xef4444);
         createStarter('starter_water', 0x3b82f6);
+
+        // Generate new Pokemon sprites
+        this.load.image('pokemon_sprite_front_21', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/21.png'); // Spearow
+        this.load.image('pokemon_sprite_front_25', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'); // Pikachu
+        this.load.image('pokemon_sprite_front_41', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png'); // Zubat
+        this.load.image('pokemon_sprite_front_43', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/43.png'); // Oddish
+        this.load.image('pokemon_sprite_front_46', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/46.png'); // Paras
+        this.load.image('pokemon_sprite_front_74', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/74.png'); // Geodude
+        this.load.image('pokemon_sprite_front_69', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/69.png'); // Bellsprout
 
         // Generate Pokemon Placeholder
         graphics.fillStyle(0x9ca3af, 1); // Gray
@@ -170,6 +180,14 @@ export class PreloadScene extends Scene {
         graphics.fillRect(16, 8, 8, 48);
         graphics.fillRect(40, 8, 8, 48);
         graphics.generateTexture('fence', 64, 64);
+        graphics.clear();
+
+        // Generate Rock
+        graphics.fillStyle(0x9ca3af, 1); // Gray
+        graphics.fillCircle(16, 16, 14);
+        graphics.fillStyle(0x6b7280, 1);
+        graphics.fillCircle(12, 12, 5);
+        graphics.generateTexture('rock', 32, 32);
         graphics.clear();
 
         // Generate Flowers
