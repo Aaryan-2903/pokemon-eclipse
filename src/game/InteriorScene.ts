@@ -11,6 +11,7 @@ import { generatePlayerPokemon } from './PokemonData';
 import { getTrainer, Trainer } from './TrainerData';
 import { NPC } from './NPC';
 import { SaveManager } from './SaveManager';
+import { GameFeel } from './GameFeel';
 
 export class InteriorScene extends Scene {
     private player!: Player;
@@ -24,10 +25,18 @@ export class InteriorScene extends Scene {
     private escKey!: Phaser.Input.Keyboard.Key;
     private teamKey!: Phaser.Input.Keyboard.Key;
     private badgeKey!: Phaser.Input.Keyboard.Key;
+    private leftKey!: Phaser.Input.Keyboard.Key;
+    private rightKey!: Phaser.Input.Keyboard.Key;
     private autoSaveIndicator!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private bedZone?: Phaser.GameObjects.Zone;
+    private restPrompt?: Phaser.GameObjects.Container;
+    private restPromptOpen = false;
+    private restChoiceIndex = 0;
+    private restChoiceTexts: Phaser.GameObjects.Text[] = [];
+    private isResting = false;
     
     private activeDialogueKey: string | null = null;
     private activeDialogue: DialogueNode[] | null = null;
@@ -51,6 +60,7 @@ export class InteriorScene extends Scene {
     }
 
     create() {
+        GameFeel.startMusic(this, this.entranceId === 'center' || this.entranceId === 'mart' ? 'city' : 'route');
         // Room rendering
         this.add.rectangle(400, 300, 800, 600, 0x000000).setDepth(-2);
         const isLab = this.entranceId === 'lab';
@@ -94,6 +104,8 @@ export class InteriorScene extends Scene {
             this.escKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.ESC);
             this.teamKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.T);
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
+            this.leftKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.LEFT);
+            this.rightKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.RIGHT);
         }
 
         this.interactionText = this.add.text(0, 0, 'Press E to Exit', {
@@ -138,7 +150,7 @@ export class InteriorScene extends Scene {
         this.events.on('resume', () => {
             this.isPausedByMenu = false;
             // When the scene resumes from a paused state (e.g., closing the menu), re-enable player movement.
-            if (!this.activeDialogue && !this.starterUIOpen) {
+            if (!this.activeDialogue && !this.starterUIOpen && !this.isResting && !this.restPromptOpen) {
                 this.player.setMovementEnabled(true);
             }
         });
@@ -238,6 +250,7 @@ export class InteriorScene extends Scene {
         } else if (this.entranceId === 'home') {
             // Add a visible center rug for visual movement reference
             this.add.rectangle(400, 300, 120, 80, 0x7f1d1d).setDepth(-0.5);
+            this.addPlayerHouseBed();
         } else if (this.entranceId === 'gym') {
             // Add Gym Leader Aurora
             const aurora = new NPC(this, 400, 200, 'npc_aurora', 'gym_aurora_intro', 'gym_aurora');
@@ -254,10 +267,30 @@ export class InteriorScene extends Scene {
             this.npcZones.add(shopkeeper.interactionZone);
         } else if (this.entranceId === 'school') {
             this.add.text(400, 300, 'Trainer School\n(Under Construction)', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff', align: 'center' }).setOrigin(0.5);
-        } else if (this.entranceId === 'house1' || this.entranceId === 'house2') {
+        } else if (this.entranceId.startsWith('house')) {
             this.add.text(400, 300, 'This is a private residence.', { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff' }).setOrigin(0.5);
         }
         // Can add else-if blocks for 'mart', 'kai_home', etc.
+    }
+
+    private addPlayerHouseBed() {
+        this.add.rectangle(220, 185, 112, 78, 0x8b5cf6).setDepth(0.2).setStrokeStyle(3, 0x312e81);
+        this.add.rectangle(220, 158, 100, 24, 0xe0f2fe).setDepth(0.3);
+        this.add.rectangle(220, 198, 100, 50, 0xc4b5fd).setDepth(0.3);
+        this.add.text(220, 236, 'Bed', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#ffffff',
+            backgroundColor: '#00000099',
+            padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+
+        const bedObstacle = this.add.zone(220, 185, 112, 78);
+        this.physics.add.existing(bedObstacle, true);
+        this.obstacles.add(bedObstacle);
+
+        this.bedZone = this.add.zone(220, 250, 140, 90);
+        this.physics.add.existing(this.bedZone, true);
     }
 
     private startDialogue(dialogueId: string) {
@@ -304,6 +337,8 @@ export class InteriorScene extends Scene {
                     const playerMon = generatePlayerPokemon(starterName, 5);
                     console.log('Player Pokemon created:', playerMon);
                     PlayerState.pokemonTeam.push(playerMon);
+                    PlayerState.pokedex.caught.add(starterName);
+                    PlayerState.pokedex.seen.add(starterName);
                     console.log('Player Pokemon saved. Current team:', PlayerState.pokemonTeam);
                 }
 
@@ -335,6 +370,7 @@ export class InteriorScene extends Scene {
 
     private startHealingSequence() {
         this.player.setMovementEnabled(false);
+        GameFeel.playSfx('heal');
 
         // 1. Fade to white
         this.cameras.main.fadeOut(500, 255, 255, 255);
@@ -359,9 +395,167 @@ export class InteriorScene extends Scene {
         });
     }
 
+    private openRestPrompt() {
+        if (this.restPromptOpen || this.isResting) return;
+
+        this.restPromptOpen = true;
+        this.restChoiceIndex = 0;
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+
+        this.restPrompt = this.add.container(400, 300).setScrollFactor(0).setDepth(500);
+        const panel = this.add.rectangle(0, 0, 360, 170, 0x000000, 0.88).setStrokeStyle(4, 0xffffff);
+        const question = this.add.text(0, -55, 'Would you like to rest?', {
+            fontFamily: 'monospace',
+            fontSize: '20px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
+        const yes = this.add.text(-55, 30, 'Yes', {
+            fontFamily: 'monospace',
+            fontSize: '20px',
+            color: '#fcd34d'
+        }).setOrigin(0.5);
+        const no = this.add.text(55, 30, 'No', {
+            fontFamily: 'monospace',
+            fontSize: '20px',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.restChoiceTexts = [yes, no];
+        this.restPrompt.add([panel, question, yes, no]);
+        this.updateRestPromptSelection();
+    }
+
+    private updateRestPromptSelection() {
+        this.restChoiceTexts.forEach((text, index) => {
+            text.setText(`${index === this.restChoiceIndex ? '> ' : '  '}${index === 0 ? 'Yes' : 'No'}`);
+            text.setColor(index === this.restChoiceIndex ? '#fcd34d' : '#ffffff');
+        });
+    }
+
+    private closeRestPrompt(restoreMovement: boolean) {
+        this.restPrompt?.destroy();
+        this.restPrompt = undefined;
+        this.restChoiceTexts = [];
+        this.restPromptOpen = false;
+        if (restoreMovement) {
+            this.player.setMovementEnabled(true);
+        }
+    }
+
+    private confirmRestChoice() {
+        if (!this.restPromptOpen) return;
+
+        if (this.restChoiceIndex === 1) {
+            this.closeRestPrompt(true);
+            return;
+        }
+
+        this.closeRestPrompt(false);
+        this.startBedRestSequence();
+    }
+
+    private startBedRestSequence() {
+        if (this.isResting || this.entranceId !== 'home') return;
+
+        this.isResting = true;
+        this.player.setMovementEnabled(false);
+        this.interactionText.setVisible(false);
+
+        this.tweens.add({
+            targets: this.player,
+            x: 220,
+            y: 240,
+            duration: 650,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                this.playSleepAnimation();
+            }
+        });
+    }
+
+    private playSleepAnimation() {
+        const zzz = this.add.text(this.player.x + 26, this.player.y - 50, 'Zzz', {
+            fontFamily: 'monospace',
+            fontSize: '18px',
+            color: '#bfdbfe',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(250);
+
+        this.tweens.add({
+            targets: zzz,
+            y: zzz.y - 34,
+            alpha: 0.2,
+            duration: 900,
+            repeat: 1,
+            ease: 'Sine.easeOut'
+        });
+
+        this.tweens.add({
+            targets: this.player,
+            angle: -8,
+            alpha: 0.82,
+            duration: 450,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                GameFeel.playSfx('heal');
+                this.cameras.main.fadeOut(500, 0, 0, 0);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                    this.time.delayedCall(2300, () => {
+                        this.completeBedRest(zzz);
+                    });
+                });
+            }
+        });
+    }
+
+    private completeBedRest(zzz: Phaser.GameObjects.Text) {
+        PlayerState.pokemonTeam.forEach(pokemon => {
+            if (pokemon) {
+                pokemon.currentHp = pokemon.maxHp;
+            }
+        });
+        console.log('[InteriorScene] Player house bed rest healed party.', PlayerState.pokemonTeam);
+        SaveManager.save(this, this.player.x, this.player.y);
+
+        zzz.destroy();
+        this.player.setAngle(0).setAlpha(1);
+        this.tweens.add({
+            targets: this.player,
+            y: 270,
+            duration: 350,
+            ease: 'Back.easeOut'
+        });
+
+        this.cameras.main.fadeIn(500, 0, 0, 0);
+        this.cameras.main.once('camerafadeincomplete', () => {
+            this.isResting = false;
+            this.showAutoSaveIndicator('Rested and saved');
+            this.startDialogue('player_house_rest_complete');
+        });
+    }
+
     update(time: number, delta: number) {
         // If the menu is open, do not process any game logic for this scene.
         if (this.isPausedByMenu) {
+            return;
+        }
+
+        if (this.restPromptOpen) {
+            if (Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey) || Input.Keyboard.JustDown(this.interactKey)) {
+                this.confirmRestChoice();
+            } else if (Input.Keyboard.JustDown(this.escKey)) {
+                this.closeRestPrompt(true);
+            } else if (Input.Keyboard.JustDown(this.leftKey) || Input.Keyboard.JustDown(this.rightKey)) {
+                this.restChoiceIndex = this.restChoiceIndex === 0 ? 1 : 0;
+                this.updateRestPromptSelection();
+            }
+            return;
+        }
+
+        if (this.isResting) {
             return;
         }
 
@@ -400,6 +594,13 @@ export class InteriorScene extends Scene {
             nearExit = true;
         });
 
+        let nearBed = false;
+        if (this.entranceId === 'home' && this.bedZone) {
+            this.physics.overlap(this.player, this.bedZone, () => {
+                nearBed = true;
+            });
+        }
+
         this.currentNPC = null;
         let currentTrainerId: string | null = null;
         this.physics.overlap(this.player, this.npcZones, (_player, zone) => {
@@ -409,7 +610,9 @@ export class InteriorScene extends Scene {
         });
 
         let interactionMessage = '';
-        if (this.currentNPC) {
+        if (nearBed) {
+            interactionMessage = 'Press E to Rest';
+        } else if (this.currentNPC) {
             if (currentTrainerId && !PlayerState.defeatedTrainers.has(currentTrainerId)) {
                 interactionMessage = 'Press E to Battle';
             } else {
@@ -424,13 +627,15 @@ export class InteriorScene extends Scene {
             
             if (Input.Keyboard.JustDown(this.interactKey)) {
                 const trainer = currentTrainerId ? getTrainer(currentTrainerId) : null;
-                if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
+                if (nearBed) {
+                    this.openRestPrompt();
+                } else if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
                     this.startTrainerBattle(trainer);
                 } else if (this.currentNPC) {
                     this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
                 } else if (nearExit) {
                     this.autoSave();
-                    this.scene.start(this.parentScene, { spawnEntrance: this.entranceId });
+                    GameFeel.fadeToScene(this, this.parentScene, { spawnEntrance: this.entranceId });
                 }
             }
         } else {

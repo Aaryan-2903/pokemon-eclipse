@@ -11,6 +11,7 @@ import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
 import { PokemonInstance } from './PokemonData';
+import { GameFeel } from './GameFeel';
 
 export class EclipseForestScene extends Scene {
     private player!: Player;
@@ -53,6 +54,7 @@ export class EclipseForestScene extends Scene {
     }
 
     create() {
+        GameFeel.startMusic(this, 'route');
         const worldWidth = 4000;
         const worldHeight = 4000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
@@ -249,6 +251,7 @@ export class EclipseForestScene extends Scene {
     }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
+        PlayerState.pokedex.seen.add(enemyMon.name);
         this.player.setMovementEnabled(false);
         this.cameras.main.flash(300, 255, 255, 255);
         this.time.delayedCall(300, () => {
@@ -270,6 +273,7 @@ export class EclipseForestScene extends Scene {
     }
 
     private startTrainerBattle(trainer: Trainer) {
+        trainer.team.forEach(p => PlayerState.pokedex.seen.add(p.name));
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
         this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
@@ -331,7 +335,7 @@ export class EclipseForestScene extends Scene {
                 this.startDialogue('forest_umbra_intro'); // Grunt is blocking
             } else {
                 this.autoSave();
-                this.scene.start(transitionScene, { spawnEntrance: 'forest' }); // Let the next scene know we came from the forest
+                GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'forest' }); // Let the next scene know we came from the forest
             }
             return;
         }
@@ -374,6 +378,7 @@ export class EclipseForestScene extends Scene {
             const distance = this.playerLastPosForEncounter.distance({ x: this.player.x, y: this.player.y });
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
+                GameFeel.grassRustle(this, this.player.x, this.player.y + 10);
                 const encounter = this.encounterManager.checkEncounter('EclipseForestScene');
                 if (encounter) this.triggerEncounter(encounter);
             }

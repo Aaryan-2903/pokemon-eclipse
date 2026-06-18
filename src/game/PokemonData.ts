@@ -1,4 +1,5 @@
 import { EvolutionTable } from './EvolutionData';
+import { PlayerState } from './PlayerData';
 
 export interface PokemonInstance {
     name: string;
@@ -47,7 +48,7 @@ export const POKEMON_SPECIES_ID_MAP: Record<string, number> = {
     'Raticate': 20,
 };
 
-const POKEMON_TYPES_MAP: Record<string, string[]> = {
+export const POKEMON_TYPES_MAP: Record<string, string[]> = {
     'Bulbasaur': ['Grass', 'Poison'],
     'Ivysaur': ['Grass', 'Poison'],
     'Venusaur': ['Grass', 'Poison'],
@@ -156,6 +157,9 @@ export const evolvePokemon = (pokemon: PokemonInstance, to: string) => {
     pokemon.defense += 5;
     pokemon.speed += 5;
     pokemon.currentHp = Math.round(pokemon.maxHp * hpPercent); // Preserve HP percentage
+
+    PlayerState.pokedex.seen.add(to);
+    PlayerState.pokedex.caught.add(to);
 
     console.log(`${oldName} evolved into ${to}!`, pokemon);
 };

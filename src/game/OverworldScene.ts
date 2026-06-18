@@ -8,6 +8,7 @@ import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { QuestTracker } from './QuestTracker';
 import { SaveManager } from './SaveManager';
+import { GameFeel } from './GameFeel';
 
 export class OverworldScene extends Scene {
     private player!: Player;
@@ -46,6 +47,7 @@ export class OverworldScene extends Scene {
 
     create() {
         console.log('OverworldScene: create');
+        GameFeel.startMusic(this, 'city');
 
         // Setup World Physics Bounds (2000x2000)
         const worldSize = 2000;
@@ -362,7 +364,7 @@ export class OverworldScene extends Scene {
 
         if (transitionScene) {
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'town' });
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'town' });
             return;
         }
 
@@ -397,7 +399,7 @@ export class OverworldScene extends Scene {
                     this.startDialogue(currentTrainerId && PlayerState.defeatedTrainers.has(currentTrainerId) ? `${currentTrainerId}_defeated` : this.currentNPC!);
                 } else if (this.currentEntrance) {
                     this.autoSave();
-                    this.scene.start('InteriorScene', { entranceId: this.currentEntrance, parentScene: this.scene.key });
+                    GameFeel.fadeToScene(this, 'InteriorScene', { entranceId: this.currentEntrance, parentScene: this.scene.key }, [255, 255, 255]);
                 }
             }
         } else {

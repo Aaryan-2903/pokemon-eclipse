@@ -58,6 +58,9 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'Nurse', text: "All done! Your Pokémon are fighting fit.", portrait: 'portrait_nurse' },
         { speaker: 'Nurse', text: "We hope to see you again!", portrait: 'portrait_nurse' }
     ],
+    'player_house_rest_complete': [
+        { speaker: 'System', text: 'Your Pokemon had a good rest!' }
+    ],
     'shopkeeper_menu': [
         { speaker: 'Shopkeeper', text: "Welcome to the Poké Mart! How can I help you today?", portrait: 'portrait_shopkeeper' }
     ],
@@ -178,6 +181,43 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'lunar_citizen_8': [ { speaker: 'Collector', text: "The Poké Mart here has a great selection." } ],
     'lunar_citizen_9': [ { speaker: 'Student', text: "I'm studying to be a Pokémon Professor, just like Professor Nova." } ],
     'lunar_citizen_10': [ { speaker: 'Researcher', text: "We're studying the effects of lunar cycles on Pokémon evolution." }
+    ],
+    'lunar_route3_locked': [
+        { speaker: 'Gate Guard', text: "Route 3 is closed while crews inspect the northern pass." },
+        { speaker: 'Gate Guard', text: "Trainers with the Sky Badge may pass. Aurora trusts them to handle the rough road ahead." }
+    ],
+    'lunar_plaza_gardener': [
+        { speaker: 'Gardener', text: "The plaza stays green because everyone in Lunar City helps care for it.", portrait: 'portrait_traveler' }
+    ],
+    'lunar_fountain_kid': [
+        { speaker: 'Kid', text: "I toss coins in the fountain before every trainer battle. It totally works!", portrait: 'portrait_youngster' }
+    ],
+    'lunar_center_hint': [
+        { speaker: 'Nurse', text: "The Pokemon Center is just east of the plaza. Rest before you head south to Route 2.", portrait: 'portrait_nurse' }
+    ],
+    'lunar_mart_collector': [
+        { speaker: 'Collector', text: "Stock up at the Mart before Route 2. The grass gets thick past the south gate.", portrait: 'portrait_bugcatcher' }
+    ],
+    'lunar_main_street_traveler': [
+        { speaker: 'Traveler', text: "Main Street runs straight through the city. If you get lost, find the fountain and follow the road.", portrait: 'portrait_traveler' }
+    ],
+    'lunar_gym_fan': [
+        { speaker: 'Gym Fan', text: "The Gym District is north of the plaza. Aurora's Flying-type Pokemon are graceful and fast.", portrait: 'portrait_youngster' }
+    ],
+    'lunar_route3_guard_tip': [
+        { speaker: 'Cool Guy', text: "The north gate leads to Route 3, but only badge-holders are allowed through right now.", portrait: 'portrait_kai' }
+    ],
+    'lunar_school_researcher': [
+        { speaker: 'Researcher', text: "Trainer School is open to everyone. Smart routing wins battles before the first move is called.", portrait: 'portrait_nova' }
+    ],
+    'lunar_house_neighbor': [
+        { speaker: 'Neighbor', text: "I like living off Main Street. Close to the plaza, close to the shops, and far from wild Pokemon.", portrait: 'portrait_youngster' }
+    ],
+    'lunar_route1_welcome': [
+        { speaker: 'Guide', text: "Route 1 comes in from the west. Follow the stone path and you will hit Green Plaza right away.", portrait: 'portrait_traveler' }
+    ],
+    'lunar_route2_warning': [
+        { speaker: 'Scout', text: "Route 2 starts at the south gate. Stock up before you leave; the road bends toward Eclipse Forest.", portrait: 'portrait_youngster' }
     ],
     'forest_entry': [
         { speaker: 'System', text: "You've entered the Eclipse Forest. The air is thick and still." }

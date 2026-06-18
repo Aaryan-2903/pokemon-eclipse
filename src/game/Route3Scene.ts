@@ -12,6 +12,7 @@ import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
 import { Route3Encounters } from './Route3Encounters';
+import { GameFeel } from './GameFeel';
 
 export class Route3Scene extends Scene {
     private player!: Player;
@@ -55,6 +56,7 @@ export class Route3Scene extends Scene {
 
     create() {
         console.log('Route3Scene loaded');
+        GameFeel.startMusic(this, 'route');
 
         // --- DEBUG: Ensure player has a Pokémon for testing ---
         if (PlayerState.pokemonTeam.length === 0) {
@@ -237,6 +239,7 @@ export class Route3Scene extends Scene {
     }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
+        PlayerState.pokedex.seen.add(enemyMon.name);
         this.player.setMovementEnabled(false);
         this.cameras.main.flash(300, 255, 255, 255);
         this.time.delayedCall(300, () => {
@@ -258,6 +261,7 @@ export class Route3Scene extends Scene {
     }
 
     private startTrainerBattle(trainer: Trainer) {
+        trainer.team.forEach(p => PlayerState.pokedex.seen.add(p.name));
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
         this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
@@ -310,7 +314,7 @@ export class Route3Scene extends Scene {
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) {
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'route3' });
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'route3' });
             return;
         }
 
@@ -352,6 +356,7 @@ export class Route3Scene extends Scene {
             const distance = this.playerLastPosForEncounter.distance({ x: this.player.x, y: this.player.y });
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
+                GameFeel.grassRustle(this, this.player.x, this.player.y + 10);
                 const encounter = this.encounterManager.checkEncounter('Route3Scene');
                 if (encounter) this.triggerEncounter(encounter);
             }

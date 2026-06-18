@@ -12,6 +12,7 @@ import { generatePlayerPokemon, PokemonInstance } from './PokemonData';
 import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
+import { GameFeel } from './GameFeel';
 
 export class Route1Scene extends Scene {
     private player!: Player;
@@ -48,13 +49,15 @@ export class Route1Scene extends Scene {
     }
 
     init(data: any) {
+        console.log('[Route1Scene] init/start', data);
         this.spawnEntrance = data.spawnEntrance;
         this.spawnX = data.spawnX;
         this.spawnY = data.spawnY;
     }
 
     create() {
-        console.log('Route1Scene loaded');
+        console.log('[Route1Scene] create start');
+        GameFeel.startMusic(this, 'route');
 
         // --- DEBUG: Ensure player has a Pokémon for testing ---
         if (PlayerState.pokemonTeam.length === 0) {
@@ -64,9 +67,10 @@ export class Route1Scene extends Scene {
         }
         // --- END DEBUG ---
 
-        console.log('Current playerPokemon on load:', PlayerState.pokemonTeam[0]);
+        console.log('[Route1Scene] current player Pokemon on load:', PlayerState.pokemonTeam[0]);
 
-        console.log(`Loading Route Data: ${Route1Data.name}`);
+        console.log(`[Route1Scene] loading route data: ${Route1Data.name}`);
+        this.verifyRequiredTextures();
 
         // Redesigned Route 1: 4x larger and explorable
         const worldWidth = 5000;
@@ -229,6 +233,7 @@ export class Route1Scene extends Scene {
 
         EventBus.on('save-game-from-menu', this.manualSave, this);
         this.events.on('shutdown', () => {
+            console.log('[Route1Scene] shutdown');
             // Clean up listeners and DOM elements to prevent memory leaks
             EventBus.off('save-game-from-menu', this.manualSave, this);
         });
@@ -270,6 +275,34 @@ export class Route1Scene extends Scene {
         }
 
         EventBus.emit('current-scene-ready', this);
+        console.log('[Route1Scene] create complete');
+    }
+
+    private verifyRequiredTextures() {
+        const requiredTextures = [
+            'grass',
+            'path',
+            'tall_grass',
+            'tree',
+            'fence',
+            'rock',
+            'water',
+            'sign',
+            'pokeball_item',
+            'npc_youngster',
+            'npc_bugcatcher',
+            'npc_traveler',
+            'npc_kai',
+            'player_texture',
+            'selector_arrow'
+        ];
+
+        const missingTextures = requiredTextures.filter(key => !this.textures.exists(key));
+        if (missingTextures.length > 0) {
+            console.error('[Route1Scene] missing required textures:', missingTextures);
+        } else {
+            console.log('[Route1Scene] required textures verified');
+        }
     }
 
     private addItemPickup(x: number, y: number, itemId: string) {
@@ -305,6 +338,7 @@ export class Route1Scene extends Scene {
 
     private triggerEncounter(enemyMon: PokemonInstance) {
         console.log('Encounter triggered!');
+        PlayerState.pokedex.seen.add(enemyMon.name);
         this.player.setMovementEnabled(false);
 
         // 1. Screen flash effect
@@ -347,6 +381,7 @@ export class Route1Scene extends Scene {
 
     private startTrainerBattle(trainer: Trainer, onBattleEnd?: (result: 'win' | 'loss' | 'run') => void) {
         this.player.setMovementEnabled(false);
+        trainer.team.forEach(p => PlayerState.pokedex.seen.add(p.name));
         this.interactionText.setVisible(false);
     
         // Show pre-battle dialogue
@@ -468,8 +503,9 @@ export class Route1Scene extends Scene {
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) { 
+            console.log(`[Route1Scene] transition requested -> ${transitionScene}`);
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: transitionScene === 'OverworldScene' ? 'route1' : 'lunar_city' }); 
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: transitionScene === 'OverworldScene' ? 'route1' : 'lunar_city' }); 
             return; 
         }
 
@@ -528,6 +564,7 @@ export class Route1Scene extends Scene {
 
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
+                GameFeel.grassRustle(this, this.player.x, this.player.y + 10);
                 const encounter = this.encounterManager.checkEncounter('Route1Scene');
                 if (encounter) {
                     this.triggerEncounter(encounter);

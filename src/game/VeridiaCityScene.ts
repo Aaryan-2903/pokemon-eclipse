@@ -9,6 +9,7 @@ import { getTrainer, Trainer } from './TrainerData';
 import { QuestTracker } from './QuestTracker';
 import { SaveManager } from './SaveManager';
 import { StoryManager, StoryFlag } from './StoryManager';
+import { GameFeel } from './GameFeel';
 
 export class VeridiaCityScene extends Scene {
     private player!: Player;
@@ -46,6 +47,7 @@ export class VeridiaCityScene extends Scene {
     }
 
     create() {
+        GameFeel.startMusic(this, 'city');
         const worldWidth = 2000;
         const worldHeight = 2000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
@@ -228,7 +230,7 @@ export class VeridiaCityScene extends Scene {
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) {
             this.autoSave();
-            this.scene.start(transitionScene, { spawnEntrance: 'veridia_city' });
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'veridia_city' });
             return;
         }
 
@@ -247,7 +249,7 @@ export class VeridiaCityScene extends Scene {
                 if (this.currentNPC) this.startDialogue(this.currentNPC);
                 else if (currentEntranceId) {
                     this.autoSave();
-                    this.scene.start('InteriorScene', { entranceId: currentEntranceId, parentScene: this.scene.key });
+                    GameFeel.fadeToScene(this, 'InteriorScene', { entranceId: currentEntranceId, parentScene: this.scene.key }, [255, 255, 255]);
                 }
             }
         } else {

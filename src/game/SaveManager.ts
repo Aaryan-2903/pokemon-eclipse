@@ -14,6 +14,10 @@ export interface SaveData {
         money: number;
         defeatedTrainers: string[];
         badges: string[];
+        pokedex: {
+            seen: string[];
+            caught: string[];
+        };
     };
     storyState: {
         flags: StoryFlag[];
@@ -41,6 +45,10 @@ export class SaveManager {
                 money: PlayerState.money,
                 defeatedTrainers: Array.from(PlayerState.defeatedTrainers),
                 badges: Array.from(PlayerState.badges),
+                pokedex: {
+                    seen: Array.from(PlayerState.pokedex.seen),
+                    caught: Array.from(PlayerState.pokedex.caught),
+                },
             },
             storyState: {
                 flags: Array.from(StoryManager.getInstance().getFlags()),
@@ -84,6 +92,10 @@ export class SaveManager {
             PlayerState.money = saveData.playerState.money;
             PlayerState.defeatedTrainers = new Set(saveData.playerState.defeatedTrainers);
             PlayerState.badges = new Set(saveData.playerState.badges || []);
+            PlayerState.pokedex = {
+                seen: new Set(saveData.playerState.pokedex?.seen || []),
+                caught: new Set(saveData.playerState.pokedex?.caught || []),
+            };
 
             StoryManager.getInstance().setFlags(new Set(saveData.storyState.flags));
             StoryManager.getInstance().setActiveQuest(saveData.storyState.activeQuest);

@@ -9,6 +9,7 @@ export class DialogueBox extends Phaser.GameObjects.Container {
     private hintText: Phaser.GameObjects.Text;
     private FINAL_Y: number;
     private START_Y: number;
+    private activeTypeTimer?: Phaser.Time.TimerEvent;
 
     constructor(scene: Scene) {
         super(scene, 0, 0);
@@ -55,9 +56,11 @@ export class DialogueBox extends Phaser.GameObjects.Container {
 
     public show(speaker: string, text: string, portrait?: string) {
         this.scene.tweens.killTweensOf(this); // Safely cancel previous animation
+        this.activeTypeTimer?.remove(false);
         
         this.nameText.setText(speaker);
-        this.messageText.setText(text);
+        this.messageText.setText('');
+        this.typeText(text);
         
         if (portrait) {
             this.portraitImage.setTexture(portrait);
@@ -96,10 +99,20 @@ export class DialogueBox extends Phaser.GameObjects.Container {
             this.setAlpha(1);
             this.setY(this.FINAL_Y);
         }
+
+        if (portrait && this.portraitImage.visible) {
+            this.scene.tweens.add({
+                targets: this.portraitImage,
+                scale: { from: 0.92, to: 1 },
+                duration: 180,
+                ease: 'Back.easeOut'
+            });
+        }
     }
 
     public hide() {
         this.scene.tweens.killTweensOf(this);
+        this.activeTypeTimer?.remove(false);
         
         this.scene.tweens.add({
             targets: this,
@@ -109,6 +122,22 @@ export class DialogueBox extends Phaser.GameObjects.Container {
             ease: 'Power2',
             onComplete: () => {
                 this.setVisible(false);
+            }
+        });
+    }
+
+    private typeText(text: string) {
+        let index = 0;
+        this.activeTypeTimer = this.scene.time.addEvent({
+            delay: 18,
+            repeat: text.length,
+            callback: () => {
+                this.messageText.setText(text.slice(0, index));
+                index++;
+                if (index > text.length) {
+                    this.messageText.setText(text);
+                    this.activeTypeTimer?.remove(false);
+                }
             }
         });
     }

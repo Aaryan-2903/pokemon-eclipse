@@ -1,5 +1,10 @@
 import { PokemonInstance } from './PokemonData';
 
+export interface IPokedex {
+    seen: Set<string>;
+    caught: Set<string>;
+}
+
 export interface IPlayerData {
     name: string;
     starterPokemon?: string;
@@ -9,6 +14,7 @@ export interface IPlayerData {
     money: number;
     defeatedTrainers: Set<string>;
     badges: Set<string>;
+    pokedex: IPokedex;
 }
 
 export const PlayerState: IPlayerData = {
@@ -19,4 +25,8 @@ export const PlayerState: IPlayerData = {
     money: 1000,
     defeatedTrainers: new Set(),
     badges: new Set(),
+    pokedex: {
+        seen: new Set(),
+        caught: new Set(),
+    },
 };

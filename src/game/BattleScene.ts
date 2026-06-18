@@ -6,6 +6,7 @@ import { Moves } from './Moves';
 import { EventBus } from './EventBus';
 import { PlayerState } from './PlayerData';
 import { Trainer } from './TrainerData';
+import { GameFeel } from './GameFeel';
 
 export class BattleScene extends Scene {
     private playerMon!: PokemonInstance;
@@ -34,6 +35,8 @@ export class BattleScene extends Scene {
     private enemyTeam: PokemonInstance[] = [];
     private currentEnemyIndex: number = 0;
     private isForcedSwitch: boolean = false; // New member to track forced switches
+    private loadingIndicator?: Phaser.GameObjects.Text;
+    private loadingIndicatorTimer?: Phaser.Time.TimerEvent;
 
     constructor() {
         super('BattleScene');
@@ -61,6 +64,23 @@ export class BattleScene extends Scene {
 
     preload() {
         console.log('BattleScene preload()');
+        this.loadingIndicatorTimer = this.time.delayedCall(1000, () => {
+            this.loadingIndicator = this.add.text(400, 300, 'Loading battle...', {
+                fontFamily: 'monospace',
+                fontSize: '22px',
+                color: '#ffffff',
+                backgroundColor: '#000000aa',
+                padding: { x: 12, y: 8 }
+            }).setOrigin(0.5).setDepth(1000);
+        });
+
+        this.load.once('complete', () => {
+            this.loadingIndicatorTimer?.remove(false);
+            this.loadingIndicatorTimer = undefined;
+            this.loadingIndicator?.destroy();
+            this.loadingIndicator = undefined;
+        });
+
         // Dynamically load sprites for the current battle
         const teamToLoad = this.isTrainerBattle ? this.enemyTeam : [this.enemyMon];
         teamToLoad.forEach(mon => {
@@ -82,7 +102,12 @@ export class BattleScene extends Scene {
 
     create() {
         console.log('BattleScene create()');
+        this.loadingIndicatorTimer?.remove(false);
+        this.loadingIndicatorTimer = undefined;
+        this.loadingIndicator?.destroy();
+        this.loadingIndicator = undefined;
         this.cameras.main.fadeIn(500, 0, 0, 0);
+        GameFeel.startMusic(this, 'battle');
 
         // Background
         this.add.rectangle(400, 300, 800, 600, 0x4ade80); // Light green terrain
@@ -127,7 +152,7 @@ export class BattleScene extends Scene {
         const createBtn = (x: number, y: number, text: string, callback: () => void) => {
             const btnBg = this.add.rectangle(x, y, 140, 40, 0xe5e7eb).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
             const btnText = this.add.text(x, y, text, { fontFamily: 'monospace', fontSize: '18px', color: '#000000' }).setOrigin(0.5);
-            btnBg.on('pointerdown', () => { /* this.sound.play('menu_confirm'); */ callback(); });
+            btnBg.on('pointerdown', () => { GameFeel.playSfx('menuConfirm'); callback(); });
             return [btnBg, btnText];
         };
 
@@ -225,7 +250,7 @@ export class BattleScene extends Scene {
         
         if (move1) this.movesMenu.add(this.createMenuButton(-80, -25, Moves[move1].name.toUpperCase(), () => this.executeTurn(move1)));
         if (move2) this.movesMenu.add(this.createMenuButton(80, -25, Moves[move2].name.toUpperCase(), () => this.executeTurn(move2)));
-        this.movesMenu.add(this.createMenuButton(0, 25, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
+        this.movesMenu.add(this.createMenuButton(0, 25, 'CANCEL', () => { GameFeel.playSfx('menuMove'); this.showActionMenu(); }));
 
         this.movesMenu.setVisible(true);
         this.itemsMenu.setVisible(false);
@@ -259,7 +284,7 @@ export class BattleScene extends Scene {
             // Simple pagination not implemented, just show first 4
         }
 
-        this.itemsMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
+        this.itemsMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { GameFeel.playSfx('menuMove'); this.showActionMenu(); }));
         this.movesMenu.setVisible(false);
         this.itemsMenu.setVisible(true);
     }
@@ -274,7 +299,7 @@ export class BattleScene extends Scene {
         const container = this.add.container(x, y);
         const btnBg = this.add.rectangle(0, 0, 140, 40, 0xe5e7eb).setStrokeStyle(2, 0x000000).setInteractive({ useHandCursor: true });
         const btnText = this.add.text(0, 0, text, { fontFamily: 'monospace', fontSize: '16px', color: '#000000' }).setOrigin(0.5);
-        btnBg.on('pointerdown', () => { /* this.sound.play('menu_confirm'); */ callback(); });
+        btnBg.on('pointerdown', () => { GameFeel.playSfx('menuConfirm'); callback(); });
         container.add([btnBg, btnText]);
         return container;
     }
@@ -320,7 +345,7 @@ export class BattleScene extends Scene {
             this.playerInfoText.setText(`${this.playerMon.name} Lv${this.playerMon.level}`);
             this.updateHpBars(0);
             const performSwap = () => {
-                this.playerSprite.setTexture(newSpriteKey);
+                this.playerSprite.setTexture(newSpriteKey).setAlpha(1).setY(400).setAngle(0);
                 this.enemyTurnAfterSwap();
             };
             // Handle sprite update
@@ -367,12 +392,12 @@ export class BattleScene extends Scene {
         const result = useItem(itemId, this.playerMon);
         this.showMessage(result.message, () => {
             if (result.success) {
-                // this.sound.play('item_use');
+                GameFeel.playSfx('heal');
                 this.updateHpBars();
                 this.enemyTurnAfterItemUse();
             } else {
                 this.isProcessingTurn = false;
-                // this.sound.play('item_error');
+                GameFeel.playSfx('miss');
                 this.showActionMenu();
             }
         });
@@ -392,7 +417,7 @@ export class BattleScene extends Scene {
             this.pokemonSelectMenu.add(this.createMenuButton(0, y, pokemon.name, () => this.useItemOnBenched('Revive', pokemon)));
         });
 
-        this.pokemonSelectMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { /* this.sound.play('menu_select', { volume: 0.7 }); */ this.showActionMenu(); }));
+        this.pokemonSelectMenu.add(this.createMenuButton(0, 75, 'CANCEL', () => { GameFeel.playSfx('menuMove'); this.showActionMenu(); }));
         this.pokemonSelectMenu.setVisible(true);
     }
 
@@ -403,7 +428,7 @@ export class BattleScene extends Scene {
 
         if (this.isTrainerBattle) {
             this.showMessage("You can't steal another trainer's Pokémon!", () => {
-                // this.sound.play('item_error');
+                GameFeel.playSfx('miss');
                 this.isProcessingTurn = false;
                 this.showActionMenu();
             });
@@ -412,7 +437,7 @@ export class BattleScene extends Scene {
 
         useItem(ballItemId, this.enemyMon); // This will decrement the count
 
-        // this.sound.play('pokeball_throw');
+        GameFeel.playSfx('catchThrow');
         this.showMessage(`You threw a ${Items[ballItemId].name}!`, () => {
             // Define base catch rates for early-game Pokémon
             const BASE_CATCH_RATES: Record<string, number> = {
@@ -443,12 +468,14 @@ export class BattleScene extends Scene {
                     PlayerState.pokemonTeam.push(this.enemyMon);
                     this.showMessage(`Gotcha! ${this.enemyMon.name} was caught!`, () => {
                         // this.sound.play('item_use'); // Success sound
+                        GameFeel.playSfx('catchSuccess');
                         this.time.delayedCall(1000, () => this.endBattle('win'));
                     });
                 } else {
                     PlayerState.pokemonBox.push(this.enemyMon);
                     this.showMessage(`Gotcha! ${this.enemyMon.name} was caught and sent to the PC Box!`, () => {
                         // this.sound.play('item_use'); // Success sound
+                        GameFeel.playSfx('catchSuccess');
                         this.time.delayedCall(1000, () => this.endBattle('win'));
                     });
                 }
@@ -457,7 +484,7 @@ export class BattleScene extends Scene {
                 const failureMessages = ["The Pokemon broke free!", "Almost had it!"];
                 const failureMessage = failureMessages[Math.floor(Math.random() * failureMessages.length)];
                 this.showMessage(failureMessage, () => {
-                    // this.sound.play('item_error');
+                    GameFeel.playSfx('miss');
                     // On failure, the enemy gets to attack.
                     const enemyMoveId = this.enemyMon.moves[Math.floor(Math.random() * this.enemyMon.moves.length)] || 'tackle';
                     this.processActions(TurnManager.processEnemyTurn(this.playerMon, this.enemyMon, enemyMoveId));
@@ -474,12 +501,12 @@ export class BattleScene extends Scene {
         const result = useItem(itemId, target);
         this.showMessage(result.message, () => {
             if (result.success) {
-                // this.sound.play('item_use');
+                GameFeel.playSfx('heal');
                 // The benched pokemon is revived. The enemy gets their turn.
                 this.enemyTurnAfterItemUse();
             } else {
                 this.isProcessingTurn = false;
-                // this.sound.play('item_error');
+                GameFeel.playSfx('miss');
                 this.showActionMenu();
             }
         });
@@ -494,24 +521,64 @@ export class BattleScene extends Scene {
         const action = actions.shift()!;
 
         this.showMessage(action.message, () => {
+            if (action.moveUser) {
+                const attacker = action.moveUser === 'player' ? this.playerSprite : this.enemySprite;
+                const target = action.moveUser === 'player' ? this.enemySprite : this.playerSprite;
+                GameFeel.animateAttack(this, attacker, target, () => undefined);
+            }
+
             if (action.damage !== undefined) {
                 this.updateHpBars(300);
+                this.playDamageFeedback(action);
+            } else if (action.missed && action.target) {
+                const targetSprite = action.target === 'enemy' ? this.enemySprite : this.playerSprite;
+                GameFeel.miss(this, targetSprite.x, targetSprite.y - 65);
+            } else if (action.modifier === 'critical' && action.target) {
+                const targetSprite = action.target === 'enemy' ? this.enemySprite : this.playerSprite;
+                GameFeel.effectBurst(this, targetSprite.x, targetSprite.y - 30, 0xfacc15, 'CRITICAL');
+            } else if (action.modifier === 'super' && action.target) {
+                const targetSprite = action.target === 'enemy' ? this.enemySprite : this.playerSprite;
+                GameFeel.effectBurst(this, targetSprite.x, targetSprite.y - 30, 0x38bdf8, 'SUPER');
             }
 
             // VICTORY: Enemy fainted
             if (action.isFaint && action.target === 'enemy') {
-                const xpGained = 20;
-                this.handleXpGain(xpGained);
+                GameFeel.faint(this, this.enemySprite, () => {
+                    const xpGained = 20;
+                    this.handleXpGain(xpGained);
+                });
             }
             // DEFEAT: Player fainted, now showing "blacked out"
             else if (action.isFaint && action.target === 'player') {
-                this.handlePlayerPokemonFaint(); // Call new handler for player fainting
+                GameFeel.faint(this, this.playerSprite, () => this.handlePlayerPokemonFaint());
             }
             else {
                 // If not a game-ending action, continue processing the rest of the turn's actions
                 this.processActions(actions);
             }
         });
+    }
+
+    private playDamageFeedback(action: TurnAction) {
+        if (!action.target || action.damage === undefined) return;
+
+        const targetSprite = action.target === 'enemy' ? this.enemySprite : this.playerSprite;
+        const color = action.modifier === 'critical'
+            ? '#facc15'
+            : action.modifier === 'super'
+                ? '#38bdf8'
+                : action.modifier === 'not-very'
+                    ? '#a7f3d0'
+                    : '#ffffff';
+
+        GameFeel.hitReaction(this, targetSprite, action.modifier === 'critical');
+        GameFeel.damageNumber(this, targetSprite.x, targetSprite.y - 78, `-${action.damage}`, color);
+
+        if (action.modifier === 'critical') {
+            GameFeel.effectBurst(this, targetSprite.x, targetSprite.y - 28, 0xfacc15, 'CRITICAL');
+        } else if (action.modifier === 'super') {
+            GameFeel.effectBurst(this, targetSprite.x, targetSprite.y - 28, 0x38bdf8, 'SUPER');
+        }
     }
 
     // New method to handle player's Pokémon fainting
@@ -596,10 +663,10 @@ export class BattleScene extends Scene {
             const newSpriteKey = `player_sprite_back_${this.playerMon.id}`;
             if (!this.textures.exists(newSpriteKey)) {
                 this.load.image(newSpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${this.playerMon.id}.png`);
-                this.load.once('complete', () => this.playerSprite.setTexture(newSpriteKey), this);
+                this.load.once('complete', () => this.playerSprite.setTexture(newSpriteKey).setAlpha(1).setY(400).setAngle(0), this);
                 this.load.start();
             } else {
-                this.playerSprite.setTexture(newSpriteKey);
+                this.playerSprite.setTexture(newSpriteKey).setAlpha(1).setY(400).setAngle(0);
             }
 
             this.time.delayedCall(1500, () => this.handleEnemyFaint());
@@ -634,6 +701,7 @@ export class BattleScene extends Scene {
         
         this.enemyInfoText.setText(`${this.enemyMon.name} Lv${this.enemyMon.level}`);
         this.updateHpBars(0);
+        this.enemySprite.setAlpha(1).setY(220).setAngle(0);
 
         const showNextMon = () => {
             this.showMessage(`Go, ${this.enemyMon.name}!`, () => {
@@ -643,12 +711,12 @@ export class BattleScene extends Scene {
         };
 
         if (this.textures.exists(newSpriteKey)) {
-            this.enemySprite.setTexture(newSpriteKey);
+            this.enemySprite.setTexture(newSpriteKey).setAlpha(1).setY(220).setAngle(0);
             showNextMon();
         } else {
             this.load.image(newSpriteKey, `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${this.enemyMon.id}.png`);
             this.load.once('complete', () => {
-                this.enemySprite.setTexture(newSpriteKey);
+                this.enemySprite.setTexture(newSpriteKey).setAlpha(1).setY(220).setAngle(0);
                 showNextMon();
             }, this);
             this.load.start();
@@ -672,6 +740,7 @@ export class BattleScene extends Scene {
     }
 
     private endBattle(result: 'win' | 'loss' | 'run') {
+        GameFeel.stopMusic();
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => this.events.emit('battle-ended', result));
     }
