@@ -31,6 +31,7 @@ export class InteriorScene extends Scene {
     private interactionText!: Phaser.GameObjects.Text;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private bedZone?: Phaser.GameObjects.Zone;
     private restPrompt?: Phaser.GameObjects.Container;
     private restPromptOpen = false;
@@ -96,6 +97,7 @@ export class InteriorScene extends Scene {
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
         this.npcZones = this.physics.add.staticGroup();
+        this.itemPickups = this.physics.add.staticGroup();
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
@@ -172,6 +174,13 @@ export class InteriorScene extends Scene {
             });
         }
         
+        // Post-creation story triggers
+        if (this.entranceId === 'observatory' && !StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER)) {
+            this.player.setMovementEnabled(false);
+            this.time.delayedCall(500, () => {
+                this.startDialogue('observatory_umbra_cutscene');
+            });
+        }
         EventBus.emit('current-scene-ready', this);
     }
 
@@ -181,6 +190,12 @@ export class InteriorScene extends Scene {
         this.npcZones.add(npc.interactionZone);
         this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
         return npc;
+    }
+
+    private addItemPickup(x: number, y: number, itemId: string) {
+        const itemSprite = this.itemPickups.create(x, y, 'pokeball_item').setDepth(1);
+        itemSprite.setData('itemId', itemId);
+        itemSprite.refreshBody();
     }
 
     private startTrainerBattle(trainer: Trainer) {
@@ -227,6 +242,10 @@ export class InteriorScene extends Scene {
                             this.startDialogue('gym_lily_victory');
                             StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM2);
                             StoryManager.getInstance().setActiveQuest("Explore the path north of Veridia");
+                        } else if (trainer.id === 'observatory_umbra_scientist') {
+                            StoryManager.getInstance().setFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER);
+                            PlayerState.inventory['Observatory Key'] = 1; // Add key item
+                            this.startDialogue(`${trainer.id}_defeated`);
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
                         }
@@ -276,6 +295,21 @@ export class InteriorScene extends Scene {
                 this.addNPC(400, 200, 'npc_nova', 'gym_lily_intro', 'Gym Leader Lily', 'gym_lily');
             } else {
                 this.addNPC(400, 200, 'npc_nova', 'gym_lily_defeated', 'Gym Leader Lily');
+            }
+        } else if (this.entranceId === 'observatory') {
+            this.add.image(400, 300, 'eclipse_symbol').setAlpha(0.3).setScale(3);
+            this.add.text(400, 150, 'Abandoned Observatory', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+            
+            this.add.rectangle(200, 400, 80, 40, 0x555555).setDepth(0);
+            this.add.rectangle(600, 200, 50, 90, 0x555555).setDepth(0);
+
+            if (!StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER)) {
+                // NPCs are added but the cutscene is triggered from create()
+                this.addNPC(400, 250, 'npc_traveler', 'observatory_umbra_scientist_prebattle', 'Umbra Scientist', 'observatory_umbra_scientist');
+                this.addNPC(500, 300, 'npc_kai', 'observatory_umbra_cutscene', 'Umbra Grunt');
+            } else {
+                this.addItemPickup(200, 200, 'Observatory Journal Page #1');
+                this.add.text(400, 300, 'The observatory is empty.\nStrange symbols cover the floor.', { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'center' }).setOrigin(0.5);
             }
         } else if (this.entranceId === 'mart') {
             // Add shopkeeper
@@ -342,7 +376,18 @@ export class InteriorScene extends Scene {
         this.activeDialogueKey = null;
         this.activeDialogue = null;
 
-        if (previousDialogueKey === 'nova_lab_intro' && !StoryManager.getInstance().hasFlag(StoryFlag.HAS_CHOSEN_STARTER)) {
+        if (previousDialogueKey === 'observatory_umbra_cutscene') {
+            const trainer = getTrainer('observatory_umbra_scientist');
+            if (trainer) {
+                this.startTrainerBattle(trainer);
+            }
+        } else if (previousDialogueKey === 'observatory_umbra_scientist_defeated') {
+            const grunt = this.obstacles.getChildren().find(obj => (obj as NPC).dialogueId === 'observatory_umbra_cutscene');
+            if (grunt) grunt.destroy();
+            const scientist = this.obstacles.getChildren().find(obj => (obj as NPC).trainerId === 'observatory_umbra_scientist');
+            if (scientist) scientist.destroy();
+            this.player.setMovementEnabled(true);
+        } else if (previousDialogueKey === 'nova_lab_intro' && !StoryManager.getInstance().hasFlag(StoryFlag.HAS_CHOSEN_STARTER)) {
             this.starterUIOpen = true;
             new StarterSelectionUI(this, (starterName) => {
                 this.starterUIOpen = false;
@@ -559,6 +604,16 @@ export class InteriorScene extends Scene {
         if (this.isPausedByMenu) {
             return;
         }
+
+        this.physics.overlap(this.player, this.itemPickups, (_player, itemPickupObj) => {
+            const itemPickup = itemPickupObj as Phaser.GameObjects.GameObject;
+            const itemId = itemPickup.getData('itemId') as string;
+            if (itemId) {
+                PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1;
+                this.startDialogue(`found_${itemId.toLowerCase().replace(/ /g, '_').replace(/#/g, '')}`);
+                itemPickup.destroy();
+            }
+        });
 
         if (this.restPromptOpen) {
             if (Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey) || Input.Keyboard.JustDown(this.interactKey)) {

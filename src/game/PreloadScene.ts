@@ -99,6 +99,7 @@ export class PreloadScene extends Scene {
 
         // Generate new Pokemon sprites
         this.load.image('pokemon_sprite_front_2', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png'); // Ivysaur
+        this.load.image('pokemon_sprite_front_17', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/17.png'); // Pidgeotto
         this.load.image('pokemon_sprite_front_3', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png'); // Venusaur
         this.load.image('pokemon_sprite_front_8', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/8.png'); // Wartortle
         this.load.image('pokemon_sprite_front_9', 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/9.png'); // Blastoise
@@ -243,6 +244,24 @@ export class PreloadScene extends Scene {
         graphics.fillStyle(0x166534, 1); // Dark Green
         graphics.fillCircle(16, 16, 5);
         graphics.generateTexture('badge_verdant', 32, 32);
+        graphics.clear();
+
+        // Generate Eclipse Symbol
+        graphics.fillStyle(0x9333ea, 1); // Purple
+        graphics.fillCircle(32, 32, 30);
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillCircle(32, 32, 26);
+        graphics.fillStyle(0x9333ea, 1);
+        graphics.fillCircle(32, 32, 10);
+        graphics.lineStyle(4, 0x9333ea, 1);
+        for (let i = 0; i < 8; i++) {
+            const angle = Phaser.Math.DegToRad(i * 45);
+            graphics.lineBetween(
+                32 + Math.cos(angle) * 12, 32 + Math.sin(angle) * 12,
+                32 + Math.cos(angle) * 24, 32 + Math.sin(angle) * 24
+            );
+        }
+        graphics.generateTexture('eclipse_symbol', 64, 64);
         graphics.clear();
 
         // Generate Item Pickup Sprite

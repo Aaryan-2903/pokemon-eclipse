@@ -22,6 +22,7 @@ export class EclipseForestScene extends Scene {
     private hudText!: Phaser.GameObjects.Text;
     private autoSaveIndicator!: Phaser.GameObjects.Text;
     private tallGrassZones!: Phaser.Physics.Arcade.StaticGroup;
+    private tallGrassZones_rare!: Phaser.Physics.Arcade.StaticGroup;
     private interactionText!: Phaser.GameObjects.Text;
     private interactKey!: Phaser.Input.Keyboard.Key;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -81,13 +82,18 @@ export class EclipseForestScene extends Scene {
 
         // --- Tall Grass Patches ---
         this.tallGrassZones = this.physics.add.staticGroup();
+        this.tallGrassZones_rare = this.physics.add.staticGroup();
         const addTallGrass = (x: number, y: number, width: number, height: number) => {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
+        const addRareTallGrass = (x: number, y: number, width: number, height: number) => {
+            this.add.tileSprite(x, y, width, height, 'tall_grass').setTint(0xccffcc).setDepth(0.5); // Slightly different tint
+            this.tallGrassZones_rare.create(x, y).setSize(width, height).setVisible(false);
+        };
         addTallGrass(2500, 6500, 1024, 1024); // SW field
         addTallGrass(5500, 5000, 1500, 1024); // East field
-        addTallGrass(1500, 1500, 1024, 1024); // NW hidden clearing (rare pokemon)
+        addRareTallGrass(1500, 1500, 1024, 1024); // NW hidden clearing (rare pokemon)
         addTallGrass(4000, 3500, 1024, 512); // Central patch
 
         this.obstacles = this.physics.add.staticGroup();
@@ -123,10 +129,26 @@ export class EclipseForestScene extends Scene {
         };
 
         // --- NPCs, Trainers, and Items ---
-        addNPC(2500, 5500, 'npc_traveler', 'forest_explorer', 'Explorer'); // Abandoned camp
+        const storyManager = StoryManager.getInstance();
+        let botanistDialogue = 'forest_botanist_intro';
+        if (storyManager.hasFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_COMPLETE)) {
+            botanistDialogue = 'forest_botanist_complete';
+        } else if (storyManager.hasFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_STARTED)) {
+            if (PlayerState.inventory['Rare Flower'] > 0) {
+                botanistDialogue = 'forest_botanist_complete';
+            } else {
+                botanistDialogue = 'forest_botanist_quest_active';
+            }
+        }
+        addNPC(2500, 5500, 'npc_traveler', botanistDialogue, 'Botanist');
+
         addNPC(4500, 6000, 'npc_youngster', 'forest_lost_child', 'Lost Child');
         addNPC(5500, 4800, 'npc_bugcatcher', 'forest_bug_catcher_dave', 'Bug Catcher Dave', 'forest_bug_catcher_dave'); // Optional trainer
         addNPC(1800, 1800, 'npc_traveler', 'forest_hiker_barry', 'Hiker Barry', 'forest_hiker_barry'); // Optional trainer
+
+        // New optional trainers
+        addNPC(6800, 3500, 'npc_kai', 'forest_ace_trainer_m', 'Ace Trainer Felix', 'forest_ace_trainer_m'); // Hidden east path
+        addNPC(1000, 6000, 'npc_bugcatcher', 'forest_bug_maniac', 'Bug Maniac Donald', 'forest_bug_maniac'); // Hidden south-west path
 
         // Umbra Equipment
         const equipment = addNPC(4200, 4200, 'rock', 'forest_umbra_equipment', 'Strange Device');
@@ -134,6 +156,7 @@ export class EclipseForestScene extends Scene {
 
         this.addItemPickup(6500, 6500, 'Super Potion'); // Dead end reward
         this.addItemPickup(1000, 1000, 'Revive'); // Hidden clearing reward
+        this.addItemPickup(500, 7500, 'Max Revive'); // Deep south-west corner
 
         // --- Transitions ---
         const route2Zone = this.add.zone(4000, worldHeight - 50, 400, 40);
@@ -181,7 +204,6 @@ export class EclipseForestScene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        const storyManager = StoryManager.getInstance();
         if (!storyManager.hasFlag(StoryFlag.ENTERED_ECLIPSE_FOREST)) {
             storyManager.setFlag(StoryFlag.ENTERED_ECLIPSE_FOREST);
             storyManager.setActiveQuest("Find a way through the forest");
@@ -250,6 +272,18 @@ export class EclipseForestScene extends Scene {
         this.dialogueBox.hide();
         this.activeDialogueKey = null;
         this.activeDialogue = null;
+
+        const storyManager = StoryManager.getInstance();
+        if (endedDialogueKey === 'forest_botanist_intro' && !storyManager.hasFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_STARTED)) {
+            storyManager.setFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_STARTED);
+        } else if (endedDialogueKey === 'forest_botanist_complete' && !storyManager.hasFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_COMPLETE)) {
+            if (PlayerState.inventory['Rare Flower'] > 0) {
+                PlayerState.inventory['Rare Flower']--;
+                if (PlayerState.inventory['Rare Flower'] <= 0) delete PlayerState.inventory['Rare Flower'];
+                PlayerState.inventory['Rare Candy'] = (PlayerState.inventory['Rare Candy'] || 0) + 1;
+                storyManager.setFlag(StoryFlag.SIDEQUEST_FOREST_FLOWER_COMPLETE);
+            }
+        }
 
         if (endedDialogueKey === 'forest_umbra_grunt_1_defeated') {
             StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST);
@@ -394,12 +428,15 @@ export class EclipseForestScene extends Scene {
         let inTallGrass = false;
         this.physics.overlap(this.player, this.tallGrassZones, () => { inTallGrass = true; });
 
+        let inRareGrass = false;
+        this.physics.overlap(this.player, this.tallGrassZones_rare, () => { inRareGrass = true; });
+
         if (inTallGrass && this.player.isMoving()) {
             const distance = this.playerLastPosForEncounter.distance({ x: this.player.x, y: this.player.y });
             if (distance >= this.STEP_DISTANCE_FOR_ENCOUNTER_CHECK) {
                 this.playerLastPosForEncounter.set(this.player.x, this.player.y);
                 GameFeel.grassRustle(this, this.player.x, this.player.y + 10);
-                const encounter = this.encounterManager.checkEncounter('EclipseForestScene');
+                const encounter = this.encounterManager.checkEncounter(inRareGrass ? 'EclipseForestScene_Hidden' : 'EclipseForestScene');
                 if (encounter) this.triggerEncounter(encounter);
             }
         } else {

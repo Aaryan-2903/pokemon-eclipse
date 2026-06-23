@@ -33,6 +33,15 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'found_super_potion': [
         { speaker: 'System', text: 'You found a Super Potion!' }
     ],
+    'found_max_revive': [
+        { speaker: 'System', text: 'You found a Max Revive!' }
+    ],
+    'found_tm01': [
+        { speaker: 'System', text: 'You found TM01 - Mega Punch!' }
+    ],
+    'found_rare_flower': [
+        { speaker: 'System', text: 'You found a beautiful, glowing flower. This must be the one the botanist was looking for.' }
+    ],
     'found_revive': [
         { speaker: 'System', text: 'You found a Revive!' }
     ],
@@ -273,6 +282,56 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     ],
     'route3_lass': [
         { speaker: 'Lass', text: "I heard the Gym Leader in Veridia City uses Grass-type Pokémon." }
+    ],
+    'forest_ace_trainer_m_defeated': [
+        { speaker: 'Ace Trainer Felix', text: "Impressive. You have a bright future." }
+    ],
+    'forest_bug_maniac_defeated': [
+        { speaker: 'Bug Maniac Donald', text: "My prized Beedrill... defeated!" }
+    ],
+    'route3_blackbelt_defeated': [
+        { speaker: 'Blackbelt Kenji', text: "A powerful strike! Well done." }
+    ],
+    'forest_botanist_intro': [
+        { speaker: 'Botanist', text: "Oh, hello there! I'm searching for a very rare plant, the 'Lunar Bloom'. It's said to only grow on high mountain trails under the moonlight." },
+        { speaker: 'Botanist', text: "If you happen to find one on your travels, could you bring it to me? I would be most grateful!" }
+    ],
+    'forest_botanist_quest_active': [
+        { speaker: 'Botanist', text: "Still searching for that Lunar Bloom. I just know it's out there somewhere on a mountain path..." }
+    ],
+    'forest_botanist_complete': [
+        { speaker: 'Botanist', text: "Is that... it is! A perfect specimen of a Lunar Bloom! Thank you so much!" },
+        { speaker: 'Botanist', text: "Please, take this as a reward for your efforts. It's a special nutrient that Pokémon love." },
+        { speaker: 'System', text: "You received a Rare Candy!" }
+    ],
+    'found_crumbled_note': [
+        { speaker: 'System', text: "You found a crumbled note. It reads:\n'...the observatory is key. The Heart's energy signature is weak, but the alignment will amplify it. Do not fail.'" }
+    ],
+    'route3_hiker_john_defeated': [
+        { speaker: 'Hiker John', text: "Whoa, you're tough as nails! Keep it up!" }
+    ],
+    'route3_ace_trainer_female_defeated': [
+        { speaker: 'Ace Trainer Maria', text: "A well-deserved victory. Your strategy is impressive." }
+    ],
+    'route3_cave_explorer': [
+        { speaker: 'Explorer', text: "I heard there's a cave around here, but it looks blocked off for now. Maybe a strong Pokémon could clear the way?" }
+    ],
+    'observatory_umbra_cutscene': [
+        { speaker: 'Umbra Grunt', text: "Scientist, the readings are faint... but they're here.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Umbra Scientist', text: "Of course they are. The ancient texts were clear. This observatory was built on a convergence point.", portrait: 'portrait_traveler' },
+        { speaker: 'Umbra Scientist', text: "The Eclipse Heart must be nearby. We must find it before the next celestial alignment!", portrait: 'portrait_traveler' },
+        { speaker: 'Umbra Grunt', text: "What if that kid shows up again?", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Umbra Scientist', text: "Let them come. You! Deal with this interruption!", portrait: 'portrait_traveler' }
+    ],
+    'observatory_umbra_scientist_prebattle': [
+        { speaker: 'Umbra Scientist', text: "You again! Your meddling ends now. Witness the power of research!", portrait: 'portrait_traveler' }
+    ],
+    'observatory_umbra_scientist_defeated': [
+        { speaker: 'Umbra Scientist', text: "Impossible! My calculations were flawless... This changes nothing. We will find the Eclipse Heart!", portrait: 'portrait_traveler' },
+        { speaker: 'System', text: "Team Umbra vanished in the confusion." }
+    ],
+    'found_observatory_journal_page_1': [
+        { speaker: 'System', text: "You found a dusty journal page. It reads:\n'Day 12: The ancients were right. The structure resonates with celestial events. The 'Eclipse Heart' they spoke of isn't a metaphor. It's a source of immense, untamed power...'" }
     ],
     'veridia_city_entry': [
         { speaker: 'System', text: "You've arrived in Veridia City. The air is fresh and green." }

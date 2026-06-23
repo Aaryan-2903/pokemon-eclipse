@@ -47,11 +47,10 @@ const config: Types.Core.GameConfig = {
         PreloadScene,
         OverworldScene,
         InteriorScene,
+        Route1Scene,
         Route2Scene,
-        Route3Scene,
         VeridiaCityScene,
         EclipseForestScene,
-        Route1Scene,
         LunarCityScene,
         BattleScene,
         MenuScene,
@@ -61,7 +60,8 @@ const config: Types.Core.GameConfig = {
         SettingsScene,
         TeamScene,
         EvolutionScene,
-        BadgeScene
+        BadgeScene,
+        Route3Scene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

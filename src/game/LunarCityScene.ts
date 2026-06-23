@@ -489,13 +489,9 @@ export class LunarCityScene extends Scene {
                 transitionScene = null;
             } else {
                 this.autoSave();
-                const spawnEntrance = transitionScene === 'Route2Scene'
-                    ? 'lunar_city'
-                    : transitionScene === 'Route1Scene'
-                        ? 'lunar_city'
-                        : 'route3';
-                console.log('[LunarCityScene] route transition start', { transitionScene, spawnEntrance });
-                GameFeel.fadeToScene(this, transitionScene, { spawnEntrance });
+                // Let the next scene know we came from Lunar City
+                console.log('[LunarCityScene] route transition start', { transitionScene, spawnEntrance: 'lunar_city' });
+                GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'lunar_city' });
                 return;
             }
         }

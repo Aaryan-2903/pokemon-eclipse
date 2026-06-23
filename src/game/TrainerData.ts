@@ -177,6 +177,60 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         postBattleDialogue: "My Pokémon... defeated by brute force...",
         rewardMoney: 320,
     },
+    'forest_ace_trainer_m': {
+        id: 'forest_ace_trainer_m',
+        name: 'Ace Trainer Felix',
+        spriteKey: 'npc_kai', // Placeholder
+        teamSpec: [{ name: 'Pidgeotto', level: 14 }, { name: 'Rattata', level: 14 }],
+        preBattleDialogue: "A true master can win in any environment. Let's see your skill.",
+        postBattleDialogue: "Impressive. You have a bright future.",
+        rewardMoney: 700,
+    },
+    'forest_bug_maniac': {
+        id: 'forest_bug_maniac',
+        name: 'Bug Maniac Donald',
+        spriteKey: 'npc_bugcatcher',
+        teamSpec: [{ name: 'Beedrill', level: 15 }],
+        preBattleDialogue: "The buzzing of bug wings is the greatest sound in the world!",
+        postBattleDialogue: "My prized Beedrill... defeated!",
+        rewardMoney: 500,
+    },
+    'route3_blackbelt': {
+        id: 'route3_blackbelt',
+        name: 'Blackbelt Kenji',
+        spriteKey: 'npc_traveler', // Placeholder
+        teamSpec: [{ name: 'Geodude', level: 18 }],
+        preBattleDialogue: "Focus! Discipline! Power! Show me your fighting spirit!",
+        postBattleDialogue: "A powerful strike! Well done.",
+        rewardMoney: 800,
+    },
+    'route3_hiker_john': {
+        id: 'route3_hiker_john',
+        name: 'Hiker John',
+        spriteKey: 'npc_traveler',
+        teamSpec: [{ name: 'Geodude', level: 16 }],
+        preBattleDialogue: "The mountain air is great for training! My Geodude is getting tougher every day.",
+        postBattleDialogue: "Whoa, you're tough as nails! Keep it up!",
+        rewardMoney: 450,
+    },
+    'route3_ace_trainer_female': {
+        id: 'route3_ace_trainer_female',
+        name: 'Ace Trainer Maria',
+        spriteKey: 'npc_aurora', // Placeholder
+        teamSpec: [{ name: 'Pidgeotto', level: 17 }, { name: 'Wartortle', level: 18 }],
+        preBattleDialogue: "Only the most dedicated trainers make it this far. Let's see your dedication.",
+        postBattleDialogue: "A well-deserved victory. Your strategy is impressive.",
+        rewardMoney: 900,
+    },
+    'observatory_umbra_scientist': {
+        id: 'observatory_umbra_scientist',
+        name: 'Umbra Scientist',
+        spriteKey: 'npc_traveler', // Placeholder
+        teamSpec: [{ name: 'Zubat', level: 18 }, { name: 'Oddish', level: 18 }],
+        preBattleDialogue: "You again! Your meddling ends now. Witness the power of research!",
+        postBattleDialogue: "Impossible! My calculations were flawless... This changes nothing. We will find the Eclipse Heart!",
+        rewardMoney: 1000,
+    },
     'route3_youngster_toby': {
         id: 'route3_youngster_toby',
         name: 'Youngster Toby',
