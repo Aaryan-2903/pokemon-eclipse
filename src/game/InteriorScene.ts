@@ -37,6 +37,7 @@ export class InteriorScene extends Scene {
     private restPromptOpen = false;
     private restChoiceIndex = 0;
     private restChoiceTexts: Phaser.GameObjects.Text[] = [];
+    private cutsceneNPCs: Phaser.GameObjects.Sprite[] = [];
     private isResting = false;
     
     private activeDialogueKey: string | null = null;
@@ -175,9 +176,11 @@ export class InteriorScene extends Scene {
         }
         
         // Post-creation story triggers
-        if (this.entranceId === 'observatory' && !StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER)) {
+        if (this.entranceId === 'observatory' && !StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_MYSTERY_SEEN)) {
             this.player.setMovementEnabled(false);
             this.time.delayedCall(500, () => {
+                this.cameras.main.pan(400, 250, 1000, 'Power2');
+                this.cameras.main.zoomTo(2, 1000);
                 this.startDialogue('observatory_umbra_cutscene');
             });
         }
@@ -243,8 +246,8 @@ export class InteriorScene extends Scene {
                             StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM2);
                             StoryManager.getInstance().setActiveQuest("Explore the path north of Veridia");
                         } else if (trainer.id === 'observatory_umbra_scientist') {
-                            StoryManager.getInstance().setFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER);
-                            PlayerState.inventory['Observatory Key'] = 1; // Add key item
+                            StoryManager.getInstance().setFlag(StoryFlag.OBSERVATORY_UMBRA_DEFEATED);
+                            // PlayerState.inventory['Observatory Key'] = 1; // Add key item
                             this.startDialogue(`${trainer.id}_defeated`);
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
@@ -303,12 +306,13 @@ export class InteriorScene extends Scene {
             this.add.rectangle(200, 400, 80, 40, 0x555555).setDepth(0);
             this.add.rectangle(600, 200, 50, 90, 0x555555).setDepth(0);
 
-            if (!StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_UMBRA_ENCOUNTER)) {
+            if (!StoryManager.getInstance().hasFlag(StoryFlag.OBSERVATORY_MYSTERY_SEEN)) {
                 // NPCs are added but the cutscene is triggered from create()
-                this.addNPC(400, 250, 'npc_traveler', 'observatory_umbra_scientist_prebattle', 'Umbra Scientist', 'observatory_umbra_scientist');
-                this.addNPC(500, 300, 'npc_kai', 'observatory_umbra_cutscene', 'Umbra Grunt');
+                const scientist = this.addNPC(350, 250, 'npc_traveler', 'observatory_umbra_cutscene', 'Scientist');
+                const grunt = this.addNPC(450, 250, 'npc_kai', 'observatory_umbra_cutscene', 'Grunt');
+                this.cutsceneNPCs = [scientist, grunt];
             } else {
-                this.addItemPickup(200, 200, 'Observatory Journal Page #1');
+                if (!PlayerState.inventory['Observatory Journal Page #1']) this.addItemPickup(200, 200, 'Observatory Journal Page #1');
                 this.add.text(400, 300, 'The observatory is empty.\nStrange symbols cover the floor.', { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'center' }).setOrigin(0.5);
             }
         } else if (this.entranceId === 'mart') {
@@ -377,15 +381,22 @@ export class InteriorScene extends Scene {
         this.activeDialogue = null;
 
         if (previousDialogueKey === 'observatory_umbra_cutscene') {
-            const trainer = getTrainer('observatory_umbra_scientist');
-            if (trainer) {
-                this.startTrainerBattle(trainer);
-            }
+            StoryManager.getInstance().setFlag(StoryFlag.OBSERVATORY_MYSTERY_SEEN);
+            this.tweens.add({
+                targets: this.cutsceneNPCs,
+                alpha: 0,
+                y: '-=50',
+                duration: 500,
+                onComplete: () => {
+                    this.cutsceneNPCs.forEach(npc => npc.destroy());
+                    this.cutsceneNPCs = [];
+                    this.cameras.main.zoomTo(1.5, 500);
+                    this.cameras.main.pan(this.player.x, this.player.y, 500, 'Power2', false, (_cam, progress) => {
+                        if (progress === 1) this.player.setMovementEnabled(true);
+                    });
+                }
+            });
         } else if (previousDialogueKey === 'observatory_umbra_scientist_defeated') {
-            const grunt = this.obstacles.getChildren().find(obj => (obj as NPC).dialogueId === 'observatory_umbra_cutscene');
-            if (grunt) grunt.destroy();
-            const scientist = this.obstacles.getChildren().find(obj => (obj as NPC).trainerId === 'observatory_umbra_scientist');
-            if (scientist) scientist.destroy();
             this.player.setMovementEnabled(true);
         } else if (previousDialogueKey === 'nova_lab_intro' && !StoryManager.getInstance().hasFlag(StoryFlag.HAS_CHOSEN_STARTER)) {
             this.starterUIOpen = true;

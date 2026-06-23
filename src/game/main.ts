@@ -16,6 +16,7 @@ import { BagScene } from './BagScene';
 import { SettingsScene } from './SettingsScene';
 import { TeamScene } from './TeamScene';
 import { EvolutionScene } from './EvolutionScene';
+import { JournalScene } from './JournalScene';
 import { BadgeScene } from './BadgeScene';
 import { Types, Game } from 'phaser';
 
@@ -61,7 +62,8 @@ const config: Types.Core.GameConfig = {
         TeamScene,
         EvolutionScene,
         BadgeScene,
-        Route3Scene
+        Route3Scene,
+        JournalScene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

@@ -121,8 +121,13 @@ export class VeridiaCityScene extends Scene {
             this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
         };
         const storyManager = StoryManager.getInstance();
-        addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_1_after_gym2' : 'veridia_citizen_1', 'Trainer');
-        addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_2_after_gym2' : 'veridia_citizen_2', 'Gardener');
+        if (storyManager.hasFlag(StoryFlag.OBSERVATORY_MYSTERY_SEEN)) {
+            addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', 'veridia_citizen_nova_1', 'Researcher');
+            addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', 'veridia_citizen_nova_2', 'Old Timer');
+        } else {
+            addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_1_after_gym2' : 'veridia_citizen_1', 'Trainer');
+            addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_2_after_gym2' : 'veridia_citizen_2', 'Gardener');
+        }
         addNPC(worldWidth / 2 - 200, 700, 'npc_nurse', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_3_after_gym2' : 'veridia_citizen_3', 'Nurse');
 
         // Player Spawn

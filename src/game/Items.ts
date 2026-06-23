@@ -131,6 +131,9 @@ export const Items: Record<string, Item> = {
     'Observatory Journal Page #1': {
         id: 'Observatory Journal Page #1', name: 'Journal Page 1', description: 'A dusty page from an old journal.', price: 0, canUseInBattle: false, canUseOutsideBattle: false, effect: () => ({ success: false, message: 'It seems to be a lore item.' })
     },
+    'Observatory Journal Page #2': {
+        id: 'Observatory Journal Page #2', name: 'Journal Page 2', description: 'Another page, this one looks more worn.', price: 0, canUseInBattle: false, canUseOutsideBattle: false, effect: () => ({ success: false, message: 'It seems to be a lore item.' })
+    },
     'Crumbled Note': {
         id: 'Crumbled Note', name: 'Crumbled Note', description: 'A note dropped by Team Umbra.', price: 0, canUseInBattle: false, canUseOutsideBattle: false, effect: () => ({ success: false, message: 'It seems to be a lore item.' })
     },

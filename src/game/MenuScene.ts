@@ -34,10 +34,11 @@ export class MenuScene extends Scene {
             { name: 'POKÉDEX', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('PokedexScene'); } },
             { name: 'POKÉMON', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('TeamScene', { inBattle: false }); } },
             { name: 'BAG', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('BagScene'); } },
+            { name: 'JOURNAL', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('JournalScene'); } },
             { name: 'SAVE', action: () => this.saveGame() },
             { name: 'BADGES', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('BadgeScene'); } },
             { name: 'SETTINGS', action: () => { /* this.sound.play('menu_confirm'); */ this.launchSubScene('SettingsScene'); } },
-            { name: 'QUIT', action: () => { /* this.sound.play('menu_confirm'); */ window.location.href = '/'; } }
+            { name: 'QUIT', action: () => { /* this.sound.play('menu_confirm'); */ window.location.href = '/'; } },
         ];
 
         const startY = (this.cameras.main.height - (options.length * 50)) / 2 + 25;

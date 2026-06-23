@@ -157,6 +157,7 @@ export class EclipseForestScene extends Scene {
         this.addItemPickup(6500, 6500, 'Super Potion'); // Dead end reward
         this.addItemPickup(1000, 1000, 'Revive'); // Hidden clearing reward
         this.addItemPickup(500, 7500, 'Max Revive'); // Deep south-west corner
+        this.addItemPickup(200, 200, 'Observatory Journal Page #2'); // Hidden lore
 
         // --- Transitions ---
         const route2Zone = this.add.zone(4000, worldHeight - 50, 400, 40);
@@ -399,7 +400,7 @@ export class EclipseForestScene extends Scene {
             const itemId = itemPickup.getData('itemId') as string;
             if (itemId) {
                 PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1;
-                this.startDialogue(`found_${itemId.toLowerCase()}`);
+                this.startDialogue(`found_${itemId.toLowerCase().replace(/ /g, '_').replace(/#/g, '')}`);
                 itemPickup.destroy();
             }
         });

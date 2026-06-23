@@ -317,11 +317,12 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'Explorer', text: "I heard there's a cave around here, but it looks blocked off for now. Maybe a strong Pokémon could clear the way?" }
     ],
     'observatory_umbra_cutscene': [
-        { speaker: 'Umbra Grunt', text: "Scientist, the readings are faint... but they're here.", portrait: 'portrait_umbra_grunt' },
-        { speaker: 'Umbra Scientist', text: "Of course they are. The ancient texts were clear. This observatory was built on a convergence point.", portrait: 'portrait_traveler' },
-        { speaker: 'Umbra Scientist', text: "The Eclipse Heart must be nearby. We must find it before the next celestial alignment!", portrait: 'portrait_traveler' },
-        { speaker: 'Umbra Grunt', text: "What if that kid shows up again?", portrait: 'portrait_umbra_grunt' },
-        { speaker: 'Umbra Scientist', text: "Let them come. You! Deal with this interruption!", portrait: 'portrait_traveler' }
+        { speaker: 'Scientist', text: "The seal is weakening.", portrait: 'portrait_traveler' },
+        { speaker: 'Grunt', text: "What if we're too late?", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Scientist', text: "Then the entire region is at risk.", portrait: 'portrait_traveler' },
+        { speaker: 'Grunt', text: "Will the leader tell them the truth?", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Scientist', text: "Not yet.", portrait: 'portrait_traveler' },
+        { speaker: 'Scientist', text: "Someone's there.", portrait: 'portrait_traveler' }
     ],
     'observatory_umbra_scientist_prebattle': [
         { speaker: 'Umbra Scientist', text: "You again! Your meddling ends now. Witness the power of research!", portrait: 'portrait_traveler' }
@@ -331,7 +332,10 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'System', text: "Team Umbra vanished in the confusion." }
     ],
     'found_observatory_journal_page_1': [
-        { speaker: 'System', text: "You found a dusty journal page. It reads:\n'Day 12: The ancients were right. The structure resonates with celestial events. The 'Eclipse Heart' they spoke of isn't a metaphor. It's a source of immense, untamed power...'" }
+        { speaker: 'System', text: "You found a dusty journal page. It reads:\n'The Eclipse Heart is not a weapon. It is a seal.'" }
+    ],
+    'found_observatory_journal_page_2': [
+        { speaker: 'System', text: "You found another journal page. It reads:\n'The ancients feared what slept beneath Solara.'" }
     ],
     'veridia_city_entry': [
         { speaker: 'System', text: "You've arrived in Veridia City. The air is fresh and green." }
@@ -353,6 +357,12 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     ],
     'veridia_citizen_2_after_gym2': [
         { speaker: 'Gardener', text: "That was an amazing battle! You've inspired me to train my own Pokémon!" }
+    ],
+    'veridia_citizen_nova_1': [
+        { speaker: 'Researcher', text: "This city is lovely, but I miss the view from the old observatory. Professor Nova used to work there, you know." }
+    ],
+    'veridia_citizen_nova_2': [
+        { speaker: 'Old Timer', text: "Professor Nova... haven't heard that name in a while. He stopped all his big research years ago after some kind of accident up on the mountain." }
     ],
     'veridia_citizen_3_after_gym2': [
         { speaker: 'Nurse', text: "I saw your battle! Make sure to rest your Pokémon at the Center before you head north." }
