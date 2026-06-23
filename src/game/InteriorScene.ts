@@ -31,6 +31,7 @@ export class InteriorScene extends Scene {
     private interactionText!: Phaser.GameObjects.Text;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private entrances!: Phaser.Physics.Arcade.StaticGroup;
     private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private bedZone?: Phaser.GameObjects.Zone;
     private restPrompt?: Phaser.GameObjects.Container;
@@ -98,6 +99,7 @@ export class InteriorScene extends Scene {
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
         this.npcZones = this.physics.add.staticGroup();
+        this.entrances = this.physics.add.staticGroup();
         this.itemPickups = this.physics.add.staticGroup();
 
         if (this.input.keyboard) {
@@ -315,6 +317,23 @@ export class InteriorScene extends Scene {
                 if (!PlayerState.inventory['Observatory Journal Page #1']) this.addItemPickup(200, 200, 'Observatory Journal Page #1');
                 this.add.text(400, 300, 'The observatory is empty.\nStrange symbols cover the floor.', { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff', align: 'center' }).setOrigin(0.5);
             }
+        } else if (this.entranceId === 'aethelburg_museum') {
+            this.add.text(400, 150, 'Aethelburg Museum', { fontFamily: 'monospace', fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+            this.addNPC(200, 300, 'sign', 'aethelburg_museum_exhibit_1', 'Tablet of Guardians');
+            this.addNPC(400, 300, 'sign', 'aethelburg_museum_exhibit_2', 'Ancient Star Chart');
+            const novaExhibit = this.addNPC(600, 300, 'sign', 'aethelburg_museum_exhibit_3', 'Eclipse Heart Theory');
+            novaExhibit.interactionZone.on('pointerdown', () => {
+                StoryManager.getInstance().setFlag(StoryFlag.VISITED_AETHELBURG_MUSEUM);
+            });
+        } else if (this.entranceId === 'gym_aethelburg') {
+            const storyManager = StoryManager.getInstance();
+            let dialogueId = 'gym_leader_2_before_museum';
+            if (storyManager.hasFlag(StoryFlag.VISITED_AETHELBURG_MUSEUM)) {
+                dialogueId = 'gym_leader_2_after_museum';
+            }
+            // The user said not to implement Gym 2 yet, so the trainerId is omitted.
+            // When it's time, it will be 'gym_leader_orion' or similar.
+            this.addNPC(400, 200, 'npc_traveler', dialogueId, 'Gym Leader Orion');
         } else if (this.entranceId === 'mart') {
             // Add shopkeeper
             const shopkeeper = new NPC(this, 400, 250, 'npc_shopkeeper', 'shopkeeper_menu');
@@ -396,6 +415,15 @@ export class InteriorScene extends Scene {
                     });
                 }
             });
+        } else if (previousDialogueKey === 'aethelburg_museum_exhibit_3') {
+            if (!StoryManager.getInstance().hasFlag(StoryFlag.VISITED_AETHELBURG_MUSEUM)) {
+                StoryManager.getInstance().setFlag(StoryFlag.VISITED_AETHELBURG_MUSEUM);
+            }
+            EventBus.emit('quest-updated'); // To update quest tracker if needed
+            this.player.setMovementEnabled(true);
+        } else if (previousDialogueKey === 'facility_nova_log') {
+            StoryManager.getInstance().setFlag(StoryFlag.PROJECT_ECLIPSE_REVEALED);
+            this.player.setMovementEnabled(true);
         } else if (previousDialogueKey === 'observatory_umbra_scientist_defeated') {
             this.player.setMovementEnabled(true);
         } else if (previousDialogueKey === 'nova_lab_intro' && !StoryManager.getInstance().hasFlag(StoryFlag.HAS_CHOSEN_STARTER)) {
@@ -686,6 +714,7 @@ export class InteriorScene extends Scene {
 
         this.currentNPC = null;
         let currentTrainerId: string | null = null;
+        let currentEntranceId: string | null = null;
         this.physics.overlap(this.player, this.npcZones, (_player, zone) => {
             const go = zone as Phaser.GameObjects.GameObject;
             this.currentNPC = go.getData('dialogueId');
@@ -693,7 +722,13 @@ export class InteriorScene extends Scene {
         });
 
         let interactionMessage = '';
-        if (nearBed) {
+        this.physics.overlap(this.player, this.entrances, (_player, entrance) => {
+            currentEntranceId = (entrance as Phaser.GameObjects.GameObject).getData('entranceId');
+        });
+
+        if (currentEntranceId) {
+            interactionMessage = 'Press E to Enter';
+        } else if (nearBed) {
             interactionMessage = 'Press E to Rest';
         } else if (this.currentNPC) {
             if (currentTrainerId && !PlayerState.defeatedTrainers.has(currentTrainerId)) {
@@ -710,7 +745,10 @@ export class InteriorScene extends Scene {
             
             if (Input.Keyboard.JustDown(this.interactKey)) {
                 const trainer = currentTrainerId ? getTrainer(currentTrainerId) : null;
-                if (nearBed) {
+                if (currentEntranceId) {
+                    this.autoSave();
+                    GameFeel.fadeToScene(this, 'InteriorScene', { entranceId: currentEntranceId, parentScene: this.parentScene }, [255, 255, 255]);
+                } else if (nearBed) {
                     this.openRestPrompt();
                 } else if (trainer && !PlayerState.defeatedTrainers.has(trainer.id)) {
                     this.startTrainerBattle(trainer);

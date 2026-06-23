@@ -16,6 +16,9 @@ import { BagScene } from './BagScene';
 import { SettingsScene } from './SettingsScene';
 import { TeamScene } from './TeamScene';
 import { EvolutionScene } from './EvolutionScene';
+import { SilitechCityScene } from './SilitechCityScene';
+import { AethelburgCityScene } from './AethelburgCityScene';
+import { AncientRuinsScene } from './AncientRuinsScene';
 import { JournalScene } from './JournalScene';
 import { BadgeScene } from './BadgeScene';
 import { Types, Game } from 'phaser';
@@ -63,7 +66,9 @@ const config: Types.Core.GameConfig = {
         EvolutionScene,
         BadgeScene,
         Route3Scene,
-        JournalScene
+        JournalScene,
+        AncientRuinsScene,
+        AethelburgCityScene
     ],
     pixelArt: true // Ensures pixel art scales without blurring
 };

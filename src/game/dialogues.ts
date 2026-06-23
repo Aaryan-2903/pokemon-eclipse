@@ -332,10 +332,97 @@ export const Dialogues: Record<string, DialogueNode[]> = {
         { speaker: 'System', text: "Team Umbra vanished in the confusion." }
     ],
     'found_observatory_journal_page_1': [
-        { speaker: 'System', text: "You found a dusty journal page. It reads:\n'The Eclipse Heart is not a weapon. It is a seal.'" }
+        { speaker: 'System', text: "You found a dusty journal page. It reads:\n'The Eclipse Heart is not a weapon.\nIt is a seal.'" }
     ],
     'found_observatory_journal_page_2': [
         { speaker: 'System', text: "You found another journal page. It reads:\n'The ancients feared what slept beneath Solara.'" }
+    ],
+    'found_observatory_journal_page_3': [
+        { speaker: 'System', text: "You found a page from a modern journal. It reads:\n'The seal was never meant to last forever.\n\nWhen the final eclipse comes, the Heart will awaken.'" }
+    ],
+    'ancient_ruins_tablet': [
+        { speaker: 'Ancient Tablet', text: "When shadow consumes light,\nthe Heart shall awaken." },
+        { speaker: 'Ancient Tablet', text: "The guardians failed.\nThe seal endured.\nFor now." }
+    ],
+    'umbra_camp_notes': [
+        { speaker: 'System', text: "The notes are filled with complex astronomical charts and translations of ancient symbols. One page is circled:\n'The seal's energy is fluctuating. We must stabilize it before it's too late.'" }
+    ],
+    'found_observatory_journal_page_5': [
+        { speaker: 'System', text: "You found another page from a modern journal. It reads:\n'The Heart was never created.\n\nIt was discovered.'" }
+    ],
+    'museum_basement_locked': [
+        { speaker: 'Curator', text: "Sorry, this area is off-limits. Only authorized personnel and trainers recognized by the league are allowed." },
+        { speaker: 'Curator', text: "Perhaps after you've proven yourself against our Gym Leader..." }
+    ],
+    'museum_basement_records': [
+        { speaker: 'System', text: "Dusty records of celestial events. Many are focused on the 'Great Eclipse' from centuries ago." }
+    ],
+    'museum_basement_maps': [
+        { speaker: 'System', text: "Ancient maps of the Solara region. They show ley lines of energy converging on several key locations, including this city and the observatory." }
+    ],
+    'museum_basement_nova_log': [
+        { speaker: 'System', text: "A research log from years ago. It's labeled...\n\n'Project Eclipse'\nLead Researcher: Professor Nova" }
+    ],
+    'umbra_encounter_4_cutscene': [
+        { speaker: 'Grunt', text: "He should have told them.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Scientist', text: "He wanted to protect them.", portrait: 'portrait_traveler' },
+        { speaker: 'Grunt', text: "And now?", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Scientist', text: "Now we're paying the price.", portrait: 'portrait_traveler' },
+        { speaker: 'Scientist', text: "Someone's there.", portrait: 'portrait_traveler' }
+    ],
+    'found_observatory_journal_page_4': [
+        { speaker: 'System', text: "You found a weathered journal page. It reads:\n'The guardians failed.\n\nThe eclipse returned.\n\nThe Heart awakened.'" }
+    ],
+    'aethelburg_citizen_1': [
+        { speaker: 'Historian', text: "This city is built upon the ruins of a much older civilization. The museum holds many of their secrets." }
+    ],
+    'aethelburg_citizen_2': [
+        { speaker: 'Tourist', text: "I saw some people in black coats near the old ruins north of here. They looked like they were searching for something." }
+    ],
+    'aethelburg_citizen_3': [
+        { speaker: 'Old Timer', text: "The legends say that when the sky darkens, the land remembers. I wonder what that means..." }
+    ],
+    'aethelburg_citizen_4': [
+        { speaker: 'Researcher', text: "Professor Nova's early work on Eclipse Energy was groundbreaking. It's a shame he stopped. Some say his research is still in the city archives." }
+    ],
+    'aethelburg_museum_exhibit_1': [
+        { speaker: 'Exhibit', text: "Tablet of the Guardians:\nThis tablet depicts three large Pokémon surrounding a central, pulsating core. The inscription is partially eroded, but one phrase is clear: '...to seal the slumbering one...'" }
+    ],
+    'aethelburg_museum_exhibit_2': [
+        { speaker: 'Exhibit', text: "Ancient Star Chart:\nA map of the stars from thousands of years ago. It accurately predicts a total solar eclipse over the Solara region every 1,000 years." }
+    ],
+    'aethelburg_museum_exhibit_3': [
+        { speaker: 'Exhibit', text: "The Eclipse Heart - A Theory:\nEarly researchers, including a young Professor Nova, theorized the 'Eclipse Heart' was not a physical object, but a concentration of immense energy deep within the planet, awakened by celestial events." }
+    ],
+    'gym_leader_2_before_museum': [
+        { speaker: 'Orion', text: "Welcome, challenger. I am Orion, keeper of this city's history and its Gym Leader." },
+        { speaker: 'Orion', text: "To understand the strength of this city, you must first understand its past. Visit our museum. Learn our story. Then, we shall battle." }
+    ],
+    'gym_leader_2_after_museum': [
+        { speaker: 'Orion', text: "You have returned. I can see the weight of history in your eyes." },
+        { speaker: 'Orion', text: "Very well. Let us see if your resolve is as strong as the seal of old! En garde!" }
+    ],
+    'gym_leader_2_defeated': [
+        { speaker: 'Orion', text: "A formidable battle. You carry the spirit of the future." }
+    ],
+    'found_research_log_1': [
+        { speaker: 'System', text: "You found a research log. It reads:\n'We believed the Eclipse Heart was an energy source.\n\nWe were wrong.'" }
+    ],
+    'facility_nova_log': [
+        { speaker: 'System', text: "A dusty terminal flickers to life. The main file is labeled:\n\n'Project Eclipse'\nLead Researcher: Professor Nova" }
+    ],
+    'umbra_leader_teaser_cutscene': [
+        { speaker: '???', text: "We are not fighting for power." },
+        { speaker: '???', text: "We are fighting for time." }
+    ],
+    'silitech_citizen_1': [
+        { speaker: 'Worker', text: "This city powers the whole region. The research facility is our crown jewel, though it's been... quiet lately." }
+    ],
+    'silitech_citizen_2': [
+        { speaker: 'Engineer', text: "I've seen strange energy readings coming from the old facility. Management says it's nothing, but I'm not so sure." }
+    ],
+    'silitech_citizen_3': [
+        { speaker: 'Security Guard', text: "The old research wing is off-limits. Top secret stuff, even for me." }
     ],
     'veridia_city_entry': [
         { speaker: 'System', text: "You've arrived in Veridia City. The air is fresh and green." }

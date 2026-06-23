@@ -5,17 +5,17 @@ import { NPC } from './NPC';
 import { DialogueBox } from './DialogueBox';
 import { Dialogues, DialogueNode } from './dialogues';
 import { PlayerState } from './PlayerData';
-import { getTrainer, Trainer } from './TrainerData';
 import { QuestTracker } from './QuestTracker';
 import { SaveManager } from './SaveManager';
 import { StoryManager, StoryFlag } from './StoryManager';
 import { GameFeel } from './GameFeel';
 
-export class VeridiaCityScene extends Scene {
+export class SilitechCityScene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private autoSaveIndicator!: Phaser.GameObjects.Text;
     private hudText!: Phaser.GameObjects.Text;
     private interactionText!: Phaser.GameObjects.Text;
@@ -25,7 +25,6 @@ export class VeridiaCityScene extends Scene {
     private escKey!: Phaser.Input.Keyboard.Key;
     private teamKey!: Phaser.Input.Keyboard.Key;
     private badgeKey!: Phaser.Input.Keyboard.Key;
-    private currentEntrance: string | null = null;
     private currentNPC: string | null = null;
     private dialogueBox!: DialogueBox;
     private questTracker!: QuestTracker;
@@ -36,8 +35,10 @@ export class VeridiaCityScene extends Scene {
     private spawnY?: number;
     private isPausedByMenu: boolean = false;
 
+    private umbraCutsceneTrigger!: Phaser.GameObjects.Zone;
+
     constructor() {
-        super('VeridiaCityScene');
+        super('SilitechCityScene');
     }
 
     init(data: any) {
@@ -48,52 +49,33 @@ export class VeridiaCityScene extends Scene {
 
     create() {
         GameFeel.startMusic(this, 'city');
-        const worldWidth = 2000;
-        const worldHeight = 2000;
+        const worldWidth = 3000;
+        const worldHeight = 3000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
-        this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
-        this.add.tileSprite(worldWidth / 2, worldHeight / 2, 256, worldHeight, 'path').setDepth(1); // Main vertical road
-        this.add.tileSprite(worldWidth / 2, 1000, worldWidth, 256, 'path').setDepth(1); // Main horizontal road
+        this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setTint(0x57534e).setDepth(0);
+        this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, 256, 'path').setDepth(1);
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
         this.npcZones = this.physics.add.staticGroup();
+        this.itemPickups = this.physics.add.staticGroup();
 
-        // Boundaries (Trees)
+        // Boundaries
         for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 900 || x > 1100) this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
-            if (x < 900 || x > 1100) this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South Edge
+            if (x < worldWidth / 2 - 100 || x > worldWidth / 2 + 100) this.obstacles.create(x, 100, 'rock').setDepth(2);
+            this.obstacles.create(x, worldHeight - 100, 'rock').setDepth(2);
         }
         for (let y = 100; y <= worldHeight - 100; y += 64) {
-            this.obstacles.create(100, y, 'tree').setDepth(2); // West Edge
-            this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East Edge
+            this.obstacles.create(100, y, 'rock').setDepth(2);
+            this.obstacles.create(worldWidth - 100, y, 'rock').setDepth(2);
         }
 
-        // Route 3 Transition (South)
-        this.add.tileSprite(worldWidth / 2, worldHeight - 150, 128, 100, 'path').setDepth(1);
-        this.obstacles.create(worldWidth / 2 - 80, worldHeight - 150, 'sign').setDepth(2);
-        this.add.text(worldWidth / 2 - 80, worldHeight - 180, 'Route 3', {
-            fontFamily: 'monospace', fontSize: '14px', color: '#ffffff',
-            backgroundColor: '#000000aa', padding: { x: 4, y: 2 }
-        }).setOrigin(0.5).setDepth(5);
-        const route3Zone = this.add.zone(worldWidth / 2, worldHeight - 50, 200, 40);
-        this.physics.add.existing(route3Zone, true);
-        route3Zone.setData('targetScene', 'Route3Scene');
-        this.entrances.add(route3Zone);
-
-        // Route 4 Transition (North - Placeholder)
-        const route4Zone = this.add.zone(worldWidth / 2, 50, 200, 40);
-        this.physics.add.existing(route4Zone, true);
-        route4Zone.setData('targetScene', 'AethelburgCityScene');
-        this.entrances.add(route4Zone);
-
-        // City Sign
-        this.obstacles.create(worldWidth / 2 + 80, worldHeight - 150, 'sign').setDepth(2);
-        this.add.text(worldWidth / 2 + 80, worldHeight - 180, 'Welcome to Veridia City!', {
-            fontFamily: 'monospace', fontSize: '14px', color: '#ffffff',
-            backgroundColor: '#000000aa', padding: { x: 4, y: 2 }
-        }).setOrigin(0.5).setDepth(5);
+        // Transitions
+        const aethelburgZone = this.add.zone(worldWidth / 2, worldHeight - 50, 200, 40);
+        this.physics.add.existing(aethelburgZone, true);
+        aethelburgZone.setData('targetScene', 'AethelburgCityScene');
+        this.entrances.add(aethelburgZone);
 
         // Buildings
         const addBuilding = (x: number, y: number, key: string, label: string, entranceId: string) => {
@@ -107,11 +89,9 @@ export class VeridiaCityScene extends Scene {
             this.add.text(x, y - building.height / 2 - 20, label, { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 6, y: 4 } }).setOrigin(0.5).setDepth(5);
         };
 
-        addBuilding(worldWidth / 2, 500, 'building_gym', 'Veridia City Gym', 'gym_veridia');
-        addBuilding(worldWidth / 2 - 300, 1000, 'center', 'Pokemon Center', 'center_veridia');
-        addBuilding(worldWidth / 2 + 300, 1000, 'mart', 'Poké Mart', 'mart_veridia');
-        addBuilding(worldWidth / 2 - 500, 1500, 'house_player', 'House', 'house_veridia_1');
-        addBuilding(worldWidth / 2 + 500, 1500, 'house_rival', 'House', 'house_veridia_2');
+        addBuilding(worldWidth / 2 - 500, worldHeight / 2, 'lab', 'Research Facility', 'eclipse_facility');
+        addBuilding(worldWidth / 2, worldHeight / 2 - 300, 'building_gym', 'Silitech Gym', 'gym_silitech');
+        addBuilding(worldWidth / 2 + 500, worldHeight / 2, 'center', 'Pokemon Center', 'center_silitech');
 
         // NPCs
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string) => {
@@ -120,24 +100,21 @@ export class VeridiaCityScene extends Scene {
             this.npcZones.add(npc.interactionZone);
             this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
         };
+        addNPC(worldWidth / 2 + 150, worldHeight / 2, 'npc_traveler', 'silitech_citizen_1', 'Worker');
+        addNPC(worldWidth / 2 - 150, worldHeight / 2, 'npc_youngster', 'silitech_citizen_2', 'Engineer');
+        addNPC(worldWidth / 2 - 500, worldHeight / 2 + 150, 'npc_traveler', 'silitech_citizen_3', 'Guard');
+
+        // Umbra Leader Teaser
         const storyManager = StoryManager.getInstance();
-        if (storyManager.hasFlag(StoryFlag.ANCIENT_RUINS_UMBRA_ENCOUNTER_SEEN)) {
-            addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', 'veridia_citizen_nova_1', 'Researcher'); // Re-using old dialogue keys
-            addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', 'veridia_citizen_nova_2', 'Old Timer'); // Re-using old dialogue keys
-        } else {
-            addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_1_after_gym2' : 'veridia_citizen_1', 'Trainer');
-            addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_2_after_gym2' : 'veridia_citizen_2', 'Gardener');
+        if (storyManager.hasFlag(StoryFlag.PROJECT_ECLIPSE_REVEALED) && !storyManager.hasFlag(StoryFlag.UMBRA_LEADER_TEASER_SEEN)) {
+            this.umbraCutsceneTrigger = this.add.zone(worldWidth / 2, worldHeight / 2 + 300, 200, 200);
+            this.physics.add.existing(this.umbraCutsceneTrigger, true);
         }
-        addNPC(worldWidth / 2 - 200, 700, 'npc_nurse', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_3_after_gym2' : 'veridia_citizen_3', 'Nurse');
 
         // Player Spawn
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            if (this.spawnEntrance === 'forest') {
-                spawnX = worldWidth / 2; spawnY = worldHeight - 150; // Default from Route 3
-            } else {
-                spawnX = worldWidth / 2; spawnY = worldHeight / 2; // Fallback spawn
-            }
+            spawnX = worldWidth / 2; spawnY = worldHeight - 150;
         }
         this.player = new Player(this, spawnX, spawnY);
         this.physics.add.collider(this.player, this.obstacles);
@@ -152,10 +129,7 @@ export class VeridiaCityScene extends Scene {
         this.questTracker = new QuestTracker(this);
         this.hudText = this.add.text(16, 16, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#00000099', padding: { x: 8, y: 8 }, wordWrap: { width: 250 } }).setScrollFactor(0).setDepth(100);
         this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', { fontFamily: 'monospace', fontSize: '14px', color: '#22c55e', backgroundColor: '#000000aa', padding: { x: 8, y: 4 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
-        this.interactionText = this.add.text(0, 0, 'Press E to Enter', {
-            fontFamily: 'monospace', fontSize: '12px', color: '#000000',
-            backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
-        }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
+        this.interactionText = this.add.text(0, 0, 'Press E to Enter', { fontFamily: 'monospace', fontSize: '12px', color: '#000000', backgroundColor: '#ffffff', padding: { x: 6, y: 4 } }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
@@ -166,58 +140,26 @@ export class VeridiaCityScene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        // Story Events
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM2)) {
-            StoryManager.getInstance().setActiveQuest("Challenge Gym Leader Lily");
-            EventBus.emit('quest-updated');
-        }
-
         EventBus.on('save-game-from-menu', this.manualSave, this);
         this.events.on('shutdown', () => { EventBus.off('save-game-from-menu', this.manualSave, this); });
-        this.events.on('resume', () => {
-            this.isPausedByMenu = false;
-            if (!this.activeDialogue) this.player.setMovementEnabled(true);
-        });
+        this.events.on('resume', () => { this.isPausedByMenu = false; if (!this.activeDialogue) this.player.setMovementEnabled(true); });
 
         EventBus.emit('current-scene-ready', this);
     }
 
-    private openMenu() {
-        this.isPausedByMenu = true;
+    private triggerLeaderTeaser() {
+        if (this.umbraCutsceneTrigger.active) this.umbraCutsceneTrigger.destroy();
+        StoryManager.getInstance().setFlag(StoryFlag.UMBRA_LEADER_TEASER_SEEN);
         this.player.setMovementEnabled(false);
-        this.interactionText.setVisible(false);
-        this.scene.pause();
-        this.scene.launch('MenuScene', { fromScene: this.scene.key });
+        this.cameras.main.flash(1500, 50, 50, 50);
+        this.startDialogue('umbra_leader_teaser_cutscene');
     }
 
-    private startDialogue(dialogueId: string) {
-        if (!Dialogues[dialogueId]) return;
-        this.activeDialogue = Dialogues[dialogueId];
-        this.currentDialogueIndex = 0;
-        this.player.setMovementEnabled(false);
-        this.interactionText.setVisible(false);
-        this.showCurrentDialogue();
-    }
-
-    private showCurrentDialogue() {
-        if (!this.activeDialogue) return;
-        this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait);
-    }
-
-    private progressDialogue() {
-        this.currentDialogueIndex++;
-        if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) {
-            this.endDialogue();
-        } else {
-            this.showCurrentDialogue();
-        }
-    }
-
-    private endDialogue() {
-        this.dialogueBox.hide();
-        this.activeDialogue = null;
-        this.player.setMovementEnabled(true);
-    }
+    private openMenu() { this.isPausedByMenu = true; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.scene.pause(); this.scene.launch('MenuScene', { fromScene: this.scene.key }); }
+    private startDialogue(dialogueId: string) { if (!Dialogues[dialogueId]) return; this.activeDialogue = Dialogues[dialogueId]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); }
+    private showCurrentDialogue() { if (!this.activeDialogue) return; this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); }
+    private progressDialogue() { this.currentDialogueIndex++; if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { this.endDialogue(); } else { this.showCurrentDialogue(); } }
+    private endDialogue() { this.dialogueBox.hide(); this.activeDialogue = null; this.player.setMovementEnabled(true); }
 
     update(time: number, delta: number) {
         if (this.isPausedByMenu) return;
@@ -234,7 +176,11 @@ export class VeridiaCityScene extends Scene {
         if (!this.player.canMove()) return;
 
         this.player.update(time, delta);
-        this.hudText.setText(`Location: Veridia City\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
+        this.hudText.setText(`Location: Silitech City\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
+
+        if (this.umbraCutsceneTrigger && this.umbraCutsceneTrigger.active) {
+            this.physics.overlap(this.player, this.umbraCutsceneTrigger, this.triggerLeaderTeaser, undefined, this);
+        }
 
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => {
@@ -243,7 +189,7 @@ export class VeridiaCityScene extends Scene {
         });
         if (transitionScene) {
             this.autoSave();
-            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'veridia_city' });
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'silitech' });
             return;
         }
 
@@ -266,14 +212,7 @@ export class VeridiaCityScene extends Scene {
             this.interactionText.setText(interactionMessage).setPosition(this.player.x, this.player.y - 56).setVisible(true);
             if (Input.Keyboard.JustDown(this.interactKey)) {
                 if (this.currentNPC) {
-                    const baseDialogueKey = this.currentNPC;
-                    const postGymDialogueKey = `${baseDialogueKey}_after_gym2`;
-
-                    if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM2) && (postGymDialogueKey in Dialogues)) {
-                        this.startDialogue(postGymDialogueKey);
-                    } else {
-                        this.startDialogue(baseDialogueKey);
-                    }
+                    this.startDialogue(this.currentNPC);
                 } else if (currentEntranceId) {
                     this.autoSave();
                     GameFeel.fadeToScene(this, 'InteriorScene', { entranceId: currentEntranceId, parentScene: this.scene.key }, [255, 255, 255]);

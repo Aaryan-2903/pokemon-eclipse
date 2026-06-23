@@ -43,6 +43,9 @@ export class Route3Scene extends Scene {
     private isPausedByMenu: boolean = false;
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32;
 
+    private umbraCutsceneTrigger!: Phaser.GameObjects.Zone;
+    private cutsceneNPCs: Phaser.GameObjects.Sprite[] = [];
+
     constructor() {
         super('Route3Scene');
     }
@@ -130,6 +133,19 @@ export class Route3Scene extends Scene {
         this.addItemPickup(2500, 500, 'Rare Flower'); // Side quest item
         this.addItemPickup(200, 2500, 'TM01'); // Hidden item
 
+        // Umbra Encounter #4
+        const storyManager = StoryManager.getInstance();
+        if (storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) && !storyManager.hasFlag(StoryFlag.UMBRA_ENCOUNTER_4_SEEN)) {
+            this.umbraCutsceneTrigger = this.add.zone(2000, 3500, 200, 200);
+            this.physics.add.existing(this.umbraCutsceneTrigger, true);
+        }
+
+        // Entrance to Ancient Ruins
+        const ruinsEntrance = this.add.zone(2800, 1000, 100, 100);
+        this.physics.add.existing(ruinsEntrance, true);
+        ruinsEntrance.setData('targetScene', 'AncientRuinsScene');
+        this.entrances.add(ruinsEntrance);
+
         const lunarCityZone = this.add.zone(1500, worldHeight - 50, 200, 40);
         this.physics.add.existing(lunarCityZone, true);
         lunarCityZone.setData('targetScene', 'LunarCityScene');
@@ -189,7 +205,27 @@ export class Route3Scene extends Scene {
     private startDialogue(dialogueId: string) { if (!Dialogues[dialogueId]) return; this.activeDialogueKey = dialogueId; this.activeDialogue = Dialogues[dialogueId]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); }
     private showCurrentDialogue() { if (!this.activeDialogue) return; this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); }
     private progressDialogue() { this.currentDialogueIndex++; if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { this.endDialogue(); } else { this.showCurrentDialogue(); } }
-    private endDialogue() { this.dialogueBox.hide(); this.activeDialogueKey = null; this.activeDialogue = null; this.player.setMovementEnabled(true); }
+    private endDialogue() {
+        const endedDialogueKey = this.activeDialogueKey;
+        this.dialogueBox.hide();
+        this.activeDialogueKey = null;
+        this.activeDialogue = null;
+
+        if (endedDialogueKey === 'umbra_encounter_4_cutscene') {
+            this.tweens.add({
+                targets: this.cutsceneNPCs, alpha: 0, duration: 500,
+                onComplete: () => {
+                    this.cutsceneNPCs.forEach(npc => npc.destroy());
+                    this.cutsceneNPCs = [];
+                    this.cameras.main.zoomTo(1.5, 500);
+                    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+                    this.player.setMovementEnabled(true);
+                }
+            });
+        } else {
+            this.player.setMovementEnabled(true);
+        }
+    }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
         PlayerState.pokedex.seen.add(enemyMon.name);
@@ -235,6 +271,25 @@ export class Route3Scene extends Scene {
         };
     }
 
+    private triggerUmbraEncounter4() {
+        if (this.umbraCutsceneTrigger.active) this.umbraCutsceneTrigger.destroy();
+        
+        StoryManager.getInstance().setFlag(StoryFlag.UMBRA_ENCOUNTER_4_SEEN);
+        this.player.setMovementEnabled(false);
+
+        this.cameras.main.pan(2000, 3500, 1000, 'Power2');
+        this.cameras.main.zoomTo(2, 1000);
+
+        const grunt = this.add.sprite(1950, 3550, 'npc_kai').setAlpha(0);
+        const scientist = this.add.sprite(2050, 3550, 'npc_traveler').setAlpha(0);
+        this.cutsceneNPCs = [grunt, scientist];
+
+        this.tweens.add({
+            targets: this.cutsceneNPCs, alpha: 1, duration: 500, delay: 800,
+            onComplete: () => this.startDialogue('umbra_encounter_4_cutscene')
+        });
+    }
+
     update(time: number, delta: number) {
         if (this.isPausedByMenu) return;
         if (this.activeDialogue) { if (Input.Keyboard.JustDown(this.interactKey) || Input.Keyboard.JustDown(this.spaceKey) || Input.Keyboard.JustDown(this.enterKey)) this.progressDialogue(); return; }
@@ -245,6 +300,10 @@ export class Route3Scene extends Scene {
 
         this.player.update(time, delta);
         this.hudText.setText(`Location: Route 3\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
+
+        if (this.umbraCutsceneTrigger && this.umbraCutsceneTrigger.active) {
+            this.physics.overlap(this.player, this.umbraCutsceneTrigger, this.triggerUmbraEncounter4, undefined, this);
+        }
 
         let transitionScene: string | null = null;
         let currentEntranceId: string | null = null;
@@ -259,7 +318,7 @@ export class Route3Scene extends Scene {
         this.physics.overlap(this.player, this.itemPickups, (_player, itemPickupObj) => {
             const itemPickup = itemPickupObj as Phaser.GameObjects.GameObject;
             const itemId = itemPickup.getData('itemId') as string;
-            if (itemId) { PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1; this.startDialogue(`found_${itemId.toLowerCase()}`); itemPickup.destroy(); }
+            if (itemId) { PlayerState.inventory[itemId] = (PlayerState.inventory[itemId] || 0) + 1; this.startDialogue(`found_${itemId.toLowerCase().replace(/ /g, '_').replace(/#/g, '')}`); itemPickup.destroy(); }
         });
 
         this.currentNPC = null;

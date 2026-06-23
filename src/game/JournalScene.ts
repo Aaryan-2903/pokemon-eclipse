@@ -6,6 +6,10 @@ import { Dialogues } from './dialogues';
 const LORE_ITEM_IDS = [
     'Observatory Journal Page #1',
     'Observatory Journal Page #2',
+    'Observatory Journal Page #3',
+    'Observatory Journal Page #4',
+    'Observatory Journal Page #5',
+    'Research Log #1',
     'Crumbled Note',
 ];
 
