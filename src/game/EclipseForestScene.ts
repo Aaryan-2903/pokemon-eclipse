@@ -7,18 +7,18 @@ import { Dialogues, DialogueNode } from './dialogues';
 import { QuestTracker } from './QuestTracker';
 import { StoryManager, StoryFlag } from './StoryManager';
 import { EncounterManager } from './EncounterManager';
+import { PokemonInstance, generatePlayerPokemon } from './PokemonData';
 import { PlayerState } from './PlayerData';
 import { getTrainer, Trainer } from './TrainerData';
 import { SaveManager } from './SaveManager';
-import { PokemonInstance } from './PokemonData';
 import { GameFeel } from './GameFeel';
 
 export class EclipseForestScene extends Scene {
     private player!: Player;
     private obstacles!: Phaser.Physics.Arcade.StaticGroup;
     private entrances!: Phaser.Physics.Arcade.StaticGroup;
-    private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private npcZones!: Phaser.Physics.Arcade.StaticGroup;
+    private itemPickups!: Phaser.Physics.Arcade.StaticGroup;
     private hudText!: Phaser.GameObjects.Text;
     private autoSaveIndicator!: Phaser.GameObjects.Text;
     private tallGrassZones!: Phaser.Physics.Arcade.StaticGroup;
@@ -43,6 +43,9 @@ export class EclipseForestScene extends Scene {
     private isPausedByMenu: boolean = false;
     private readonly STEP_DISTANCE_FOR_ENCOUNTER_CHECK = 32;
 
+    private umbraCutsceneTrigger!: Phaser.GameObjects.Zone;
+    private cutsceneNPCs: Phaser.GameObjects.Sprite[] = [];
+
     constructor() {
         super('EclipseForestScene');
     }
@@ -55,108 +58,119 @@ export class EclipseForestScene extends Scene {
 
     create() {
         GameFeel.startMusic(this, 'route');
-        const worldWidth = 4000;
-        const worldHeight = 4000;
+
+        if (PlayerState.pokemonTeam.length === 0) {
+            PlayerState.pokemonTeam.push(generatePlayerPokemon('Charmander', 5));
+        }
+
+        const worldWidth = 8000;
+        const worldHeight = 8000;
         this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
-        this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
+        this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setTint(0x888888).setDepth(0);
 
-        this.obstacles = this.physics.add.staticGroup();
-        this.entrances = this.physics.add.staticGroup();
-        this.itemPickups = this.physics.add.staticGroup();
-        this.npcZones = this.physics.add.staticGroup();
+        // --- Path Layout ---
+        this.add.tileSprite(4000, 7000, 256, 2000, 'path').setDepth(1); // South entrance path
+        this.add.tileSprite(4000, 5500, 2000, 256, 'path').setDepth(1); // Fork
+        this.add.tileSprite(2500, 5500, 256, 2000, 'path').setDepth(1); // West path
+        this.add.tileSprite(3750, 4500, 2500, 256, 'path').setDepth(1); // West-East connector
+        this.add.tileSprite(5000, 3500, 256, 2000, 'path').setDepth(1); // East path
+        this.add.tileSprite(4000, 2500, 2000, 256, 'path').setDepth(1); // Central connector
+        this.add.tileSprite(3000, 1500, 256, 2000, 'path').setDepth(1); // Path to NW exit
+        this.add.tileSprite(6000, 1500, 256, 2000, 'path').setDepth(1); // Path to NE exit
+
+        // --- Tall Grass Patches ---
         this.tallGrassZones = this.physics.add.staticGroup();
-
-        // --- Forest Layout ---
-        // Outer walls
-        for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 1900 || x > 2100) this.obstacles.create(x, 100, 'tree').setDepth(2); // North
-            if (x < 1900 || x > 2100) this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South
-        }
-        for (let y = 100; y <= worldHeight - 100; y += 64) {
-            this.obstacles.create(100, y, 'tree').setDepth(2); // West
-            this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East
-        }
-
-        // Internal maze-like trees
-        for (let i = 0; i < 150; i++) {
-            const x = Phaser.Math.Between(100, worldWidth - 100);
-            const y = Phaser.Math.Between(100, worldHeight - 100);
-            // Avoid blocking entry/exit paths
-            if ((x > 1800 && x < 2200 && y > 3500) || (x > 1800 && x < 2200 && y < 500)) continue;
-            this.obstacles.create(x, y, 'tree').setDepth(Phaser.Math.Between(2, 4));
-        }
-
-        // --- Tall Grass ---
         const addTallGrass = (x: number, y: number, width: number, height: number) => {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(1000, 3000, 1024, 512);
-        addTallGrass(3000, 3000, 1024, 512);
-        addTallGrass(2000, 1000, 1500, 768); // Central large patch
+        addTallGrass(2500, 6500, 1024, 1024); // SW field
+        addTallGrass(5500, 5000, 1500, 1024); // East field
+        addTallGrass(1500, 1500, 1024, 1024); // NW hidden clearing (rare pokemon)
+        addTallGrass(4000, 3500, 1024, 512); // Central patch
 
-        // --- NPCs and Trainers ---
+        this.obstacles = this.physics.add.staticGroup();
+        this.entrances = this.physics.add.staticGroup();
+        this.npcZones = this.physics.add.staticGroup();
+        this.itemPickups = this.physics.add.staticGroup();
+
+        // --- Scenery and Boundaries ---
+        const addScenery = (count: number, area: Phaser.Geom.Rectangle) => {
+            for (let i = 0; i < count; i++) {
+                const x = Phaser.Math.Between(area.x, area.x + area.width);
+                const y = Phaser.Math.Between(area.y, area.y + area.height);
+                const isTree = Math.random() > 0.1;
+                this.obstacles.create(x, y, isTree ? 'tree' : 'rock').setDepth(Phaser.Math.Between(2, 12)).refreshBody();
+            }
+        };
+        // Outer boundaries
+        addScenery(400, new Phaser.Geom.Rectangle(0, 0, worldWidth, 200));
+        addScenery(400, new Phaser.Geom.Rectangle(0, worldHeight - 200, worldWidth, 200));
+        addScenery(400, new Phaser.Geom.Rectangle(0, 0, 200, worldHeight));
+        addScenery(400, new Phaser.Geom.Rectangle(worldWidth - 200, 0, 200, worldHeight));
+        // Inner dense areas
+        addScenery(200, new Phaser.Geom.Rectangle(0, 2000, 2000, 4000));
+        addScenery(200, new Phaser.Geom.Rectangle(6000, 2000, 2000, 4000));
+        addScenery(100, new Phaser.Geom.Rectangle(4500, 6000, 3000, 1500));
+
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
             const npc = new NPC(this, x, y, key, dialogueId, trainerId);
             this.obstacles.add(npc);
             this.npcZones.add(npc.interactionZone);
             this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
+            return npc;
         };
-        addNPC(1000, 3500, 'npc_bugcatcher', 'forest_bug_catcher_dave', 'Bug Catcher', 'forest_bug_catcher_dave');
-        addNPC(3000, 1500, 'npc_traveler', 'forest_hiker_barry', 'Hiker', 'forest_hiker_barry');
-        addNPC(500, 500, 'npc_youngster', 'forest_lost_child', 'Lost Child');
-        addNPC(3500, 3500, 'npc_traveler', 'forest_explorer', 'Explorer');
 
-        // --- Items ---
-        this.addItemPickup(3500, 500, 'Pokeball');
-        this.addItemPickup(500, 2000, 'Potion');
-        this.addItemPickup(2000, 2000, 'Revive'); // In secret clearing
+        // --- NPCs, Trainers, and Items ---
+        addNPC(2500, 5500, 'npc_traveler', 'forest_explorer', 'Explorer'); // Abandoned camp
+        addNPC(4500, 6000, 'npc_youngster', 'forest_lost_child', 'Lost Child');
+        addNPC(5500, 4800, 'npc_bugcatcher', 'forest_bug_catcher_dave', 'Bug Catcher Dave', 'forest_bug_catcher_dave'); // Optional trainer
+        addNPC(1800, 1800, 'npc_traveler', 'forest_hiker_barry', 'Hiker Barry', 'forest_hiker_barry'); // Optional trainer
 
-        // --- Signs and Transitions ---
-        const addSign = (x: number, y: number, dialogueId: string) => {
-            const sign = new NPC(this, x, y, 'sign', dialogueId);
-            this.obstacles.add(sign);
-            this.npcZones.add(sign.interactionZone);
-        };
-        addSign(2200, 3800, 'forest_entrance_sign');
+        // Umbra Equipment
+        const equipment = addNPC(4200, 4200, 'rock', 'forest_umbra_equipment', 'Strange Device');
+        equipment.setTint(0x9333ea); // Purple tint
 
-        const route2Zone = this.add.zone(2000, worldHeight - 50, 200, 40);
+        this.addItemPickup(6500, 6500, 'Super Potion'); // Dead end reward
+        this.addItemPickup(1000, 1000, 'Revive'); // Hidden clearing reward
+
+        // --- Transitions ---
+        const route2Zone = this.add.zone(4000, worldHeight - 50, 400, 40);
         this.physics.add.existing(route2Zone, true);
         route2Zone.setData('targetScene', 'Route2Scene');
         this.entrances.add(route2Zone);
 
-        const route3Zone = this.add.zone(2000, 50, 200, 40); // North exit
+        const veridiaZone = this.add.zone(1000, 50, 400, 40);
+        this.physics.add.existing(veridiaZone, true);
+        veridiaZone.setData('targetScene', 'VeridiaCityScene');
+        this.entrances.add(veridiaZone);
+
+        const route3Zone = this.add.zone(7000, 50, 400, 40);
         this.physics.add.existing(route3Zone, true);
         route3Zone.setData('targetScene', 'Route3Scene');
-        // This exit will be conditionally active based on story progression
-        route3Zone.setData('blocked', !StoryManager.getInstance().hasFlag(StoryFlag.UNLOCKED_ROUTE3));
         this.entrances.add(route3Zone);
 
-        // --- Player ---
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = 2000; spawnY = worldHeight - 150; // Default from Route 2
+            spawnX = 4000; spawnY = worldHeight - 150; // Default from Route 2
+            if (this.spawnEntrance === 'route3') { spawnX = 7000; spawnY = 150; }
+            if (this.spawnEntrance === 'veridia_city') { spawnX = 1000; spawnY = 150; }
         }
         this.player = new Player(this, spawnX, spawnY);
         this.playerLastPosForEncounter = new Phaser.Math.Vector2(this.player.x, this.player.y);
         this.physics.add.collider(this.player, this.obstacles);
 
-        // --- Camera ---
         this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
         this.cameras.main.setZoom(1.5);
 
-        // --- Systems and UI ---
         this.encounterManager = new EncounterManager(this);
         this.dialogueBox = new DialogueBox(this);
         this.questTracker = new QuestTracker(this);
         this.hudText = this.add.text(16, 16, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#00000099', padding: { x: 8, y: 8 }, wordWrap: { width: 250 } }).setScrollFactor(0).setDepth(100);
         this.autoSaveIndicator = this.add.text(this.cameras.main.displayWidth / 2, 16, '', { fontFamily: 'monospace', fontSize: '14px', color: '#22c55e', backgroundColor: '#000000aa', padding: { x: 8, y: 4 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200).setAlpha(0);
-        this.interactionText = this.add.text(0, 0, 'Press E to Talk', {
-            fontFamily: 'monospace', fontSize: '12px', color: '#000000',
-            backgroundColor: '#ffffff', padding: { x: 6, y: 4 }
-        }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
+        this.interactionText = this.add.text(0, 0, 'Press E to Talk', { fontFamily: 'monospace', fontSize: '12px', color: '#000000', backgroundColor: '#ffffff', padding: { x: 6, y: 4 } }).setOrigin(0.5).setDepth(100).setVisible(false).setScrollFactor(1);
 
         if (this.input.keyboard) {
             this.interactKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.E);
@@ -167,18 +181,21 @@ export class EclipseForestScene extends Scene {
             this.badgeKey = this.input.keyboard.addKey(Input.Keyboard.KeyCodes.B);
         }
 
-        // --- Story Events ---
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST)) {
-            addNPC(2000, 500, 'npc_kai', 'forest_umbra_intro', 'Team Umbra Grunt', 'forest_umbra_grunt_1');
+        const storyManager = StoryManager.getInstance();
+        if (!storyManager.hasFlag(StoryFlag.ENTERED_ECLIPSE_FOREST)) {
+            storyManager.setFlag(StoryFlag.ENTERED_ECLIPSE_FOREST);
+            storyManager.setActiveQuest("Find a way through the forest");
+            EventBus.emit('quest-updated');
+            this.startDialogue('forest_entry');
         }
 
-        if (!StoryManager.getInstance().hasFlag(StoryFlag.ENTERED_ECLIPSE_FOREST)) {
-            this.time.delayedCall(500, () => {
-                this.startDialogue('forest_entry');
-                StoryManager.getInstance().setFlag(StoryFlag.ENTERED_ECLIPSE_FOREST);
-                StoryManager.getInstance().setActiveQuest("Find the source of the disturbance");
-                EventBus.emit('quest-updated');
-            });
+        if (!storyManager.hasFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST)) {
+            if (storyManager.hasFlag(StoryFlag.FOREST_UMBRA_CUTSCENE_SEEN) && !PlayerState.defeatedTrainers.has('forest_umbra_grunt_1')) {
+                addNPC(4000, 3950, 'npc_kai', 'forest_umbra_grunt_1_prebattle', 'Team Umbra Grunt', 'forest_umbra_grunt_1');
+            } else if (!storyManager.hasFlag(StoryFlag.FOREST_UMBRA_CUTSCENE_SEEN)) {
+                this.umbraCutsceneTrigger = this.add.zone(4000, 4000, 400, 400);
+                this.physics.add.existing(this.umbraCutsceneTrigger, true);
+            }
         }
 
         EventBus.on('save-game-from-menu', this.manualSave, this);
@@ -191,63 +208,71 @@ export class EclipseForestScene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
-    private addItemPickup(x: number, y: number, itemId: string) {
-        const itemSprite = this.itemPickups.create(x, y, 'pokeball_item').setDepth(1);
-        itemSprite.setData('itemId', itemId);
-        itemSprite.refreshBody();
-    }
-
-    private openMenu() {
-        this.isPausedByMenu = true;
+    private triggerUmbraForestCutscene() {
+        if (this.umbraCutsceneTrigger.active) this.umbraCutsceneTrigger.destroy();
+        
+        StoryManager.getInstance().setFlag(StoryFlag.FOREST_UMBRA_CUTSCENE_SEEN);
         this.player.setMovementEnabled(false);
-        this.interactionText.setVisible(false);
-        this.scene.pause();
-        this.scene.launch('MenuScene', { fromScene: this.scene.key });
-    }
-    private startDialogue(dialogueId: string) {
-        if (!Dialogues[dialogueId]) return;
-        this.activeDialogueKey = dialogueId;
-        this.activeDialogue = Dialogues[dialogueId];
-        this.currentDialogueIndex = 0;
-        this.player.setMovementEnabled(false);
-        this.showCurrentDialogue();
+        GameFeel.playSfx('evolve');
+        this.cameras.main.shake(250, 0.005);
+
+        this.cameras.main.pan(4000, 4000, 1000, 'Power2');
+        this.cameras.main.zoomTo(2, 1000);
+
+        const grunt = this.add.sprite(3950, 4050, 'npc_kai').setAlpha(0);
+        const scientist = this.add.sprite(4050, 4050, 'npc_traveler').setAlpha(0);
+        this.cutsceneNPCs = [grunt, scientist];
+
+        this.tweens.add({
+            targets: this.cutsceneNPCs,
+            alpha: 1,
+            duration: 500,
+            delay: 800,
+            onComplete: () => {
+                this.startDialogue('forest_umbra_cutscene');
+                const originalEndDialogue = this.endDialogue.bind(this);
+                this.endDialogue = () => {
+                    this.endDialogue = originalEndDialogue;
+                    const trainer = getTrainer('forest_umbra_grunt_1');
+                    if (trainer) this.startTrainerBattle(trainer);
+                };
+            }
+        });
     }
 
-    private showCurrentDialogue() {
-        if (!this.activeDialogue) return;
-        this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait);
-    }
-
-    private progressDialogue() {
-        this.currentDialogueIndex++;
-        if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) {
-            this.endDialogue();
-        } else {
-            this.showCurrentDialogue();
-        }
-    }
-
+    private openMenu() { this.isPausedByMenu = true; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.scene.pause(); this.scene.launch('MenuScene', { fromScene: this.scene.key }); }
+    private startDialogue(dialogueId: string) { if (!Dialogues[dialogueId]) return; this.activeDialogueKey = dialogueId; this.activeDialogue = Dialogues[dialogueId]; this.currentDialogueIndex = 0; this.player.setMovementEnabled(false); this.interactionText.setVisible(false); this.showCurrentDialogue(); }
+    private showCurrentDialogue() { if (!this.activeDialogue) return; this.dialogueBox.show(this.activeDialogue[this.currentDialogueIndex].speaker, this.activeDialogue[this.currentDialogueIndex].text, this.activeDialogue[this.currentDialogueIndex].portrait); }
+    private progressDialogue() { this.currentDialogueIndex++; if (!this.activeDialogue || this.currentDialogueIndex >= this.activeDialogue.length) { this.endDialogue(); } else { this.showCurrentDialogue(); } }
+    
     private endDialogue() {
+        const endedDialogueKey = this.activeDialogueKey;
         this.dialogueBox.hide();
-        const previousDialogueKey = this.activeDialogueKey;
         this.activeDialogueKey = null;
         this.activeDialogue = null;
 
-        if (previousDialogueKey === 'forest_umbra_grunt_1_defeated') {
-            // After defeating the grunt, unlock Route 3
-            const gruntNPC = this.obstacles.getChildren().find(obj => (obj as NPC).trainerId === 'forest_umbra_grunt_1');
-            if (gruntNPC) gruntNPC.destroy();
-            const gruntZone = this.npcZones.getChildren().find(obj => (obj as Phaser.GameObjects.Zone).getData('trainerId') === 'forest_umbra_grunt_1');
-            if (gruntZone) gruntZone.destroy();
-            StoryManager.getInstance().setFlag(StoryFlag.UNLOCKED_ROUTE3);
-            StoryManager.getInstance().setActiveQuest("Travel to Veridia City via Route 3");
-            EventBus.emit('quest-updated');
-            // Re-enable the exit zone to Route 3
-            const route3Exit = this.entrances.getChildren().find(zone => (zone as Phaser.GameObjects.Zone).getData('targetScene') === 'Route3Scene');
-            if (route3Exit) route3Exit.setData('blocked', false);
-        }
+        if (endedDialogueKey === 'forest_umbra_grunt_1_defeated') {
+            StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST);
+            this.tweens.add({
+                targets: this.cutsceneNPCs,
+                alpha: 0,
+                duration: 500,
+                onComplete: () => {
+                    this.cutsceneNPCs.forEach(npc => npc.destroy());
+                    this.cutsceneNPCs = [];
+                    this.cameras.main.zoomTo(1.5, 500);
+                    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-        this.player.setMovementEnabled(true);
+                    // Give reward and show message
+                    PlayerState.inventory['Potion'] = (PlayerState.inventory['Potion'] || 0) + 1;
+                    this.startDialogue('found_potion');
+                }
+            });
+        } else if (endedDialogueKey && endedDialogueKey.startsWith('found_')) {
+            this.player.setMovementEnabled(true);
+        } else {
+            this.player.setMovementEnabled(true);
+        }
     }
 
     private triggerEncounter(enemyMon: PokemonInstance) {
@@ -260,7 +285,6 @@ export class EclipseForestScene extends Scene {
             this.scene.get('BattleScene').events.once('battle-ended', (result: 'win' | 'loss' | 'run') => {
                 this.scene.stop('BattleScene');
                 if (result === 'loss') {
-                    PlayerState.pokemonTeam.forEach(p => p.currentHp = p.maxHp);
                     this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                 } else {
                     if (result === 'win') this.autoSave();
@@ -276,12 +300,11 @@ export class EclipseForestScene extends Scene {
         trainer.team.forEach(p => PlayerState.pokedex.seen.add(p.name));
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
-        this.activeDialogue = [{ speaker: trainer.name, text: trainer.preBattleDialogue, portrait: `portrait_${trainer.spriteKey.replace('npc_', '')}` }];
-        this.currentDialogueIndex = 0;
-        this.showCurrentDialogue();
-        const originalProgress = this.progressDialogue.bind(this);
-        this.progressDialogue = () => {
-            this.progressDialogue = originalProgress;
+        this.startDialogue(trainer.id === 'forest_umbra_grunt_1' ? 'forest_umbra_grunt_1_prebattle' : trainer.preBattleDialogue);
+        
+        const originalEndDialogue = this.endDialogue.bind(this);
+        this.endDialogue = () => {
+            this.endDialogue = originalEndDialogue;
             this.dialogueBox.hide();
             this.activeDialogue = null;
             this.cameras.main.flash(300, 0, 0, 0);
@@ -292,17 +315,15 @@ export class EclipseForestScene extends Scene {
                     this.scene.stop('BattleScene');
                     this.cameras.main.fadeIn(250, 0, 0, 0);
                     this.scene.resume();
+                    
                     if (result === 'win') {
                         PlayerState.defeatedTrainers.add(trainer.id);
                         PlayerState.money += trainer.rewardMoney;
                         this.autoSave();
-                        if (trainer.id === 'forest_umbra_grunt_1') {
-                            StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_UMBRA_IN_FOREST);
-                            StoryManager.getInstance().setActiveQuest("Find a way out of the forest");
-                            EventBus.emit('quest-updated');
-                        }
                         this.startDialogue(`${trainer.id}_defeated`);
                     } else if (result === 'loss') {
+                        this.cutsceneNPCs.forEach(npc => npc.destroy());
+                        this.cutsceneNPCs = [];
                         this.scene.start('InteriorScene', { entranceId: 'center', parentScene: 'OverworldScene' });
                     }
                 });
@@ -327,16 +348,15 @@ export class EclipseForestScene extends Scene {
         this.player.update(time, delta);
         this.hudText.setText(`Location: Eclipse Forest\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
 
+        if (this.umbraCutsceneTrigger && this.umbraCutsceneTrigger.active) {
+            this.physics.overlap(this.player, this.umbraCutsceneTrigger, this.triggerUmbraForestCutscene, undefined, this);
+        }
+
         let transitionScene: string | null = null;
         this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
         if (transitionScene) {
-            const entranceZone = this.entrances.getChildren().find(zone => (zone as Phaser.GameObjects.GameObject).getData('targetScene') === transitionScene);
-            if (entranceZone && entranceZone.getData('blocked')) {
-                this.startDialogue('forest_umbra_intro'); // Grunt is blocking
-            } else {
-                this.autoSave();
-                GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'forest' }); // Let the next scene know we came from the forest
-            }
+            this.autoSave();
+            GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'forest' });
             return;
         }
 
@@ -385,6 +405,12 @@ export class EclipseForestScene extends Scene {
         } else {
             this.playerLastPosForEncounter.set(this.player.x, this.player.y);
         }
+    }
+
+    private addItemPickup(x: number, y: number, itemId: string) {
+        const itemSprite = this.itemPickups.create(x, y, 'pokeball_item').setDepth(1);
+        itemSprite.setData('itemId', itemId);
+        itemSprite.refreshBody();
     }
 
     private manualSave() { SaveManager.save(this, this.player.x, this.player.y); }

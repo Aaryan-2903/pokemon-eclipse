@@ -237,13 +237,27 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'forest_explorer': [
         { speaker: 'Explorer', text: "This forest is a maze! I heard a rumor of a hidden clearing where rare Pokémon gather." }
     ],
+    'forest_umbra_cutscene': [
+        { speaker: 'Scientist', text: "The Eclipse Shard is responding.", portrait: 'portrait_traveler' },
+        { speaker: 'Team Umbra Grunt', text: "Our leader will be pleased.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Scientist', text: "We are close to unlocking its power.", portrait: 'portrait_traveler' },
+        { speaker: 'Scientist', text: "Wait... someone's here!", portrait: 'portrait_traveler' },
+    ],
+    'forest_umbra_grunt_1_prebattle': [
+        { speaker: 'Team Umbra Grunt', text: "You shouldn't be here.", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'Team Umbra Grunt', text: "I'll make sure you forget what you saw!", portrait: 'portrait_umbra_grunt' }
+    ],
     'forest_umbra_intro': [
         { speaker: 'Team Umbra Grunt', text: "You again! Meddling kids have no place here!", portrait: 'portrait_umbra_grunt' },
         { speaker: 'Team Umbra Grunt', text: "We're searching for Eclipse Shards, and you won't interfere!", portrait: 'portrait_umbra_grunt' }
     ],
     'forest_umbra_grunt_1_defeated': [
         { speaker: 'Team Umbra Grunt', text: "Argh! How are you so strong?!", portrait: 'portrait_umbra_grunt' },
-        { speaker: 'Team Umbra Grunt', text: "This won't stop us. The power of the Eclipse Shards will be ours!", portrait: 'portrait_umbra_grunt' }
+        { speaker: 'Team Umbra Grunt', text: "This won't stop us! Retreat!", portrait: 'portrait_umbra_grunt' },
+        { speaker: 'System', text: 'The Scientist vanished in the confusion. The Grunt dropped something as they fled...' }
+    ],
+    'forest_umbra_equipment': [
+        { speaker: 'System', text: "It's a strange device, humming with a faint energy. It seems to be of Team Umbra origin." }
     ],
     'route3_entry': [
         { speaker: 'System', text: "You've entered Route 3. The path ahead is clear." }

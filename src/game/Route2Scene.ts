@@ -75,17 +75,19 @@ export class Route2Scene extends Scene {
         this.add.tileSprite(worldWidth / 2, worldHeight / 2, worldWidth, worldHeight, 'grass').setDepth(0);
 
         // --- Path Layout ---
-        this.add.tileSprite(3000, 5500, 256, 1000, 'path').setDepth(1); // South entrance path
-        this.add.tileSprite(3000, 4750, 1500, 256, 'path').setDepth(1); // Fork
+        // Path from Lunar City (South)
+        this.add.tileSprite(3000, 5500, 256, 1000, 'path').setDepth(1); 
+        // The Great Fork
+        this.add.tileSprite(3000, 4800, 1500, 256, 'path').setDepth(1); 
         // East Path (Main)
-        this.add.tileSprite(3750, 3500, 256, 2500, 'path').setDepth(1);
-        this.add.tileSprite(3000, 2250, 1500, 256, 'path').setDepth(1);
+        this.add.tileSprite(3750, 3800, 256, 2000, 'path').setDepth(1);
         // West Path (Winding)
-        this.add.tileSprite(2250, 4000, 256, 1500, 'path').setDepth(1);
-        this.add.tileSprite(1500, 3250, 1500, 256, 'path').setDepth(1);
-        this.add.tileSprite(1500, 2250, 256, 2000, 'path').setDepth(1);
-        // North Path to Exit
-        this.add.tileSprite(3000, 1150, 256, 2200, 'path').setDepth(1);
+        this.add.tileSprite(2250, 4300, 256, 1000, 'path').setDepth(1);
+        this.add.tileSprite(1500, 3800, 1500, 256, 'path').setDepth(1);
+        this.add.tileSprite(750, 2800, 256, 2000, 'path').setDepth(1);
+        this.add.tileSprite(2250, 1800, 3000, 256, 'path').setDepth(1);
+        // Path to Eclipse Forest (North)
+        this.add.tileSprite(3000, 950, 256, 1700, 'path').setDepth(1);
 
         // --- Tall Grass Patches ---
         this.tallGrassZones = this.physics.add.staticGroup();
@@ -93,10 +95,15 @@ export class Route2Scene extends Scene {
             this.add.tileSprite(x, y, width, height, 'tall_grass').setDepth(0.5);
             this.tallGrassZones.create(x, y).setSize(width, height).setVisible(false);
         };
-        addTallGrass(4500, 4000, 1024, 1500); // Large eastern field
-        addTallGrass(1500, 4500, 1024, 1024); // Large western field
-        addTallGrass(2500, 1500, 2048, 512);  // Central northern field
-        addTallGrass(500, 1000, 512, 1024);   // Hidden northwest patch
+        // East path fields
+        addTallGrass(4500, 3800, 1024, 1500); 
+        // West path fields
+        addTallGrass(1500, 4500, 1024, 1024); 
+        addTallGrass(1500, 2500, 1024, 1024);
+        // North field
+        addTallGrass(4000, 1000, 2048, 512);  
+        // Hidden northwest patch
+        addTallGrass(500, 500, 512, 512);   
 
         this.obstacles = this.physics.add.staticGroup();
         this.entrances = this.physics.add.staticGroup();
@@ -104,18 +111,24 @@ export class Route2Scene extends Scene {
         this.itemPickups = this.physics.add.staticGroup();
 
         // --- Scenery and Boundaries ---
-        for (let x = 0; x <= worldWidth; x += 64) {
-            if (x < 2900 || x > 3100) {
-                this.obstacles.create(x, 100, 'tree').setDepth(2); // North Edge
+        // Add more trees and rocks for better scenery and path definition
+        const addScenery = (count: number, area: Phaser.Geom.Rectangle) => {
+            for (let i = 0; i < count; i++) {
+                const x = Phaser.Math.Between(area.x, area.x + area.width);
+                const y = Phaser.Math.Between(area.y, area.y + area.height);
+                const isTree = Math.random() > 0.25;
+                this.obstacles.create(x, y, isTree ? 'tree' : 'rock').setDepth(Phaser.Math.Between(2, 12)).refreshBody();
             }
-            if (x < 2900 || x > 3100) {
-                this.obstacles.create(x, worldHeight - 100, 'tree').setDepth(2); // South Edge
-            }
-        }
-        for (let y = 0; y <= worldHeight; y += 64) {
-            this.obstacles.create(100, y, 'tree').setDepth(2); // West Edge
-            this.obstacles.create(worldWidth - 100, y, 'tree').setDepth(2); // East Edge
-        }
+        };
+        // Outer boundaries
+        addScenery(200, new Phaser.Geom.Rectangle(0, 0, worldWidth, 100));
+        addScenery(200, new Phaser.Geom.Rectangle(0, worldHeight - 100, worldWidth, 100));
+        addScenery(200, new Phaser.Geom.Rectangle(0, 0, 100, worldHeight));
+        addScenery(200, new Phaser.Geom.Rectangle(worldWidth - 100, 0, 100, worldHeight));
+        // Path dividers
+        addScenery(50, new Phaser.Geom.Rectangle(2500, 2000, 1000, 2500)); // Central divider
+        addScenery(30, new Phaser.Geom.Rectangle(0, 1800, 700, 2000)); // West path shapers
+        addScenery(30, new Phaser.Geom.Rectangle(4000, 2000, 2000, 1500)); // East path shapers
 
         // --- Signs ---
         this.obstacles.create(3200, 5800, 'sign').setDepth(2);
@@ -129,7 +142,7 @@ export class Route2Scene extends Scene {
             this.obstacles.add(sign);
             this.npcZones.add(sign.interactionZone);
         };
-        addSign(3300, 4850, 'route2_fork_sign');
+        addSign(3300, 4900, 'route2_fork_sign');
 
         // --- NPCs and Trainers ---
         const addNPC = (x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) => {
@@ -143,26 +156,26 @@ export class Route2Scene extends Scene {
         };
 
         // Add Trainers
-        addNPC(3750, 4500, 'npc_youngster', 'route2_youngster_ben', 'Youngster Ben', 'route2_youngster_ben'); // East path
-        addNPC(2250, 3500, 'npc_bugcatcher', 'route2_bugcatcher_sam', 'Bug Catcher Sam', 'route2_bugcatcher_sam'); // West path
-        addNPC(1500, 2800, 'npc_traveler', 'route2_lass_amy', 'Lass Amy', 'route2_lass_amy'); // West path
+        addNPC(3750, 4200, 'npc_youngster', 'route2_youngster_ben', 'Youngster Ben', 'route2_youngster_ben'); // East path
+        addNPC(2250, 4000, 'npc_bugcatcher', 'route2_bugcatcher_sam', 'Bug Catcher Sam', 'route2_bugcatcher_sam'); // West path
+        addNPC(750, 3200, 'npc_traveler', 'route2_lass_amy', 'Lass Amy', 'route2_lass_amy'); // West path
         // Optional trainers
-        addNPC(500, 500, 'npc_traveler', 'route2_hiker_liam', 'Hiker Liam', 'route2_hiker_liam'); // Hidden northwest
-        addNPC(1000, 4000, 'npc_youngster', 'route2_camper_shane', 'Camper Shane', 'route2_camper_shane'); // West path side area
+        addNPC(400, 400, 'npc_traveler', 'route2_hiker_liam', 'Hiker Liam', 'route2_hiker_liam'); // Hidden northwest
+        addNPC(1800, 5000, 'npc_youngster', 'route2_camper_shane', 'Camper Shane', 'route2_camper_shane'); // West path side area
 
         // Add regular NPCs
-        addNPC(4000, 2250, 'npc_traveler', 'route2_picnicker', 'Picnicker');
+        addNPC(4500, 1500, 'npc_traveler', 'route2_picnicker', 'Picnicker');
 
         // Team Umbra Grunt
         if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM1) && !StoryManager.getInstance().hasFlag(StoryFlag.ENCOUNTERED_TEAM_UMBRA_ROUTE2)) {
-            // Blocks the main path north
-            addNPC(3000, 2000, 'npc_kai', 'route2_team_umbra_grunt', 'Team Umbra Grunt', 'route2_team_umbra_grunt');
+            // Blocks the main eastern path
+            addNPC(3750, 3000, 'npc_kai', 'route2_team_umbra_grunt', 'Team Umbra Grunt', 'route2_team_umbra_grunt');
         }
 
         // --- Item Pickups ---
-        this.addItemPickup(5500, 5500, 'Potion'); // Hidden in SE corner
-        this.addItemPickup(500, 3000, 'Super Potion'); // Hidden on west path
-        this.addItemPickup(3000, 500, 'Revive'); // Dead end near exit
+        this.addItemPickup(5800, 5800, 'Potion'); // Hidden in SE corner
+        this.addItemPickup(200, 4800, 'Super Potion'); // Hidden on west path
+        this.addItemPickup(5000, 500, 'Revive'); // Dead end near exit
 
         // --- Transitions ---
         // Return to Lunar City (South)
