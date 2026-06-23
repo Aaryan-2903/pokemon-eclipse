@@ -296,7 +296,7 @@ export class LunarCityScene extends Scene {
         const route3Zone = this.add.zone(centerX, 270, 220, 96);
         this.physics.add.existing(route3Zone, true);
         route3Zone.setData('targetScene', 'Route3Scene');
-        route3Zone.setData('requiresBadge', 'Sky Badge');
+        route3Zone.setData('requiresBadge', 'Verdant Badge');
         route3Zone.setData('debugName', 'route:Route3Scene');
         this.entrances.add(route3Zone);
         console.log('[LunarCityScene] route trigger registered', { targetScene: 'Route3Scene', x: centerX, y: 270, width: 220, height: 96, requiresBadge: 'Sky Badge' });

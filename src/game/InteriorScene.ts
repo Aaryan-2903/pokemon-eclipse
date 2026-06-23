@@ -175,6 +175,14 @@ export class InteriorScene extends Scene {
         EventBus.emit('current-scene-ready', this);
     }
 
+    private addNPC(x: number, y: number, key: string, dialogueId: string, label: string, trainerId?: string) {
+        const npc = new NPC(this, x, y, key, dialogueId, trainerId);
+        this.obstacles.add(npc);
+        this.npcZones.add(npc.interactionZone);
+        this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
+        return npc;
+    }
+
     private startTrainerBattle(trainer: Trainer) {
         this.player.setMovementEnabled(false);
         this.interactionText.setVisible(false);
@@ -215,10 +223,10 @@ export class InteriorScene extends Scene {
                             StoryManager.getInstance().setActiveQuest("Meet Kai on Route 2");
                             EventBus.emit('quest-updated');
                         } else if (trainer.id === 'gym_lily') {
-                            PlayerState.badges.add('Grass Badge');
+                            PlayerState.badges.add('Verdant Badge');
                             this.startDialogue('gym_lily_victory');
                             StoryManager.getInstance().setFlag(StoryFlag.DEFEATED_GYM2);
-                            // StoryManager.getInstance().setActiveQuest("Explore Route 4"); // Future quest
+                            StoryManager.getInstance().setActiveQuest("Explore the path north of Veridia");
                         } else {
                             this.startDialogue(`${trainer.id}_defeated`);
                         }
@@ -252,14 +260,23 @@ export class InteriorScene extends Scene {
             this.add.rectangle(400, 300, 120, 80, 0x7f1d1d).setDepth(-0.5);
             this.addPlayerHouseBed();
         } else if (this.entranceId === 'gym') {
-            // Add Gym Leader Aurora
-            const aurora = new NPC(this, 400, 200, 'npc_aurora', 'gym_aurora_intro', 'gym_aurora');
-            this.obstacles.add(aurora);
-            this.npcZones.add(aurora.interactionZone);
+            if (!PlayerState.defeatedTrainers.has('gym_aurora')) {
+                this.addNPC(400, 200, 'npc_aurora', 'gym_aurora_intro', 'Gym Leader Aurora', 'gym_aurora');
+            } else {
+                this.addNPC(400, 200, 'npc_aurora', 'gym_aurora_defeated', 'Gym Leader Aurora');
+            }
         } else if (this.entranceId === 'gym_veridia') {
-            const lily = new NPC(this, 400, 200, 'npc_nova', 'gym_lily_intro', 'gym_lily'); // Using Nova's sprite as placeholder for Lily
-            this.obstacles.add(lily);
-            this.npcZones.add(lily.interactionZone);
+            if (!PlayerState.defeatedTrainers.has('veridia_gym_trainer_1')) {
+                this.addNPC(300, 350, 'npc_traveler', 'veridia_gym_trainer_1_prebattle', 'Lass Briana', 'veridia_gym_trainer_1');
+            }
+            if (!PlayerState.defeatedTrainers.has('veridia_gym_trainer_2')) {
+                this.addNPC(500, 350, 'npc_bugcatcher', 'veridia_gym_trainer_2_prebattle', 'Bug Catcher James', 'veridia_gym_trainer_2');
+            }
+            if (!PlayerState.defeatedTrainers.has('gym_lily')) {
+                this.addNPC(400, 200, 'npc_nova', 'gym_lily_intro', 'Gym Leader Lily', 'gym_lily');
+            } else {
+                this.addNPC(400, 200, 'npc_nova', 'gym_lily_defeated', 'Gym Leader Lily');
+            }
         } else if (this.entranceId === 'mart') {
             // Add shopkeeper
             const shopkeeper = new NPC(this, 400, 250, 'npc_shopkeeper', 'shopkeeper_menu');

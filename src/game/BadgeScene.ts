@@ -9,8 +9,8 @@ interface BadgeInfo {
 
 const BADGE_DATA: BadgeInfo[] = [
     { name: 'Sky Badge', texture: 'badge_sky', description: 'Awarded for defeating Gym Leader Aurora.' },
-    { name: 'Grass Badge', texture: 'badge_sky', description: 'Awarded for defeating Gym Leader Lily.' }, // Using sky badge texture as placeholder
-    // Add other 7 badges here in the future
+    { name: 'Verdant Badge', texture: 'badge_verdant', description: 'Awarded for defeating Gym Leader Lily.' },
+    // Add other 6 badges here in the future
 ];
 
 export class BadgeScene extends Scene {

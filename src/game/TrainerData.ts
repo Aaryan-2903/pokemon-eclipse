@@ -159,6 +159,24 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
         postBattleDialogue: "Ugh, defeated again... The boss won't be happy.",
         rewardMoney: 400,
     },
+    'veridia_gym_trainer_1': {
+        id: 'veridia_gym_trainer_1',
+        name: 'Lass Briana',
+        spriteKey: 'npc_traveler',
+        teamSpec: [{ name: 'Oddish', level: 13 }, { name: 'Oddish', level: 13 }],
+        preBattleDialogue: "You think you can just walk up to Leader Lily? You have to get through me first!",
+        postBattleDialogue: "Okay, okay, you're pretty good. You can pass.",
+        rewardMoney: 300,
+    },
+    'veridia_gym_trainer_2': {
+        id: 'veridia_gym_trainer_2',
+        name: 'Bug Catcher James',
+        spriteKey: 'npc_bugcatcher',
+        teamSpec: [{ name: 'Paras', level: 14 }],
+        preBattleDialogue: "The power of nature is not to be underestimated!",
+        postBattleDialogue: "My Pokémon... defeated by brute force...",
+        rewardMoney: 320,
+    },
     'route3_youngster_toby': {
         id: 'route3_youngster_toby',
         name: 'Youngster Toby',
@@ -178,7 +196,7 @@ export const Trainers: Record<string, Omit<Trainer, 'team'> & { teamSpec: { name
             { name: 'Ivysaur', level: 17 }
         ],
         preBattleDialogue: "Welcome, challenger. I am Lily, the Grass-type Gym Leader of Veridia City. Let's see if your resolve can grow as strong as my Pokémon!",
-        postBattleDialogue: "Your growth is truly remarkable! You've earned this badge.",
+        postBattleDialogue: "Your bond with your Pokémon is inspiring. Continue to grow stronger together.",
         rewardMoney: 1500,
     }
 };

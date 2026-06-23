@@ -229,6 +229,22 @@ export class PreloadScene extends Scene {
         graphics.generateTexture('badge_sky', 32, 32);
         graphics.clear();
 
+        // Generate Verdant Badge
+        graphics.fillStyle(0x4ade80, 1); // Green
+        graphics.fillPoints([ {x: 16, y: 2}, {x: 28, y: 10}, {x: 28, y: 22}, {x: 16, y: 30}, {x: 4, y: 22}, {x: 4, y: 10} ]);
+        graphics.fillStyle(0x166534, 1); // Dark Green
+        graphics.fillCircle(16, 16, 5);
+        graphics.generateTexture('badge_verdant', 32, 32);
+        graphics.clear();
+
+        // Generate Verdant Badge
+        graphics.fillStyle(0x4ade80, 1); // Green
+        graphics.fillPoints([ {x: 16, y: 2}, {x: 28, y: 10}, {x: 28, y: 22}, {x: 16, y: 30}, {x: 4, y: 22}, {x: 4, y: 10} ]);
+        graphics.fillStyle(0x166534, 1); // Dark Green
+        graphics.fillCircle(16, 16, 5);
+        graphics.generateTexture('badge_verdant', 32, 32);
+        graphics.clear();
+
         // Generate Item Pickup Sprite
         graphics.fillStyle(0xffffff, 1);
         graphics.fillCircle(16, 16, 12);

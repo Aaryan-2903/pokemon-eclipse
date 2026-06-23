@@ -120,14 +120,19 @@ export class VeridiaCityScene extends Scene {
             this.npcZones.add(npc.interactionZone);
             this.add.text(x, y - 36, label, { fontFamily: 'monospace', fontSize: '12px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } }).setOrigin(0.5).setDepth(20);
         };
-        addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', 'veridia_citizen_1', 'Trainer');
-        addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', 'veridia_citizen_2', 'Gardener');
-        addNPC(worldWidth / 2 - 200, 700, 'npc_nurse', 'veridia_citizen_3', 'Nurse');
+        const storyManager = StoryManager.getInstance();
+        addNPC(worldWidth / 2 - 100, 1200, 'npc_youngster', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_1_after_gym2' : 'veridia_citizen_1', 'Trainer');
+        addNPC(worldWidth / 2 + 100, 1200, 'npc_traveler', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_2_after_gym2' : 'veridia_citizen_2', 'Gardener');
+        addNPC(worldWidth / 2 - 200, 700, 'npc_nurse', storyManager.hasFlag(StoryFlag.DEFEATED_GYM2) ? 'veridia_citizen_3_after_gym2' : 'veridia_citizen_3', 'Nurse');
 
         // Player Spawn
         let spawnX = this.spawnX, spawnY = this.spawnY;
         if (spawnX === undefined || spawnY === undefined) {
-            spawnX = worldWidth / 2; spawnY = worldHeight - 150; // Default from Route 3
+            if (this.spawnEntrance === 'forest') {
+                spawnX = worldWidth / 2; spawnY = worldHeight - 150; // Default from Route 3
+            } else {
+                spawnX = worldWidth / 2; spawnY = worldHeight / 2; // Fallback spawn
+            }
         }
         this.player = new Player(this, spawnX, spawnY);
         this.physics.add.collider(this.player, this.obstacles);
@@ -227,7 +232,10 @@ export class VeridiaCityScene extends Scene {
         this.hudText.setText(`Location: Veridia City\nPosition: X: ${Math.round(this.player.x)}, Y: ${Math.round(this.player.y)}`);
 
         let transitionScene: string | null = null;
-        this.physics.overlap(this.player, this.entrances, (_player, entrance) => { transitionScene = (entrance as Phaser.GameObjects.GameObject).getData('targetScene'); });
+        this.physics.overlap(this.player, this.entrances, (_player, entrance) => {
+            const target = (entrance as Phaser.GameObjects.GameObject).getData('targetScene');
+            if (target) { transitionScene = target; }
+        });
         if (transitionScene) {
             this.autoSave();
             GameFeel.fadeToScene(this, transitionScene, { spawnEntrance: 'veridia_city' });
@@ -236,8 +244,14 @@ export class VeridiaCityScene extends Scene {
 
         this.currentNPC = null;
         let currentEntranceId: string | null = null;
-        this.physics.overlap(this.player, this.npcZones, (_player, zone) => { this.currentNPC = (zone as Phaser.GameObjects.GameObject).getData('dialogueId'); });
-        this.physics.overlap(this.player, this.entrances, (_player, entrance) => { currentEntranceId = (entrance as Phaser.GameObjects.GameObject).getData('entranceId'); });
+        this.physics.overlap(this.player, this.npcZones, (_player, zone) => {
+            const npcId = (zone as Phaser.GameObjects.GameObject).getData('dialogueId');
+            if (npcId) { this.currentNPC = npcId; }
+        });
+        this.physics.overlap(this.player, this.entrances, (_player, entrance) => {
+            const entranceId = (entrance as Phaser.GameObjects.GameObject).getData('entranceId');
+            if (entranceId) { currentEntranceId = entranceId; }
+        });
 
         let interactionMessage = '';
         if (this.currentNPC) interactionMessage = 'Press E to Talk';
@@ -246,8 +260,16 @@ export class VeridiaCityScene extends Scene {
         if (interactionMessage) {
             this.interactionText.setText(interactionMessage).setPosition(this.player.x, this.player.y - 56).setVisible(true);
             if (Input.Keyboard.JustDown(this.interactKey)) {
-                if (this.currentNPC) this.startDialogue(this.currentNPC);
-                else if (currentEntranceId) {
+                if (this.currentNPC) {
+                    const baseDialogueKey = this.currentNPC;
+                    const postGymDialogueKey = `${baseDialogueKey}_after_gym2`;
+
+                    if (StoryManager.getInstance().hasFlag(StoryFlag.DEFEATED_GYM2) && (postGymDialogueKey in Dialogues)) {
+                        this.startDialogue(postGymDialogueKey);
+                    } else {
+                        this.startDialogue(baseDialogueKey);
+                    }
+                } else if (currentEntranceId) {
                     this.autoSave();
                     GameFeel.fadeToScene(this, 'InteriorScene', { entranceId: currentEntranceId, parentScene: this.scene.key }, [255, 255, 255]);
                 }

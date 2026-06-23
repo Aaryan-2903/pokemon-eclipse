@@ -183,8 +183,8 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'lunar_citizen_10': [ { speaker: 'Researcher', text: "We're studying the effects of lunar cycles on Pokémon evolution." }
     ],
     'lunar_route3_locked': [
-        { speaker: 'Gate Guard', text: "Route 3 is closed while crews inspect the northern pass." },
-        { speaker: 'Gate Guard', text: "Trainers with the Sky Badge may pass. Aurora trusts them to handle the rough road ahead." }
+        { speaker: 'Gate Guard', text: "The northern pass is treacherous. Only trainers who have proven their skill against Gym Leader Lily are permitted." },
+        { speaker: 'Gate Guard', text: "Come back when you have the Verdant Badge." }
     ],
     'lunar_plaza_gardener': [
         { speaker: 'Gardener', text: "The plaza stays green because everyone in Lunar City helps care for it.", portrait: 'portrait_traveler' }
@@ -289,12 +289,30 @@ export const Dialogues: Record<string, DialogueNode[]> = {
     'veridia_citizen_3': [
         { speaker: 'Citizen', text: "The Pokémon Center here is always busy with trainers preparing for the Gym." }
     ],
+    'veridia_citizen_1_after_gym2': [
+        { speaker: 'Citizen', text: "Wow, you defeated Gym Leader Lily! Congratulations!" }
+    ],
+    'veridia_citizen_2_after_gym2': [
+        { speaker: 'Gardener', text: "That was an amazing battle! You've inspired me to train my own Pokémon!" }
+    ],
+    'veridia_citizen_3_after_gym2': [
+        { speaker: 'Nurse', text: "I saw your battle! Make sure to rest your Pokémon at the Center before you head north." }
+    ],
+    'veridia_gym_trainer_1_defeated': [
+        { speaker: 'Lass Briana', text: "Okay, okay, you're pretty good. You can pass.", portrait: 'portrait_traveler' }
+    ],
+    'veridia_gym_trainer_2_defeated': [
+        { speaker: 'Bug Catcher James', text: "My Pokémon... defeated by brute force...", portrait: 'portrait_bugcatcher' }
+    ],
     'gym_lily_intro': [
         { speaker: 'Gym Leader Lily', text: "Welcome to my Gym, challenger. I am Lily, and my Grass-type Pokémon are ready to test your bond!", portrait: 'portrait_nova' } // Using Nova's portrait as placeholder
     ],
+    'gym_lily_defeated': [
+        { speaker: 'Gym Leader Lily', text: "Your bond with your Pokémon is inspiring. Continue to grow stronger together.", portrait: 'portrait_nova' }
+    ],
     'gym_lily_victory': [
         { speaker: 'Gym Leader Lily', text: "Your growth is truly remarkable! You've earned this badge.", portrait: 'portrait_nova' },
-        { speaker: 'System', text: "You received the Grass Badge!" },
-        { speaker: 'Gym Leader Lily', text: "With this, you can now use the move Cut outside of battle! (Placeholder)", portrait: 'portrait_nova' }
+        { speaker: 'System', text: "You received the Verdant Badge!" },
+        { speaker: 'Gym Leader Lily', text: "With this badge, trainers will recognize your skill. The path to the north should now be open to you.", portrait: 'portrait_nova' }
     ]
 };
